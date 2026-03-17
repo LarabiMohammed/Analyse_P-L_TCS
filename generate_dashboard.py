@@ -770,23 +770,21 @@ function renderDt(){
   // Show/hide sections based on compare mode
   if(cmpDiv) cmpDiv.style.display=isCmp?'block':'none';
   document.getElementById('dt-exec').style.display=isCmp?'none':'none'; // handled by renderSiteExec
-  // In compare mode: hide donut/waterfall (not meaningful for comparison); keep bench, PL for site1
-  ['dt-card-donut','dt-row-wf'].forEach(id=>{
+  // En mode comparaison : uniquement le bloc compare + graphique évolution
+  ['dt-card-donut','dt-row-wf','dt-row-bench','dt-card-pl'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display=isCmp?'none':'';
   });
-  const plTitle=document.getElementById('dt-pl-title');
-  if(plTitle) plTitle.textContent=isCmp?'Tableau P\u0026L d\u00e9taill\u00e9 \u2014 '+site+' (R'+cmpYear+')':'Tableau P\u0026L d\u00e9taill\u00e9';
   if(isCmp){
     renderCompare(site,site2);
   } else {
     renderSiteExec(site,rows);
     renderEvol(rows);
+    renderDonut();
+    renderBench();
+    renderWaterfall();
+    renderPL(rows);
   }
-  renderDonut();
-  renderBench();
-  if(!isCmp) renderWaterfall();
-  renderPL(rows);
 }
 
 function renderCompare(s1,s2){
@@ -1232,7 +1230,6 @@ function renderEt(){
     +'<span style="margin-left:auto;display:flex;gap:10px;align-items:center">'
     +'<span><span style="display:inline-block;width:10px;height:10px;background:rgba(16,185,129,.35);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Positif</span>'
     +'<span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.3);border-radius:2px;vertical-align:middle;margin-right:4px"></span>N\u00e9gatif</span>'
-    +'<span style="color:#aaa">\u2605 top parc</span>'
     +'</span></div>';
   h+='<table class="hm-table"><thead><tr><th>Site</th>';
   HM_COLS.forEach(c=>h+='<th>'+c.l+'</th>');
@@ -1242,17 +1239,10 @@ function renderEt(){
     const va=getVal(a,hmYr,'EBITDA')||0, vb=getVal(b,hmYr,'EBITDA')||0;
     return vb-va;
   });
-  // Pre-compute column best/worst for highlighting
-  const colBest=HM_COLS.map(col=>{
-    const vals=sites.map(s=>col.get(s,hmYr)).filter(v=>v!==null);
-    if(!vals.length) return null;
-    return col.type==='cost'?Math.min(...vals):Math.max(...vals);
-  });
   sitesSorted.forEach((s,si)=>{
-    const eb=getVal(s,hmYr,'EBITDA')||0;
     const rowBg=si%2===0?'':'background:#fafbfc';
     h+='<tr style="'+rowBg+'"><td style="font-weight:700;color:#003a63">'+s+'</td>';
-    HM_COLS.forEach((col,ci)=>{
+    HM_COLS.forEach(col=>{
       const v=col.get(s,hmYr);
       const vprev=hmPrevYr?col.get(s,hmPrevYr):null;
       let bg='';
@@ -1264,12 +1254,19 @@ function renderEt(){
         const arrowCol=(isUp===upGood)?'#10b981':'#ef4444';
         arrow='<span style="color:'+arrowCol+';font-size:.7rem;margin-left:2px">'+(isUp?'\u2191':'\u2193')+'</span>';
       }
-      const isBest=v!==null&&colBest[ci]!==null&&Math.abs(v-colBest[ci])<0.001;
-      const star=isBest?'<span style="color:#f59e0b;font-size:.65rem;margin-left:2px">\u2605</span>':'';
-      h+='<td style="'+bg+'">'+(v!==null?v.toFixed(1):'\u2014')+arrow+star+'</td>';
+      h+='<td style="'+bg+'">'+(v!==null?v.toFixed(1):'\u2014')+arrow+'</td>';
     });
     h+='</tr>';
   });
+  // Ligne moyenne parc
+  h+='<tr style="background:#eef2ff;font-weight:700;border-top:2px solid #c7d2fe"><td style="color:#003a63">\u2300 Moyenne parc</td>';
+  HM_COLS.forEach(col=>{
+    const vals=sites.map(s=>col.get(s,hmYr)).filter(v=>v!==null);
+    const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+    const bg=avg!==null&&col.type==='result'?(avg>=0?'background:rgba(16,185,129,.15)':'background:rgba(239,68,68,.15)'):'';
+    h+='<td style="'+bg+'">'+(avg!==null?avg.toFixed(1):'\u2014')+'</td>';
+  });
+  h+='</tr>';
   h+='</tbody></table>';
   document.getElementById('hm-wrap').innerHTML=h;
 }
