@@ -147,16 +147,23 @@ select.sel:focus{border-color:#00a3e0}
 .dt-exec .neg{color:#ef4444;font-weight:700}.dt-exec .pos{color:#10b981;font-weight:700}
 /* print */
 @media print{
+  .tabs,.toolbar,.btn-print{display:none!important}
+  .page{display:none!important}
   .page.active{display:block!important;padding:6px 10px}
-  header{background:#003a63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8px 18px!important}
+  header{background:#003a63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8px 18px!important;color:#fff!important}
+  header h1,header .header-right{color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .exec-summary{background:#003a63!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block!important;page-break-inside:avoid}
-  body{background:#fff}
-  .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none;border:1px solid #e5e7eb;margin-bottom:8px}
-  .kpi-row{page-break-inside:avoid}
+  .home-cover{min-height:auto;background:#fff!important}
+  body{background:#fff!important}
+  .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none!important;border:1px solid #e0e0e0;margin-bottom:8px}
+  .kpi-grid,.kpi-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+  .kpi-card.g,.kpi-card.p,.kpi-card.r,.kpi-card.o{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .row2{grid-template-columns:1fr 1fr;gap:8px}
-  .row2.full-print{grid-template-columns:1fr}
-  .alert-bar,.alert-ok{page-break-inside:avoid}
-  h2,h3,.card-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .alert-bar,.alert-ok{page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block!important}
+  .card-title,.kpi-label,.kpi-value,.kpi-sub{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pos{color:#10b981!important}.neg{color:#ef4444!important}
+  .ch{height:190px!important}.ch.tall{height:210px!important}
+  .podium-grid{grid-template-columns:1fr 1fr}
   @page{size:A4 landscape;margin:8mm 10mm}
 }
 /* ── Présentation mode ────────────────────────────────── */
@@ -165,6 +172,36 @@ select.sel:focus{border-color:#00a3e0}
 .kpi-card{transition:box-shadow .2s,transform .12s ease}
 .exec-summary{transition:background .3s}
 .cmp-metric-row:last-child{border-bottom:none}
+/* ── Page de garde ────────────────────────────────── */
+.home-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:72vh;text-align:center;padding:40px 20px;background:linear-gradient(160deg,#f0f6ff 0%,#fff 60%)}
+.home-logo{height:72px;margin-bottom:30px}
+.home-title{font-size:2rem;font-weight:800;color:#003a63;margin-bottom:6px;letter-spacing:-.5px}
+.home-sub{font-size:1rem;color:#5a6a7a;margin-bottom:10px}
+.home-period{font-size:.82rem;color:#aaa;margin-bottom:36px}
+.home-kpis{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+.home-kpi{background:#fff;border-radius:14px;padding:20px 28px;box-shadow:0 2px 16px rgba(0,58,99,.1);min-width:140px;border-top:4px solid #00a3e0}
+.home-kpi.g{border-top-color:#10b981}
+.home-kpi.o{border-top-color:#f59e0b}
+.home-kpi-val{font-size:1.7rem;font-weight:800;color:#1a1a2e;line-height:1.1}
+.home-kpi-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.7px;color:#888;margin-top:5px}
+.home-kpi-trend{font-size:.75rem;font-weight:600;margin-top:5px}
+.home-date{font-size:.75rem;color:#bbb;margin-top:10px}
+/* ── KPI trends ── */
+.kpi-trend{font-size:.72rem;font-weight:600;margin-top:2px;min-height:14px}
+/* ── Top 3 / Flop 3 ── */
+.podium-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.podium-card{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.podium-title{font-size:.7rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.podium-row{display:flex;justify-content:space-between;align-items:center;padding:5px 2px;border-bottom:1px solid #f3f4f6;font-size:.82rem}
+.podium-row:last-child{border-bottom:none}
+/* ── Comparaison 2 sites ── */
+#dt-compare{margin:0 0 14px;display:none}
+.cmp-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cmp-side{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.cmp-site-title{font-size:.95rem;font-weight:700;color:#003a63;border-left:4px solid #00a3e0;padding-left:10px;margin-bottom:10px}
+.cmp-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:.82rem}
+.cmp-row:last-child{border-bottom:none}
+.cmp-delta{font-size:.72rem;font-weight:600;margin-left:8px}
 </style>
 </head>
 <body>
@@ -180,14 +217,33 @@ select.sel:focus{border-color:#00a3e0}
 </header>
 
 <div class="tabs">
-  <div class="tab active"  onclick="showTab('ov',this)">Vue d&#8217;ensemble</div>
+  <div class="tab active"  onclick="showTab('home',this)">&#127968; Accueil</div>
+  <div class="tab"         onclick="showTab('ov',this)">Vue d&#8217;ensemble</div>
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('et',this)">Vue &euro;/t</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
 </div>
 
+<!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
+<div class="page active" id="tab-home">
+  <div class="home-cover">
+    <img src="%%LOGO%%" alt="Veolia" class="home-logo">
+    <div class="home-title">Dashboard P&amp;L &mdash; Centres de Tri</div>
+    <div class="home-sub">Analyse de performance du parc de centres de tri</div>
+    <div class="home-period">R2023 &middot; R2024 &middot; R2025 &middot; B2026</div>
+    <div class="home-kpis">
+      <div class="home-kpi"><div class="home-kpi-val" id="hm-ca">—</div><div class="home-kpi-lbl">CA Total (R2025)</div><div class="home-kpi-trend" id="hm-ca-tr"></div></div>
+      <div class="home-kpi g"><div class="home-kpi-val" id="hm-eb">—</div><div class="home-kpi-lbl">EBITDA Total (R2025)</div><div class="home-kpi-trend" id="hm-eb-tr"></div></div>
+      <div class="home-kpi o"><div class="home-kpi-val" id="hm-tn">—</div><div class="home-kpi-lbl">Tonnes Entrantes (R2025)</div><div class="home-kpi-trend" id="hm-tn-tr"></div></div>
+      <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
+      <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
+    </div>
+    <div class="home-date">Mis &agrave; jour le %%DATE%%</div>
+  </div>
+</div>
+
 <!-- ═══ ONGLET 1 — VUE D'ENSEMBLE ═══════════════════════════════════════════ -->
-<div class="page active" id="tab-ov">
+<div class="page" id="tab-ov">
   <div class="toolbar">
     <label>Ann&eacute;e :</label>
     <button class="btn-pill ov-yr active" onclick="toggleOvYear('all',this)">Tous</button>
@@ -204,9 +260,9 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div id="exec-summary" class="exec-summary"></div>
   <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">Chiffre d&#8217;Affaires</div><div class="kpi-value" id="kpi-ca">&#8212;</div><div class="kpi-sub" id="kpi-ca-s"></div></div>
-    <div class="kpi-card g"><div class="kpi-label">EBITDA</div><div class="kpi-value" id="kpi-eb">&#8212;</div><div class="kpi-sub" id="kpi-eb-s"></div></div>
-    <div class="kpi-card o"><div class="kpi-label">Tonnes Entrantes</div><div class="kpi-value" id="kpi-tn">&#8212;</div><div class="kpi-sub" id="kpi-tn-s"></div></div>
+    <div class="kpi-card"><div class="kpi-label">Chiffre d&#8217;Affaires</div><div class="kpi-value" id="kpi-ca">&#8212;</div><div class="kpi-sub" id="kpi-ca-s"></div><div class="kpi-trend" id="kpi-ca-tr"></div></div>
+    <div class="kpi-card g"><div class="kpi-label">EBITDA</div><div class="kpi-value" id="kpi-eb">&#8212;</div><div class="kpi-sub" id="kpi-eb-s"></div><div class="kpi-trend" id="kpi-eb-tr"></div></div>
+    <div class="kpi-card o"><div class="kpi-label">Tonnes Entrantes</div><div class="kpi-value" id="kpi-tn">&#8212;</div><div class="kpi-sub" id="kpi-tn-s"></div><div class="kpi-trend" id="kpi-tn-tr"></div></div>
     <div class="kpi-card p" id="kpi-card-best"><div class="kpi-label">&#127942; Meilleur site EBITDA</div><div class="kpi-value" id="kpi-best">&#8212;</div><div class="kpi-sub" id="kpi-best-s"></div></div>
     <div class="kpi-card r" id="kpi-card-worst"><div class="kpi-label">&#9888;&#65039; Site en alerte</div><div class="kpi-value" id="kpi-worst">&#8212;</div><div class="kpi-sub" id="kpi-worst-s"></div></div>
   </div>
@@ -232,9 +288,14 @@ select.sel:focus{border-color:#00a3e0}
   <div class="toolbar">
     <label>Site :</label>
     <select class="sel" id="dt-site" onchange="renderDt()"></select>
+    <label style="margin-left:14px">Comparer avec :</label>
+    <select class="sel" id="dt-site2" onchange="renderDt()">
+      <option value="">— aucun —</option>
+    </select>
     <div class="spacer"></div>
     <button class="btn-print" onclick="window.print()" title="Imprime l'onglet actif en PDF A4 paysage">&#128438; Exporter PDF</button>
   </div>
+  <div id="dt-compare" class="dt-exec"></div>
   <div id="dt-exec" class="dt-exec" style="display:none;margin:0 28px 0"></div>
   <div class="row2" style="margin-top:16px">
     <div class="card"><div class="card-title">&Eacute;volution CA / Marge / EBITDA / EBIT</div><div class="ch"><canvas id="c-evol"></canvas></div></div>
@@ -344,6 +405,7 @@ select.sel:focus{border-color:#00a3e0}
       <div id="rg-map" style="display:flex;justify-content:center;align-items:center;padding:8px 0"></div>
     </div>
   </div>
+  <div class="podium-grid" id="rg-podium" style="margin-top:4px"></div>
   <div class="card" style="margin-bottom:0">
     <div class="card-title">Synth&egrave;se par r&eacute;gion &nbsp;<span style="font-size:11px;font-weight:normal;color:#999">&#9654; Cliquer sur une r&eacute;gion pour voir les sites</span></div>
     <div id="rg-table-wrap"></div>
@@ -394,6 +456,7 @@ function showTab(id,el){
   // Double rAF: attendre que le navigateur ait recalculé le layout (display:none→block)
   // avant de créer les charts, sinon les canvas restent à 0×0
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(id==='home') renderHome();
     if(id==='ov') renderOv();
     if(id==='dt') renderDt();
     if(id==='et') renderEt();
@@ -407,6 +470,35 @@ function showTab(id,el){
 // ══════════════════════════════════════════════════════
 // EXECUTIVE SUMMARY
 // ══════════════════════════════════════════════════════
+function renderHome(){
+  const yr='2025', yrPrev='2024';
+  const rows=DATA.filter(d=>String(d.Annee)===yr);
+  const rowsPrev=DATA.filter(d=>String(d.Annee)===yrPrev);
+  const sum=(arr,k)=>arr.reduce((s,d)=>s+(d[k]||0),0);
+  const ca=sum(rows,'CA'), caPrev=sum(rowsPrev,'CA');
+  const eb=sum(rows,'EBITDA'), ebPrev=sum(rowsPrev,'EBITDA');
+  const tn=sum(rows,'Tonnes_entrantes'), tnPrev=sum(rowsPrev,'Tonnes_entrantes');
+  const tx=ca?(eb/ca*100):0, txPrev=caPrev?(ebPrev/caPrev*100):0;
+  const trend=(v,p,isAmt)=>{
+    if(!p||p===0) return '';
+    const d=v-p, pct=((d/Math.abs(p))*100).toFixed(1);
+    const up=d>=0;
+    return '<span style="color:'+(up?'#10b981':'#ef4444')+'">'+(up?'&#8679;':'&#8681;')+' '+(up?'+':'')+pct+'% vs R2024</span>';
+  };
+  document.getElementById('hm-ca').textContent=fmtM(ca);
+  document.getElementById('hm-ca-tr').innerHTML=trend(ca,caPrev,true);
+  document.getElementById('hm-eb').textContent=fmtM(eb);
+  document.getElementById('hm-eb').style.color=eb>=0?'#10b981':'#ef4444';
+  document.getElementById('hm-eb-tr').innerHTML=trend(eb,ebPrev,true);
+  document.getElementById('hm-tn').textContent=fmtK(tn);
+  document.getElementById('hm-tn-tr').innerHTML=trend(tn,tnPrev,true);
+  document.getElementById('hm-tx').textContent=tx.toFixed(1)+'%';
+  document.getElementById('hm-tx').style.color=eb>=0?'#10b981':'#ef4444';
+  const txD=tx-txPrev; document.getElementById('hm-tx-tr').innerHTML='<span style="color:'+(txD>=0?'#10b981':'#ef4444')+'">'+(txD>=0?'&#8679;':'&#8681;')+' '+(txD>=0?'+':'')+txD.toFixed(1)+' pts vs R2024</span>';
+  document.getElementById('hm-ns').textContent=SITES.length;
+  document.getElementById('hm-ns-tr').innerHTML='<span style="color:#888">'+[...new Set(DATA.filter(d=>d.Region).map(d=>d.Region))].length+' r\u00e9gions</span>';
+}
+
 function renderExecSummary(){
   const el=document.getElementById('exec-summary');
   if(!el) return;
@@ -548,6 +640,21 @@ function renderOv(){
   document.getElementById('kpi-eb-s').textContent='Taux: '+(ca?((eb/ca)*100).toFixed(1):0)+'%';
   document.getElementById('kpi-tn').textContent=fmtK(tn);
   document.getElementById('kpi-tn-s').textContent='tonnes entrantes';
+  // ── Tendances KPI vs année précédente ──────────────────────────
+  const lastRealYr=activeYrs.filter(y=>y!=='2026').sort().pop();
+  const prevYr=lastRealYr?String(parseInt(lastRealYr)-1):null;
+  const trendBadge=(v,vPrev,id)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(!prevYr||!vPrev||Math.abs(vPrev)<0.01){el.innerHTML='';return;}
+    const d=v-vPrev, pct=((d/Math.abs(vPrev))*100).toFixed(1);
+    const up=d>=0;
+    el.innerHTML='<span style="color:'+(up?'#10b981':'#ef4444')+'">'+(up?'\u2B06':'\u2B07')+' '+(up?'+':'')+pct+'% vs '+yr2lbl(prevYr)+'</span>';
+  };
+  const prevRows=DATA.filter(d=>siteArr.includes(d.Site)&&String(d.Annee)===prevYr);
+  trendBadge(ca,prevRows.reduce((s,d)=>s+(d.CA||0),0),'kpi-ca-tr');
+  trendBadge(eb,prevRows.reduce((s,d)=>s+(d.EBITDA||0),0),'kpi-eb-tr');
+  trendBadge(tn,prevRows.reduce((s,d)=>s+(d.Tonnes_entrantes||0),0),'kpi-tn-tr');
 
   // Best/worst/ranking : seulement si tous les sites
   document.getElementById('kpi-card-best').style.display=isAll?'':'none';
@@ -646,14 +753,69 @@ let cEvol=null, cDonut=null, cWF=null, cBench=null;
 
 function renderDt(){
   const site=document.getElementById('dt-site').value;
+  const site2=(document.getElementById('dt-site2')||{}).value||'';
   if(!site) return;
   const rows=DATA.filter(d=>d.Site===site).sort((a,b)=>a.Annee-b.Annee);
-  renderSiteExec(site,rows);
-  renderEvol(rows);
+  const cmpDiv=document.getElementById('dt-compare');
+  if(site2&&site2!==site){
+    if(cmpDiv) cmpDiv.style.display='block';
+    document.getElementById('dt-exec').style.display='none';
+    renderCompare(site,site2);
+  } else {
+    if(cmpDiv) cmpDiv.style.display='none';
+    renderSiteExec(site,rows);
+    renderEvol(rows);
+  }
   renderDonut();
   renderBench();
   renderWaterfall();
   renderPL(rows);
+}
+
+function renderCompare(s1,s2){
+  const yr='2025';
+  const METRICS=[
+    {k:'CA',l:"Chiffre d'affaires",fmt:fmtM,pos:'high'},
+    {k:'PNE',l:'PNE',fmt:fmtM,pos:'low'},
+    {k:'Marge_Brute_Cash',l:'Marge Brute',fmt:fmtM,pos:'high'},
+    {k:'EBITDA',l:'EBITDA',fmt:fmtM,pos:'high'},
+    {k:'EBIT_Courant',l:'EBIT',fmt:fmtM,pos:'high'},
+    {k:'Tonnes_entrantes',l:'Tonnes',fmt:v=>fmtK(v),pos:'high'},
+  ];
+  const r1=DATA.find(d=>d.Site===s1&&String(d.Annee)===yr)||{};
+  const r2=DATA.find(d=>d.Site===s2&&String(d.Annee)===yr)||{};
+  const side=(site,r)=>{
+    const eb=r.EBITDA||0, ca=r.CA||0;
+    const tx=ca?(eb/ca*100).toFixed(1)+'%':'—';
+    let h='<div class="cmp-side"><div class="cmp-site-title">'+site+' \u2014 R'+yr+'</div>';
+    METRICS.forEach(({k,l,fmt,pos})=>{
+      const v=r[k]; if(v==null) return;
+      const v2=(k==='CA'?(r2.CA||0):(k==='PNE'?(r2.PNE||0):(k==='EBITDA'?(r2.EBITDA||0):(r2[k]||0))));
+      const vOther=(site===s1?(r2[k]||0):(r1[k]||0));
+      const better=(pos==='high')?(v>=vOther):(v<=vOther);
+      const col=k==='EBITDA'?(eb>=0?'#10b981':'#ef4444'):'#1a1a2e';
+      h+='<div class="cmp-row"><span style="color:#666">'+l+'</span><span style="font-weight:700;color:'+col+'">'+fmt(v)+(better&&v!==vOther?' \u2605':'')+' </span></div>';
+    });
+    h+='<div class="cmp-row"><span style="color:#666">Taux EBITDA</span><span style="font-weight:700">'+tx+'</span></div>';
+    h+='</div>';
+    return h;
+  };
+  const cmpDiv=document.getElementById('dt-compare');
+  if(!cmpDiv) return;
+  cmpDiv.innerHTML='<div class="cmp-wrap">'+side(s1,r1)+side(s2,r2)+'</div>';
+  // Combined evolution chart
+  const labs=REAL_YEARS.map(yr2lbl);
+  const mk=(site,color)=>({
+    label:site+' EBITDA',
+    data:REAL_YEARS.map(yr=>{const r=DATA.find(d=>d.Site===site&&String(d.Annee)===yr);return r?(r.EBITDA/1e6):null;}),
+    borderColor:color,backgroundColor:color+'33',tension:.3,pointRadius:5,fill:false,borderWidth:2,spanGaps:true
+  });
+  const mkCA=(site,color)=>({
+    label:site+' CA',
+    data:REAL_YEARS.map(yr=>{const r=DATA.find(d=>d.Site===site&&String(d.Annee)===yr);return r?(r.CA/1e6):null;}),
+    borderColor:color,backgroundColor:color+'22',tension:.3,pointRadius:4,fill:false,borderWidth:1.5,borderDash:[5,4],spanGaps:true
+  });
+  cEvol=mkChart('c-evol',{type:'line',data:{labels:labs,datasets:[mk(s1,COLORS[0]),mk(s2,COLORS[2]),mkCA(s1,COLORS[0]),mkCA(s2,COLORS[2])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac'}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}}}}});
 }
 
 function renderSiteExec(site,rows){
@@ -1280,6 +1442,31 @@ function renderRg(){
   });
   h+='</tbody></table>';
   document.getElementById('rg-table-wrap').innerHTML=h;
+
+  // ── Top 3 / Flop 3 sites ──────────────────────────────────────
+  const podiumEl=document.getElementById('rg-podium');
+  if(podiumEl){
+    const siteEb=SITES.map(s=>{
+      const sub=rows.filter(d=>d.Site===s);
+      const eb=sub.reduce((a,d)=>a+(d.EBITDA||0),0);
+      const ca=sub.reduce((a,d)=>a+(d.CA||0),0);
+      return {s,eb,tx:ca?(eb/ca*100).toFixed(1):null};
+    }).sort((a,b)=>b.eb-a.eb);
+    const top3=siteEb.slice(0,3);
+    const flop3=siteEb.slice(-3).reverse();
+    const makeCard=(title,icon,sites,isTop)=>{
+      let c='<div class="podium-card"><div class="podium-title">'+icon+' '+title+'</div>';
+      sites.forEach((d,i)=>{
+        const col=isTop?'#10b981':'#ef4444';
+        const rank=isTop?(i+1):(SITES.length-2+i);
+        c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b>'+d.s+'</span>';
+        c+='<span><b style="color:'+col+'">'+fmtM(d.eb)+'</b>'+(d.tx?'<span style="color:#aaa;font-size:.7rem;margin-left:5px">'+d.tx+'%</span>':'')+'</span></div>';
+      });
+      c+='</div>';
+      return c;
+    };
+    podiumEl.innerHTML=makeCard('Top 3 EBITDA','\U0001F3C6',top3,true)+makeCard('Flop 3 EBITDA','\u26A0\uFE0F',flop3,false);
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1301,6 +1488,10 @@ function renderRg(){
     const o=document.createElement('option');
     o.value=s; o.textContent=s;
     document.getElementById('dt-site').appendChild(o);
+    // Dropdown Comparaison
+    const o2=document.createElement('option');
+    o2.value=s; o2.textContent=s;
+    document.getElementById('dt-site2').appendChild(o2);
   });
   // Animations & interactions Chart.js globales
   if(typeof Chart!=='undefined'){
@@ -1309,7 +1500,7 @@ function renderRg(){
     Chart.defaults.interaction.mode='index';
     Chart.defaults.interaction.intersect=false;
   }
-  requestAnimationFrame(()=>requestAnimationFrame(()=>renderOv()));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{renderHome();}));
 })();
 </script>
 </body>
