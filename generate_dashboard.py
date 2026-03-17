@@ -829,7 +829,7 @@ function renderCompare(s1,s2){
   const cmpDiv=document.getElementById('dt-compare');
   if(!cmpDiv) return;
   // Year selector buttons
-  const yrBtns=YEARS.map(y=>'<button class="btn-pill cmp-yr-btn'+(y===yr?' active':'')+(y==='2026'?' budget':'')+'" data-yr="'+y+'" onclick="setCmpYear(\''+y+'\')">'+yr2lbl(y)+'</button>').join('');
+  const yrBtns=YEARS.map(y=>'<button class="btn-pill cmp-yr-btn'+(y===yr?' active':'')+(y==='2026'?' budget':'')+'" data-yr="'+y+'" onclick="setCmpYear(this.dataset.yr)">'+yr2lbl(y)+'</button>').join('');
   cmpDiv.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:#f8fafc;border-radius:8px"><span style="font-size:.8rem;color:#555;font-weight:600">Ann\u00e9e :</span>'+yrBtns+'<span style="margin-left:12px;font-size:.78rem;color:#aaa">\u2605 = meilleur des deux</span></div>'
     +'<div class="cmp-wrap">'+side(s1,r1,r2)+side(s2,r2,r1)+'</div>';
   // Combined evolution chart (EBITDA + CA) — reuse c-evol canvas
