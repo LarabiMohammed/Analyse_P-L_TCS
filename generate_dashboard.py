@@ -1504,7 +1504,7 @@ function renderRg(){
       let c='<div class="podium-card"><div class="podium-title">'+icon+' '+title+'</div>';
       sites.forEach((d,i)=>{
         const col=isTop?'#10b981':'#ef4444';
-        const rank=isTop?(i+1):(SITES.length-2+i);
+        const rank=isTop?(i+1):(SITES.length-i);
         c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b>'+d.s+'</span>';
         c+='<span><b style="color:'+col+'">'+fmtM(d.eb)+'</b>'+(d.tx?'<span style="color:#aaa;font-size:.7rem;margin-left:5px">'+d.tx+'%</span>':'')+'</span></div>';
       });
