@@ -372,7 +372,6 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-pill rg-yr" onclick="toggleRgYear('2023',this)">R2023</button>
     <button class="btn-pill rg-yr" onclick="toggleRgYear('2024',this)">R2024</button>
     <button class="btn-pill rg-yr" onclick="toggleRgYear('2025',this)">R2025</button>
-    <button class="btn-pill rg-yr budget" onclick="toggleRgYear('2026',this)">B2026</button>
     <span style="margin-left:18px;color:#ddd">|</span>
     <label style="margin-left:14px">Vue CA :</label>
     <button class="btn-pill rg-ca-type active" onclick="setRgCAType('bar',this)">Barres</button>
@@ -386,11 +385,11 @@ select.sel:focus{border-color:#00a3e0}
     <div class="kpi-card o"><div class="kpi-label">Tonnes Totales</div><div class="kpi-value" id="rg-tn">&#8212;</div><div class="kpi-sub" id="rg-tn-s"></div></div>
   </div>
   <div class="row2">
-    <div class="card"><div class="card-title">CA par r&eacute;gion</div><div class="ch"><canvas id="c-rg-ca"></canvas></div></div>
-    <div class="card"><div class="card-title">EBITDA par r&eacute;gion (M&euro;)</div><div class="ch"><canvas id="c-rg-eb"></canvas></div></div>
+    <div class="card"><div class="card-title">CA par r&eacute;gion <span id="rg-ca-period" style="font-size:10px;font-weight:400;color:#999;margin-left:6px"></span></div><div class="ch"><canvas id="c-rg-ca"></canvas></div></div>
+    <div class="card"><div class="card-title">EBITDA par r&eacute;gion (M&euro;) <span id="rg-eb-period" style="font-size:10px;font-weight:400;color:#999;margin-left:6px"></span></div><div class="ch"><canvas id="c-rg-eb"></canvas></div></div>
   </div>
   <div class="row2">
-    <div class="card"><div class="card-title">EBITDA &euro;/t par r&eacute;gion</div><div class="ch"><canvas id="c-rg-ebt"></canvas></div></div>
+    <div class="card"><div class="card-title">EBITDA &euro;/t par r&eacute;gion <span id="rg-ebt-period" style="font-size:10px;font-weight:400;color:#999;margin-left:6px"></span></div><div class="ch"><canvas id="c-rg-ebt"></canvas></div></div>
     <div class="card">
       <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>Carte &mdash; performance r&eacute;gionale</span>
@@ -407,7 +406,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="podium-grid" id="rg-podium" style="margin-top:4px"></div>
   <div class="card" style="margin-bottom:0">
-    <div class="card-title">Synth&egrave;se par r&eacute;gion &nbsp;<span style="font-size:11px;font-weight:normal;color:#999">&#9654; Cliquer sur une r&eacute;gion pour voir les sites</span></div>
+    <div class="card-title">Synth&egrave;se par r&eacute;gion &nbsp;<span style="font-size:11px;font-weight:normal;color:#999">&#9654; Cliquer sur une r&eacute;gion pour voir les sites</span> &nbsp;<span id="rg-table-period" style="font-size:10px;font-weight:400;color:#999"></span></div>
     <div id="rg-table-wrap"></div>
   </div>
 </div>
@@ -1314,10 +1313,13 @@ function toggleRgDrill(el){
 
 function renderRg(){
   const allRows=DATA.map(function(d){return Object.assign({},d,{Reg:d.Region||REG_MAP[d.Site]||'Autre'});});
-  const activeRgYrs=rgYears.has('all')?YEARS:[...rgYears];
+  const activeRgYrs=rgYears.has('all')?REAL_YEARS:[...rgYears].filter(function(y){return y!=='2026';});
   const rgIsAll=rgYears.has('all');
   const rgIsSingle=!rgIsAll&&activeRgYrs.length===1;
-  const rows=allRows.filter(function(d){return rgIsAll||activeRgYrs.includes(String(d.Annee));});
+  const rows=allRows.filter(function(d){return activeRgYrs.includes(String(d.Annee));});
+  // Étiquette période affichée sous chaque graphique/tableau
+  const rgPeriodLabel='Données : '+activeRgYrs.map(yr2lbl).join(' + ');
+  ['rg-ca-period','rg-eb-period','rg-ebt-period','rg-table-period'].forEach(function(id){const el=document.getElementById(id);if(el)el.textContent='('+activeRgYrs.map(yr2lbl).join(' + ')+')'});
   const regions=[...new Set(allRows.map(function(d){return d.Reg;}))].sort();
 
   // ── KPIs ───────────────────────────────────────────────────────
@@ -1338,7 +1340,7 @@ function renderRg(){
     });
     cRgCA=mkChart('c-rg-ca',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:caLine},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
   } else {
-    const yList0=rgIsAll?YEARS:activeRgYrs;
+    const yList0=rgIsAll?REAL_YEARS:activeRgYrs;
     const caDs=yList0.map(function(yr,i){return {label:yr2lbl(yr),data:regions.map(function(rg){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),backgroundColor:C3(i),borderRadius:4};});
     cRgCA=mkChart('c-rg-ca',{type:'bar',data:{labels:regions,datasets:caDs},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
   }
@@ -1406,7 +1408,7 @@ function renderRg(){
   document.getElementById('rg-map').innerHTML=cards;
 
   // ── Tableau drill-down + taux% + \u0394 N-1 ────────────────────────
-  const tableYrs=rgIsAll?YEARS:activeRgYrs;
+  const tableYrs=activeRgYrs;
   let h='<table class="pl-table"><thead><tr><th>R\u00e9gion / Site</th>';
   if(!rgIsSingle){
     tableYrs.forEach(function(yr){h+='<th>CA '+yr2lbl(yr)+'</th><th>EBITDA '+yr2lbl(yr)+'</th><th>Taux%</th><th>Δ vs N-1</th>';});
