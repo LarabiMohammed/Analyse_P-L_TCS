@@ -640,8 +640,9 @@ function renderOv(){
   document.getElementById('kpi-eb-s').textContent='Taux: '+(ca?((eb/ca)*100).toFixed(1):0)+'%';
   document.getElementById('kpi-tn').textContent=fmtK(tn);
   document.getElementById('kpi-tn-s').textContent='tonnes entrantes';
-  // ── Tendances KPI vs année précédente ──────────────────────────
-  const lastRealYr=activeYrs.filter(y=>y!=='2026').sort().pop();
+  // ── Tendances KPI vs année précédente (seulement si 1 seule année réelle sélectionnée) ──
+  const realYrsSelected=activeYrs.filter(y=>y!=='2026');
+  const lastRealYr=realYrsSelected.length===1?realYrsSelected[0]:null;
   const prevYr=lastRealYr?String(parseInt(lastRealYr)-1):null;
   const trendBadge=(v,vPrev,id)=>{
     const el=document.getElementById(id);
@@ -1126,7 +1127,7 @@ function renderEt(){
     {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",               l:'Maint. courante', color:'#533483'},
     {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",     l:'Maint. oblig.',   color:'#16c79a'},
     {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",                 l:'Traitement s.-p.',color:'#f4a261'},
-    {m:"  VE000097 - Autres co\u00fbts d\u2019exploitation",                            l:'Autres co\u00fbts',    color:'#2196f3'},
+    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                                l:'Autres co\u00fbts',    color:'#2196f3'},
   ];
   // Trier les sites par EBITDA €/t décroissant
   const chargeSites=[...sites].sort((a,b)=>{
@@ -1217,6 +1218,7 @@ function renderEt(){
     {l:'Personnel \u20ac/t',   get:(s,y)=>getVal(s,y,'VE000051 - Co\u00fbts de personnel'),                                               type:'cost'},
     {l:'\u00c9nergie \u20ac/t',get:(s,y)=>getVal(s,y,'VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution'),            type:'cost'},
     {l:'Maintenance \u20ac/t', get:(s,y)=>getValSum(s,y,['VE000067 - Entretien & maintenance courante (hors personnel)','VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)']), type:'cost'},
+    {l:'Autres co\u00fbts \u20ac/t',get:(s,y)=>getVal(s,y,"VE000097 - Autres co\u00fbts d'exploitation"),                               type:'cost'},
     {l:'Marge Brute \u20ac/t', get:(s,y)=>getVal(s,y,'Marge Brute Cash'),                                                                type:'result'},
     {l:'EBITDA \u20ac/t',      get:(s,y)=>getVal(s,y,'EBITDA'),                                                                           type:'result'},
     {l:'EBIT \u20ac/t',        get:(s,y)=>getVal(s,y,'EBIT Courant'),                                                                     type:'result'},
