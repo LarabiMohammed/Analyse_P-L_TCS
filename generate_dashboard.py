@@ -297,15 +297,15 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div id="dt-compare" class="dt-exec"></div>
   <div id="dt-exec" class="dt-exec" style="display:none;margin:0 28px 0"></div>
-  <div class="row2" style="margin-top:16px">
+  <div class="row2" id="dt-row-evol" style="margin-top:16px">
     <div class="card"><div class="card-title">&Eacute;volution CA / Marge / EBITDA / EBIT</div><div class="ch"><canvas id="c-evol"></canvas></div></div>
-    <div class="card"><div class="card-title">R&eacute;partition des charges internes
+    <div class="card" id="dt-card-donut"><div class="card-title">R&eacute;partition des charges internes
       <select class="sel" id="donut-year" onchange="renderDonut()" style="margin-left:10px;font-size:.8rem">
         <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option>
       </select>
     </div><div class="ch"><canvas id="c-donut"></canvas></div></div>
   </div>
-  <div class="row2" style="margin-top:0">
+  <div class="row2" id="dt-row-bench" style="margin-top:0">
     <div class="card"><div class="card-title">Positionnement vs parc &#8212; EBITDA &euro;/t
       <select class="sel" id="bench-year" onchange="renderBench()" style="margin-left:10px;font-size:.8rem">
         <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option><option value="2026">B2026</option>
@@ -313,7 +313,7 @@ select.sel:focus{border-color:#00a3e0}
     </div><div class="ch"><canvas id="c-bench"></canvas></div></div>
     <div class="card"><div class="card-title">R&eacute;sum&eacute; d&#8217;&eacute;volution vs parc</div><div id="bench-evol-wrap" style="overflow-y:auto;max-height:290px"></div></div>
   </div>
-  <div class="row2">
+  <div class="row2" id="dt-row-wf">
     <div class="card full">
       <div class="card-title">Cascade P&amp;L (Waterfall)
         <select class="sel" id="wf-year" onchange="renderWaterfall()" style="margin-left:10px;font-size:.8rem">
@@ -323,8 +323,8 @@ select.sel:focus{border-color:#00a3e0}
       <div class="ch tall"><canvas id="c-wf"></canvas></div>
     </div>
   </div>
-  <div class="card" style="margin-bottom:0">
-    <div class="card-title">Tableau P&amp;L d&eacute;taill&eacute;</div>
+  <div class="card" id="dt-card-pl" style="margin-bottom:0">
+    <div class="card-title" id="dt-pl-title">Tableau P&amp;L d&eacute;taill&eacute;</div>
     <div id="pl-wrap"></div>
   </div>
 </div>
@@ -750,72 +750,101 @@ function renderOv(){
 // ONGLET 2 — DETAIL
 // ══════════════════════════════════════════════════════
 let cEvol=null, cDonut=null, cWF=null, cBench=null;
+let cmpYear='2025';
+
+function setCmpYear(yr){
+  cmpYear=yr;
+  const site=document.getElementById('dt-site').value;
+  const site2=(document.getElementById('dt-site2')||{}).value||'';
+  document.querySelectorAll('.cmp-yr-btn').forEach(b=>{b.classList.toggle('active',b.dataset.yr===yr);});
+  if(site&&site2&&site2!==site) renderCompare(site,site2);
+}
 
 function renderDt(){
   const site=document.getElementById('dt-site').value;
   const site2=(document.getElementById('dt-site2')||{}).value||'';
   if(!site) return;
   const rows=DATA.filter(d=>d.Site===site).sort((a,b)=>a.Annee-b.Annee);
+  const isCmp=!!(site2&&site2!==site);
   const cmpDiv=document.getElementById('dt-compare');
-  if(site2&&site2!==site){
-    if(cmpDiv) cmpDiv.style.display='block';
-    document.getElementById('dt-exec').style.display='none';
+  // Show/hide sections based on compare mode
+  if(cmpDiv) cmpDiv.style.display=isCmp?'block':'none';
+  document.getElementById('dt-exec').style.display=isCmp?'none':'none'; // handled by renderSiteExec
+  // In compare mode: hide donut/waterfall (not meaningful for comparison); keep bench, PL for site1
+  ['dt-card-donut','dt-row-wf'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isCmp?'none':'';
+  });
+  const plTitle=document.getElementById('dt-pl-title');
+  if(plTitle) plTitle.textContent=isCmp?'Tableau P\u0026L d\u00e9taill\u00e9 \u2014 '+site+' (R'+cmpYear+')':'Tableau P\u0026L d\u00e9taill\u00e9';
+  if(isCmp){
     renderCompare(site,site2);
   } else {
-    if(cmpDiv) cmpDiv.style.display='none';
     renderSiteExec(site,rows);
     renderEvol(rows);
   }
   renderDonut();
   renderBench();
-  renderWaterfall();
+  if(!isCmp) renderWaterfall();
   renderPL(rows);
 }
 
 function renderCompare(s1,s2){
-  const yr='2025';
+  const yr=cmpYear;
   const METRICS=[
-    {k:'CA',l:"Chiffre d'affaires",fmt:fmtM,pos:'high'},
-    {k:'PNE',l:'PNE',fmt:fmtM,pos:'low'},
-    {k:'Marge_Brute_Cash',l:'Marge Brute',fmt:fmtM,pos:'high'},
-    {k:'EBITDA',l:'EBITDA',fmt:fmtM,pos:'high'},
-    {k:'EBIT_Courant',l:'EBIT',fmt:fmtM,pos:'high'},
-    {k:'Tonnes_entrantes',l:'Tonnes',fmt:v=>fmtK(v),pos:'high'},
+    {k:'CA',            l:"Chiffre d'affaires", fmt:fmtM,   pos:'high'},
+    {k:'PNE',           l:'PNE',                fmt:fmtM,   pos:'low'},
+    {k:'Marge_Brute_Cash',l:'Marge Brute',      fmt:fmtM,   pos:'high'},
+    {k:'EBITDA',        l:'EBITDA',             fmt:fmtM,   pos:'high'},
+    {k:'EBIT_Courant',  l:'EBIT',               fmt:fmtM,   pos:'high'},
+    {k:'Couts_personnel',l:'Personnel',         fmt:fmtM,   pos:'low'},
+    {k:'Energie',       l:'\u00c9nergie',        fmt:fmtM,   pos:'low'},
+    {k:'_Maintenance',  l:'Maintenance',         fmt:fmtM,   pos:'low'},
+    {k:'Tonnes_entrantes',l:'Tonnes',           fmt:fmtK,   pos:'high'},
   ];
+  const get=(row,k)=>{
+    if(k==='_Maintenance') return (row.Maintenance_courante||0)+(row.Maintenance_obligatoire||0);
+    return row[k]||0;
+  };
   const r1=DATA.find(d=>d.Site===s1&&String(d.Annee)===yr)||{};
   const r2=DATA.find(d=>d.Site===s2&&String(d.Annee)===yr)||{};
-  const side=(site,r)=>{
+  const side=(site,r,other)=>{
     const eb=r.EBITDA||0, ca=r.CA||0;
     const tx=ca?(eb/ca*100).toFixed(1)+'%':'—';
-    let h='<div class="cmp-side"><div class="cmp-site-title">'+site+' \u2014 R'+yr+'</div>';
+    const tn=r.Tonnes_entrantes||0;
+    const ebt=tn>0?(eb/tn).toFixed(1)+' \u20ac/t':'—';
+    let h='<div class="cmp-side"><div class="cmp-site-title">'+site+'</div>';
     METRICS.forEach(({k,l,fmt,pos})=>{
-      const v=r[k]; if(v==null) return;
-      const v2=(k==='CA'?(r2.CA||0):(k==='PNE'?(r2.PNE||0):(k==='EBITDA'?(r2.EBITDA||0):(r2[k]||0))));
-      const vOther=(site===s1?(r2[k]||0):(r1[k]||0));
-      const better=(pos==='high')?(v>=vOther):(v<=vOther);
+      const v=get(r,k), vo=get(other,k);
+      const better=(pos==='high')?(v>=vo):(v<=vo);
+      const star=(better&&v!==vo)?'<span style="color:#f59e0b;margin-left:4px">\u2605</span>':'';
       const col=k==='EBITDA'?(eb>=0?'#10b981':'#ef4444'):'#1a1a2e';
-      h+='<div class="cmp-row"><span style="color:#666">'+l+'</span><span style="font-weight:700;color:'+col+'">'+fmt(v)+(better&&v!==vOther?' \u2605':'')+' </span></div>';
+      h+='<div class="cmp-row"><span style="color:#666">'+l+'</span><span style="font-weight:700;color:'+col+'">'+fmt(v)+star+'</span></div>';
     });
     h+='<div class="cmp-row"><span style="color:#666">Taux EBITDA</span><span style="font-weight:700">'+tx+'</span></div>';
+    h+='<div class="cmp-row"><span style="color:#666">EBITDA \u20ac/t</span><span style="font-weight:700">'+ebt+'</span></div>';
     h+='</div>';
     return h;
   };
   const cmpDiv=document.getElementById('dt-compare');
   if(!cmpDiv) return;
-  cmpDiv.innerHTML='<div class="cmp-wrap">'+side(s1,r1)+side(s2,r2)+'</div>';
-  // Combined evolution chart
-  const labs=REAL_YEARS.map(yr2lbl);
-  const mk=(site,color)=>({
-    label:site+' EBITDA',
-    data:REAL_YEARS.map(yr=>{const r=DATA.find(d=>d.Site===site&&String(d.Annee)===yr);return r?(r.EBITDA/1e6):null;}),
-    borderColor:color,backgroundColor:color+'33',tension:.3,pointRadius:5,fill:false,borderWidth:2,spanGaps:true
+  // Year selector buttons
+  const yrBtns=YEARS.map(y=>'<button class="btn-pill cmp-yr-btn'+(y===yr?' active':'')+(y==='2026'?' budget':'')+'" data-yr="'+y+'" onclick="setCmpYear(\''+y+'\')">'+yr2lbl(y)+'</button>').join('');
+  cmpDiv.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:#f8fafc;border-radius:8px"><span style="font-size:.8rem;color:#555;font-weight:600">Ann\u00e9e :</span>'+yrBtns+'<span style="margin-left:12px;font-size:.78rem;color:#aaa">\u2605 = meilleur des deux</span></div>'
+    +'<div class="cmp-wrap">'+side(s1,r1,r2)+side(s2,r2,r1)+'</div>';
+  // Combined evolution chart (EBITDA + CA) — reuse c-evol canvas
+  const labs=[...REAL_YEARS,'2026'].map(yr2lbl);
+  const allYrs=[...REAL_YEARS,'2026'];
+  const mkDs=(site,color,key,label,dash)=>({
+    label:site+' '+label,
+    data:allYrs.map(y=>{const r=DATA.find(d=>d.Site===site&&String(d.Annee)===y);return r?(r[key]/1e6):null;}),
+    borderColor:color,backgroundColor:color+'22',tension:.3,pointRadius:4,fill:false,
+    borderWidth:dash?1.5:2.5,borderDash:dash?[5,4]:[],spanGaps:true
   });
-  const mkCA=(site,color)=>({
-    label:site+' CA',
-    data:REAL_YEARS.map(yr=>{const r=DATA.find(d=>d.Site===site&&String(d.Annee)===yr);return r?(r.CA/1e6):null;}),
-    borderColor:color,backgroundColor:color+'22',tension:.3,pointRadius:4,fill:false,borderWidth:1.5,borderDash:[5,4],spanGaps:true
+  cEvol=mkChart('c-evol',{type:'line',
+    data:{labels:labs,datasets:[mkDs(s1,COLORS[0],'EBITDA','EBITDA',false),mkDs(s2,COLORS[2],'EBITDA','EBITDA',false),mkDs(s1,COLORS[0],'CA','CA',true),mkDs(s2,COLORS[2],'CA','CA',true)]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,font:{size:10}}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac'}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}}}}
   });
-  cEvol=mkChart('c-evol',{type:'line',data:{labels:labs,datasets:[mk(s1,COLORS[0]),mk(s2,COLORS[2]),mkCA(s1,COLORS[0]),mkCA(s2,COLORS[2])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac'}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}}}}});
 }
 
 function renderSiteExec(site,rows){
@@ -1177,53 +1206,68 @@ function renderEt(){
   hc+='</tbody></table>';
   document.getElementById('cat-table-wrap').innerHTML=hc;
 
-  // Heatmap
-  const KEY_METRICS=[
-    {m:"VE000001 - Chiffre d'affaires",l:'CA',         type:'cost'},
-    {m:'PNE',                           l:'PNE',        type:'cost'},
-    {m:"  VE000051 - Co\u00fbts de personnel",l:'Personnel', type:'cost'},
-    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",l:'\u00c9nergie',type:'cost'},
-    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",l:'Maintenance',type:'cost'},
-    {m:'Marge Brute Cash',              l:'Marge Brute',type:'result'},
-    {m:'EBITDA',                        l:'EBITDA',     type:'result'},
-    {m:'EBIT Courant',                  l:'EBIT',       type:'result'},
+  // Heatmap — sites en lignes, métriques en colonnes, une année à la fois
+  // getValSum : somme plusieurs métriques €/t (ex: maintenance courante + obligatoire)
+  const getValSum=(s,yr,mArr)=>{
+    const vals=mArr.map(m=>getVal(s,yr,m));
+    if(vals.every(v=>v===null)) return null;
+    return vals.reduce((sum,v)=>sum+(v||0),0);
+  };
+  const HM_COLS=[
+    {l:"CA \u20ac/t",          get:(s,y)=>getVal(s,y,"VE000001 - Chiffre d'affaires"),                                                   type:'revenue'},
+    {l:'PNE \u20ac/t',         get:(s,y)=>getVal(s,y,'PNE'),                                                                              type:'result'},
+    {l:'Personnel \u20ac/t',   get:(s,y)=>getVal(s,y,'VE000051 - Co\u00fbts de personnel'),                                               type:'cost'},
+    {l:'\u00c9nergie \u20ac/t',get:(s,y)=>getVal(s,y,'VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution'),            type:'cost'},
+    {l:'Maintenance \u20ac/t', get:(s,y)=>getValSum(s,y,['VE000067 - Entretien & maintenance courante (hors personnel)','VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)']), type:'cost'},
+    {l:'Marge Brute \u20ac/t', get:(s,y)=>getVal(s,y,'Marge Brute Cash'),                                                                type:'result'},
+    {l:'EBITDA \u20ac/t',      get:(s,y)=>getVal(s,y,'EBITDA'),                                                                           type:'result'},
+    {l:'EBIT \u20ac/t',        get:(s,y)=>getVal(s,y,'EBIT Courant'),                                                                     type:'result'},
   ];
-  let h='<div style="display:flex;gap:18px;align-items:center;margin-bottom:10px;font-size:0.82rem;color:#555;">'
-       +'<span style="font-weight:600;color:#003a63;">L\u00e9gende :</span>'
-       +'<span><span style="display:inline-block;width:12px;height:12px;background:rgba(16,185,129,0.35);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>R\u00e9sultat positif</span>'
-       +'<span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.35);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>R\u00e9sultat n\u00e9gatif</span>'
-       +'<span style="color:#888;font-size:0.78rem;">Indicateurs de charges : pas de coloration</span>'
-       +'<span>\u2191 hausse &nbsp; \u2193 baisse vs ann\u00e9e pr\u00e9c\u00e9dente</span>'
-       +'</div>';
-  h+='<table class="hm-table"><thead><tr><th>M\u00e9trique</th>';
-  sites.forEach(s=>h+='<th colspan="'+yrs.length+'">'+s+'</th>');
-  h+='</tr><tr><th></th>';
-  sites.forEach(()=>yrs.forEach(y=>{h+='<th>'+yr2lbl(y)+'</th>';}));
+  // Pick the reference year for the heatmap: last selected real year
+  const hmYr=yrs.filter(y=>y!=='B2026').pop()||yrs[yrs.length-1];
+  const hmPrevYr=hmYr==='R2023'?null:('R'+(parseInt(hmYr.replace('R',''))-1));
+  let h='<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:.8rem;color:#555">'
+    +'<span style="font-weight:700;color:#003a63;font-size:.85rem">Tableau \u20ac/t \u2014 '+yr2lbl(hmYr)+'</span>'
+    +(hmPrevYr?'<span style="color:#aaa">(\u2191\u2193 vs '+yr2lbl(hmPrevYr)+')</span>':'')
+    +'<span style="margin-left:auto;display:flex;gap:10px;align-items:center">'
+    +'<span><span style="display:inline-block;width:10px;height:10px;background:rgba(16,185,129,.35);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Positif</span>'
+    +'<span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.3);border-radius:2px;vertical-align:middle;margin-right:4px"></span>N\u00e9gatif</span>'
+    +'<span style="color:#aaa">\u2605 top parc</span>'
+    +'</span></div>';
+  h+='<table class="hm-table"><thead><tr><th>Site</th>';
+  HM_COLS.forEach(c=>h+='<th>'+c.l+'</th>');
   h+='</tr></thead><tbody>';
-  KEY_METRICS.forEach(({m,l,type})=>{
-    h+='<tr><td style="font-weight:600">'+l+'</td>';
-    sites.forEach(s=>yrs.forEach((yr,yi)=>{
-      const v=getVal(s,yr,m);
-      let bg='',arrow='';
-      if(v!==null){
-        if(type==='result'){
-          bg=v>=0?'background:rgba(16,185,129,0.25)':'background:rgba(239,68,68,0.28)';
-        }
-        if(yi>0){
-          const vprev=getVal(s,yrs[yi-1],m);
-          if(vprev!==null){
-            const delta=v-vprev;
-            if(Math.abs(delta)>0.05){
-              const upGood=(type==='result'||l==='CA');
-              const isUp=delta>0;
-              const arrowColor=(isUp===upGood)?'#10b981':'#ef4444';
-              arrow='<span style="color:'+arrowColor+';font-size:0.75rem;margin-left:3px;">'+(isUp?'\u2191':'\u2193')+'</span>';
-            }
-          }
-        }
+  // Sort sites by EBITDA €/t descending
+  const sitesSorted=[...sites].sort((a,b)=>{
+    const va=getVal(a,hmYr,'EBITDA')||0, vb=getVal(b,hmYr,'EBITDA')||0;
+    return vb-va;
+  });
+  // Pre-compute column best/worst for highlighting
+  const colBest=HM_COLS.map(col=>{
+    const vals=sites.map(s=>col.get(s,hmYr)).filter(v=>v!==null);
+    if(!vals.length) return null;
+    return col.type==='cost'?Math.min(...vals):Math.max(...vals);
+  });
+  sitesSorted.forEach((s,si)=>{
+    const eb=getVal(s,hmYr,'EBITDA')||0;
+    const rowBg=si%2===0?'':'background:#fafbfc';
+    h+='<tr style="'+rowBg+'"><td style="font-weight:700;color:#003a63">'+s+'</td>';
+    HM_COLS.forEach((col,ci)=>{
+      const v=col.get(s,hmYr);
+      const vprev=hmPrevYr?col.get(s,hmPrevYr):null;
+      let bg='';
+      if(v!==null&&col.type==='result') bg=v>=0?'background:rgba(16,185,129,.22)':'background:rgba(239,68,68,.22)';
+      let arrow='';
+      if(v!==null&&vprev!==null&&Math.abs(v-vprev)>0.05){
+        const isUp=(v-vprev)>0;
+        const upGood=(col.type==='result'||col.l.startsWith('CA'));
+        const arrowCol=(isUp===upGood)?'#10b981':'#ef4444';
+        arrow='<span style="color:'+arrowCol+';font-size:.7rem;margin-left:2px">'+(isUp?'\u2191':'\u2193')+'</span>';
       }
-      h+='<td style="'+bg+'">'+(v!==null?v.toFixed(1):'\u2014')+arrow+'</td>';
-    }));
+      const isBest=v!==null&&colBest[ci]!==null&&Math.abs(v-colBest[ci])<0.001;
+      const star=isBest?'<span style="color:#f59e0b;font-size:.65rem;margin-left:2px">\u2605</span>':'';
+      h+='<td style="'+bg+'">'+(v!==null?v.toFixed(1):'\u2014')+arrow+star+'</td>';
+    });
     h+='</tr>';
   });
   h+='</tbody></table>';
