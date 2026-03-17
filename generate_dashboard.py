@@ -162,8 +162,9 @@ select.sel:focus{border-color:#00a3e0}
   .alert-bar,.alert-ok{page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block!important}
   .card-title,.kpi-label,.kpi-value,.kpi-sub{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .pos{color:#10b981!important}.neg{color:#ef4444!important}
-  .ch{height:190px!important}.ch.tall{height:210px!important}
+  .ch{height:200px!important}.ch.tall{height:220px!important}
   .podium-grid{grid-template-columns:1fr 1fr}
+  canvas{max-width:100%!important}
   @page{size:A4 landscape;margin:8mm 10mm}
 }
 /* ── Présentation mode ────────────────────────────────── */
@@ -1546,6 +1547,32 @@ function renderRg(){
     Chart.defaults.interaction.intersect=false;
   }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{renderHome();}));
+
+  // ── Redimensionnement charts avant/après impression ─────────────────────
+  window.addEventListener('beforeprint', function(){
+    document.querySelectorAll('.ch').forEach(function(el){
+      el.dataset.origH = el.style.height || '';
+      el.style.height = el.classList.contains('tall') ? '220px' : '200px';
+      var c = el.querySelector('canvas');
+      if(c){ var chart = Chart.getChart(c); if(chart) chart.resize(); }
+    });
+  });
+  window.addEventListener('afterprint', function(){
+    document.querySelectorAll('.ch').forEach(function(el){
+      el.style.height = el.dataset.origH || '';
+      delete el.dataset.origH;
+    });
+    var p = document.querySelector('.page.active');
+    if(!p) return;
+    var id = p.id.replace('tab-','');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      if(id==='home') renderHome();
+      else if(id==='ov') renderOv();
+      else if(id==='dt') renderDt();
+      else if(id==='et') renderEt();
+      else if(id==='rg') renderRg();
+    }); });
+  });
 })();
 </script>
 </body>
