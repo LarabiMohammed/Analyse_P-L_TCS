@@ -896,7 +896,7 @@ function renderSiteExec(site,rows){
   h+=cell('EBITDA',ebVal);
   if(margeVal) h+=cell('Taux EBITDA',margeVal);
   h+=cell('Volume ('+yr2lbl(lastYr)+')',fmtK(tn));
-  h+=cell('Rang parc ('+yr2lbl(lastYr)+')','#'+rank+' / '+SITES.length);
+  h+=cell('Rang parc EBITDA ('+yr2lbl(lastYr)+')','#'+rank+' / '+SITES.length);
   if(b26){
     const b26eb=b26.EBITDA||0, b26ca=b26.CA||0;
     const b26m=b26ca?(b26eb/b26ca*100).toFixed(1):null;
