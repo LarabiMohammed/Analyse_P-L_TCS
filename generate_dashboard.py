@@ -1219,46 +1219,61 @@ function renderEt(){
     {key:'diff', label:'Petits \u00e0 relancer',   desc:'<35kt & EBITDA/t\u22640',color:'#ef4444',filt:p=>p.y<=THRESH_EB&&p.x<THRESH_TN},
   ];
 
-  // Régression linéaire
-  const trendDs=(function(){
-    const n=allPts.length; if(n<2) return null;
-    const sx=allPts.reduce(function(a,p){return a+p.x;},0);
-    const sy=allPts.reduce(function(a,p){return a+p.y;},0);
-    const sxy=allPts.reduce(function(a,p){return a+p.x*p.y;},0);
-    const sx2=allPts.reduce(function(a,p){return a+p.x*p.x;},0);
-    const slope=(n*sxy-sx*sy)/(n*sx2-sx*sx);
-    const intercept=(sy-slope*sx)/n;
-    const minX=Math.min.apply(null,allPts.map(function(p){return p.x;}));
-    const maxX=Math.max.apply(null,allPts.map(function(p){return p.x;}));
-    const r2=(function(){
-      const meanY=sy/n;
-      const ss_tot=allPts.reduce(function(a,p){return a+Math.pow(p.y-meanY,2);},0);
-      const ss_res=allPts.reduce(function(a,p){return a+Math.pow(p.y-(slope*p.x+intercept),2);},0);
-      return ss_tot>0?1-ss_res/ss_tot:0;
-    })();
-    return {type:'line',label:'Tendance (R²='+r2.toFixed(2)+')',
-      data:[{x:minX,y:slope*minX+intercept},{x:maxX,y:slope*maxX+intercept}],
-      borderColor:'#94a3b8',borderWidth:2,borderDash:[7,4],
-      pointRadius:0,fill:false,tension:0,order:99};
-  })();
+  // Plugin quadrants : fond coloré + lignes de séparation + labels
+  const quadrantPlugin={
+    id:'quadrants',
+    beforeDraw:function(chart){
+      const {ctx,chartArea:{left,right,top,bottom},scales:{x,y}}=chart;
+      const xM=x.getPixelForValue(THRESH_TN);
+      const yM=y.getPixelForValue(THRESH_EB);
+      ctx.save();
+      // Fonds des 4 quadrants
+      const quads=[
+        {x1:xM,y1:top,   x2:right, y2:yM,    color:'rgba(16,185,129,.06)'},  // grand & rentable
+        {x1:left,y1:top,  x2:xM,   y2:yM,    color:'rgba(33,150,243,.06)'},  // petit & rentable
+        {x1:xM,y1:yM,    x2:right, y2:bottom, color:'rgba(245,158,11,.07)'},  // grand à optimiser
+        {x1:left,y1:yM,  x2:xM,   y2:bottom, color:'rgba(239,68,68,.07)'},   // petit à relancer
+      ];
+      quads.forEach(function(q){
+        ctx.fillStyle=q.color;
+        ctx.fillRect(q.x1,q.y1,q.x2-q.x1,q.y2-q.y1);
+      });
+      // Lignes de séparation
+      ctx.strokeStyle='rgba(100,116,139,.35)';
+      ctx.lineWidth=1.5;
+      ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(xM,top);   ctx.lineTo(xM,bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(left,yM);  ctx.lineTo(right,yM);  ctx.stroke();
+      // Labels quadrants
+      ctx.setLineDash([]);
+      ctx.font='600 10px system-ui,sans-serif';
+      ctx.fillStyle='rgba(80,80,80,.45)';
+      ctx.textAlign='right';  ctx.fillText('Grands & Rentables', right-6,  top+14);
+      ctx.textAlign='left';   ctx.fillText('Petits & Rentables',  left+6,   top+14);
+      ctx.textAlign='right';  ctx.fillText('Grands à optimiser',  right-6,  bottom-6);
+      ctx.textAlign='left';   ctx.fillText('Petits à relancer',   left+6,   bottom-6);
+      ctx.restore();
+    }
+  };
   cScatter=mkChart('c-scatter',{
     type:'scatter',
-    data:{datasets:[...CATS.map(c=>({
+    data:{datasets:CATS.map(c=>({
       label:c.label+' \u2014 '+c.desc,
       data:allPts.filter(c.filt),
       backgroundColor:c.color+'bb',borderColor:c.color,borderWidth:2,
       pointRadius:11,pointHoverRadius:14,
-    })),...(trendDs?[trendDs]:[])]}  ,
+    }))},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{position:'top',labels:{usePointStyle:true,font:{size:11},filter:function(item){return item.text!==''&&!item.text.startsWith('Tendance')||item.text.startsWith('Tendance');}}},
-        tooltip:{callbacks:{label:function(c){if(c.dataset.type==='line'||!c.raw.label) return null; return ' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t';}}}
+        legend:{position:'top',labels:{usePointStyle:true,font:{size:11}}},
+        tooltip:{callbacks:{label:function(c){if(!c.raw.label) return null; return ' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t';}}}
       },
       scales:{
         x:{title:{display:true,text:'Tonnes entrantes'},grid:{color:'#f0f0f0'}},
         y:{title:{display:true,text:'EBITDA \u20ac/t'},grid:{color:'#f0f0f0'}}
       }
-    }
+    },
+    plugins:[quadrantPlugin]
   });
 
   // Category table
