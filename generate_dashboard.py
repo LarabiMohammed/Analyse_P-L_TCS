@@ -379,9 +379,9 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-pill rg-yr" onclick="toggleRgYear('2024',this)">R2024</button>
     <button class="btn-pill rg-yr" onclick="toggleRgYear('2025',this)">R2025</button>
     <span style="margin-left:18px;color:#ddd">|</span>
-    <label style="margin-left:14px">Vue CA :</label>
+    <label style="margin-left:14px">Vue :</label>
     <button class="btn-pill rg-ca-type active" onclick="setRgCAType('bar',this)">Barres</button>
-    <button class="btn-pill rg-ca-type" onclick="setRgCAType('line',this)">Ligne</button>
+    <button class="btn-pill rg-ca-type" id="rg-btn-line" onclick="setRgCAType('line',this)">Ligne</button>
     <div class="spacer"></div>
     <button class="btn-print" onclick="window.print()" title="Imprime l'onglet actif en PDF A4 paysage">&#128438; Exporter PDF</button>
   </div>
@@ -1417,30 +1417,62 @@ function renderRg(){
   document.getElementById('rg-tn').textContent=fmtK(totalTN);
   document.getElementById('rg-tn-s').textContent='tonnes entrantes';
 
-  // ── CA chart : barres group\u00e9es ou ligne tendance ───────────────
-  if(rgCAType==='line'&&rgIsAll){
+  // Désactiver le bouton Ligne si une seule année sélectionnée
+  const lineBtn=document.getElementById('rg-btn-line');
+  if(lineBtn){
+    if(rgIsSingle){
+      lineBtn.disabled=true; lineBtn.style.opacity='.35'; lineBtn.style.cursor='not-allowed';
+      if(rgCAType==='line'){rgCAType='bar'; lineBtn.classList.remove('active'); document.querySelector('.rg-ca-type.active')||document.querySelector('.rg-ca-type').classList.add('active');}
+    } else {
+      lineBtn.disabled=false; lineBtn.style.opacity=''; lineBtn.style.cursor='';
+    }
+  }
+  const isLine=rgCAType==='line'&&!rgIsSingle;
+  const lineOpts=function(yLabel,fmtFn){return {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+fmtFn(c.parsed.y);}}}},scales:{y:{title:{display:true,text:yLabel},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}};};
+
+  // ── CA chart ───────────────────────────────────────────────────
+  if(isLine){
     const caLine=regions.map(function(rg,i){
       return {label:rg,data:REAL_YEARS.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
     });
-    cRgCA=mkChart('c-rg-ca',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:caLine},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
+    cRgCA=mkChart('c-rg-ca',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:caLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
   } else {
     const yList0=rgIsAll?REAL_YEARS:activeRgYrs;
     const caDs=yList0.map(function(yr,i){return {label:yr2lbl(yr),data:regions.map(function(rg){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),backgroundColor:C3(i),borderRadius:4};});
     cRgCA=mkChart('c-rg-ca',{type:'bar',data:{labels:regions,datasets:caDs},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
   }
 
-  // ── EBITDA chart (horizontal, tri\u00e9) ───────────────────────────
-  const sortedRg=regions.map(function(rg){return {rg:rg,v:rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)};}).sort(function(a,b){return a.v-b.v;});
-  cRgEB=mkChart('c-rg-eb',{type:'bar',data:{labels:sortedRg.map(function(d){return d.rg;}),datasets:[{label:'EBITDA',data:sortedRg.map(function(d){return d.v/1e6;}),backgroundColor:sortedRg.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:sortedRg.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' EBITDA: '+c.parsed.x.toFixed(2)+' M\u20ac';}}}},scales:{x:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  // ── EBITDA chart ───────────────────────────────────────────────
+  if(isLine){
+    const ebLine=regions.map(function(rg,i){
+      return {label:rg,data:REAL_YEARS.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
+    });
+    cRgEB=mkChart('c-rg-eb',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:ebLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
+  } else {
+    const sortedRg=regions.map(function(rg){return {rg:rg,v:rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)};}).sort(function(a,b){return a.v-b.v;});
+    cRgEB=mkChart('c-rg-eb',{type:'bar',data:{labels:sortedRg.map(function(d){return d.rg;}),datasets:[{label:'EBITDA',data:sortedRg.map(function(d){return d.v/1e6;}),backgroundColor:sortedRg.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:sortedRg.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' EBITDA: '+c.parsed.x.toFixed(2)+' M\u20ac';}}}},scales:{x:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  }
 
   // ── EBITDA \u20ac/t chart ───────────────────────────────────────────
-  const ebtArr=regions.map(function(rg){
-    const sub=rows.filter(function(d){return d.Reg===rg;});
-    const eb=sub.reduce(function(s,d){return s+(d.EBITDA||0);},0);
-    const tn=sub.reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);
-    return {rg:rg,v:tn>0?Math.round(eb/tn*10)/10:null};
-  }).filter(function(d){return d.v!==null;}).sort(function(a,b){return a.v-b.v;});
-  cRgEBT=mkChart('c-rg-ebt',{type:'bar',data:{labels:ebtArr.map(function(d){return d.rg;}),datasets:[{label:'EBITDA \u20ac/t',data:ebtArr.map(function(d){return d.v;}),backgroundColor:ebtArr.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:ebtArr.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.parsed.x.toFixed(1)+' \u20ac/t';}}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  if(isLine){
+    const ebtLine=regions.map(function(rg,i){
+      return {label:rg,data:REAL_YEARS.map(function(yr){
+        const sub=allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;});
+        const eb=sub.reduce(function(s,d){return s+(d.EBITDA||0);},0);
+        const tn=sub.reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);
+        return tn>0?Math.round(eb/tn*10)/10:null;
+      }),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2,spanGaps:false};
+    });
+    cRgEBT=mkChart('c-rg-ebt',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:ebtLine},options:lineOpts('\u20ac/t',function(v){return v.toFixed(1)+' \u20ac/t';})});
+  } else {
+    const ebtArr=regions.map(function(rg){
+      const sub=rows.filter(function(d){return d.Reg===rg;});
+      const eb=sub.reduce(function(s,d){return s+(d.EBITDA||0);},0);
+      const tn=sub.reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);
+      return {rg:rg,v:tn>0?Math.round(eb/tn*10)/10:null};
+    }).filter(function(d){return d.v!==null;}).sort(function(a,b){return a.v-b.v;});
+    cRgEBT=mkChart('c-rg-ebt',{type:'bar',data:{labels:ebtArr.map(function(d){return d.rg;}),datasets:[{label:'EBITDA \u20ac/t',data:ebtArr.map(function(d){return d.v;}),backgroundColor:ebtArr.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:ebtArr.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.parsed.x.toFixed(1)+' \u20ac/t';}}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  }
 
   // ── Cartes visuelles par r\u00e9gion ──────────────────────────────
   const rgMvMap={};
