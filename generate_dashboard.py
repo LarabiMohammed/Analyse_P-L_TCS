@@ -978,13 +978,16 @@ function renderBench(){
     const avg=allVals.length?allVals.reduce((a,b)=>a+b,0)/allVals.length:null;
     const ecart=siteVal!==null&&avg!==null?siteVal-avg:null;
     const rnk=allVals.length?[...allVals].sort((a,b)=>b-a).indexOf(siteVal)+1:null;
+    const isBgt=y==='2026';
+    const rowStyle=isBgt?'background:rgba(245,158,11,.08);font-style:italic;color:#92400e':'';
+    const yearLabel=isBgt?'<b style="color:#d97706">B2026</b> <span style="background:#fde68a;color:#92400e;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;vertical-align:middle;margin-left:3px">BUDGET</span>':'<b>'+y+'</b>';
     let trend='';
-    if(yi>0){const prev=getEurt_yr(site,YEARS[yi-1]);if(prev!==null&&siteVal!==null)trend=siteVal>prev?'\u2191':siteVal<prev?'\u2193':'\u2192';}
-    h+='<tr><td><b>'+y+'</b> '+trend+'</td>';
+    if(yi>0&&!isBgt){const prev=getEurt_yr(site,YEARS[yi-1]);if(prev!==null&&siteVal!==null)trend=siteVal>prev?'\u2191':siteVal<prev?'\u2193':'\u2192';}
+    h+='<tr style="'+rowStyle+'"><td>'+yearLabel+' '+trend+'</td>';
     h+='<td class="'+(siteVal>=0?'pos':'neg')+'">'+(siteVal!==null?siteVal.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
-    h+='<td>'+(avg!==null?avg.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
-    h+='<td class="'+(ecart>=0?'pos':'neg')+'">'+(ecart!==null?(ecart>=0?'+':'')+ecart.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
-    h+='<td>'+(rnk?rnk+'/'+allVals.length:'\u2014')+'</td></tr>';
+    h+='<td>'+(avg!==null&&!isBgt?avg.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
+    h+='<td>'+(ecart!==null&&!isBgt?(ecart>=0?'<span class="pos">+':' <span class="neg">')+ecart.toFixed(1)+' \u20ac/t</span>':'\u2014')+'</td>';
+    h+='<td>'+(rnk&&!isBgt?rnk+'/'+allVals.length:'\u2014')+'</td></tr>';
   });
   h+='</tbody></table>';
   h+='<div style="margin-top:10px;font-size:.78rem;color:#555;padding:0 4px">Rang '+yr+' : <b>'+rank+'/'+pts.length+'</b> sites</div>';
