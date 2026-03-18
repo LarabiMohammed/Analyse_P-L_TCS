@@ -476,6 +476,7 @@ function goToSite(site){
   sel.value=site;
   const tabBtn=[...document.querySelectorAll('.tab')].find(function(t){return (t.getAttribute('onclick')||'').includes("'dt'");});
   if(tabBtn) showTab('dt',tabBtn);
+  requestAnimationFrame(function(){window.scrollTo({top:0,behavior:'smooth'});});
 }
 
 // ══════════════════════════════════════════════════════
