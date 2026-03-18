@@ -89,6 +89,10 @@ select.sel:focus{border-color:#00a3e0}
 .alert-bar{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:11px 18px;margin-bottom:16px;font-size:.82rem;color:#dc2626;display:flex;align-items:center;gap:10px}
 .alert-bar.hidden{display:none}
 .alert-ok{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:11px 18px;margin-bottom:16px;font-size:.82rem;color:#16a34a;display:flex;align-items:center;gap:10px}
+.alert-trend{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:11px 18px;margin-bottom:16px;font-size:.82rem;color:#d97706;display:flex;align-items:center;gap:10px}
+.alert-trend.hidden{display:none}
+.site-link{cursor:pointer;color:#003a63;text-decoration:underline dotted;text-underline-offset:2px}
+.site-link:hover{color:#00a3e0}
 /* ranking */
 .rank-table{width:100%;border-collapse:collapse;font-size:.82rem}
 .rank-table th{background:#003a63;color:#fff;padding:8px 12px;text-align:right;font-weight:600}
@@ -268,6 +272,7 @@ select.sel:focus{border-color:#00a3e0}
     <div class="kpi-card r" id="kpi-card-worst"><div class="kpi-label">&#9888;&#65039; Site en alerte</div><div class="kpi-value" id="kpi-worst">&#8212;</div><div class="kpi-sub" id="kpi-worst-s"></div></div>
   </div>
   <div class="alert-bar hidden" id="alert-bar">&#128680; <span id="alert-msg"></span></div>
+  <div class="alert-trend hidden" id="alert-trend">&#128201; <span id="alert-trend-msg"></span></div>
   <div class="alert-ok hidden" id="alert-ok">&#10004;&#65039; <span id="alert-ok-msg"></span></div>
   <div class="card full" id="rank-card" style="margin-bottom:18px">
     <div class="card-title">Classement EBITDA par site (derni&egrave;re p&eacute;riode s&eacute;lectionn&eacute;e)</div>
@@ -462,6 +467,15 @@ function showTab(id,el){
     if(id==='et') renderEt();
     if(id==='rg') renderRg();
   }));
+}
+
+// Navigation croisée : ouvre la fiche d'un site depuis n'importe quelle vue
+function goToSite(site){
+  const sel=document.getElementById('dt-site');
+  if(!sel) return;
+  sel.value=site;
+  const tabBtn=[...document.querySelectorAll('.tab')].find(function(t){return (t.getAttribute('onclick')||'').includes("'dt'");});
+  if(tabBtn) showTab('dt',tabBtn);
 }
 
 // ══════════════════════════════════════════════════════
@@ -679,6 +693,23 @@ function renderOv(){
     const alertBar=document.getElementById('alert-bar');
     const alertOk=document.getElementById('alert-ok');
     if(sitesNegatifs.length>0){alertBar.classList.remove('hidden');document.getElementById('alert-msg').textContent=sitesNegatifs.length+' site'+(sitesNegatifs.length>1?'s en alerte (EBITDA n\u00e9gatif)':' en alerte (EBITDA n\u00e9gatif)')+' : '+sitesNegatifs.join(', ');}else{alertBar.classList.add('hidden');}
+    // Alerte tendance : EBITDA en baisse 2 années consécutives (2023→2024 ET 2024→2025)
+    const trendAlertEl=document.getElementById('alert-trend');
+    if(trendAlertEl){
+      const declining=SITES.filter(function(s){
+        const e23=DATA.find(function(d){return d.Site===s&&String(d.Annee)==='2023';});
+        const e24=DATA.find(function(d){return d.Site===s&&String(d.Annee)==='2024';});
+        const e25=DATA.find(function(d){return d.Site===s&&String(d.Annee)==='2025';});
+        if(!e23||!e24||!e25) return false;
+        return Number(e24.EBITDA)<Number(e23.EBITDA)&&Number(e25.EBITDA)<Number(e24.EBITDA);
+      });
+      if(declining.length>0){
+        trendAlertEl.classList.remove('hidden');
+        document.getElementById('alert-trend-msg').innerHTML='<strong>'+declining.length+' site'+(declining.length>1?'s':'')+'</strong> en baisse EBITDA 2 ann\u00e9es cons\u00e9cutives (R2023\u2192R2025) : '+declining.map(function(s){return '<span class="site-link" onclick="goToSite(\''+s+'\')">'+s+'</span>';}).join(', ');
+      } else {
+        trendAlertEl.classList.add('hidden');
+      }
+    }
     if(sitesPositifs.length>0){alertOk.classList.remove('hidden');document.getElementById('alert-ok-msg').innerHTML='<strong>'+sitesPositifs.length+' site'+(sitesPositifs.length>1?'s en EBITDA positif':'  en EBITDA positif')+'</strong> \u2014 '+sitesPositifs.map(d=>d.site+' <span style="color:#10b981;font-weight:700">'+fmtM(d.eb)+'</span>').join(' &middot; ');}else{alertOk.classList.add('hidden');}
 
     let h='<table class="rank-table"><thead><tr><th>#&nbsp;Site</th><th>CA</th><th>PNE</th><th>Marge Brute</th><th>EBITDA</th><th>EBIT</th><th>Taux EBITDA</th><th>Tonnes</th></tr></thead><tbody>';
@@ -686,7 +717,7 @@ function renderOv(){
       const tauxPct=d.ca?((d.eb/d.ca)*100).toFixed(1)+'%':'—';
       const cls=i===0?'best-row':d.eb<0?'worst-row':'';
       const rnCls=i===0?'rn-g':d.eb<0?'rn-r':'rn-d';
-      h+='<tr class="'+cls+'"><td><span class="rank-num '+rnCls+'">'+(i+1)+'</span>'+d.site+'</td>';
+      h+='<tr class="'+cls+'"><td><span class="rank-num '+rnCls+'">'+(i+1)+'</span><span class="site-link" onclick="goToSite(\''+d.site+'\')">'+d.site+'</span></td>';
       h+='<td>'+fmtM(d.ca)+'</td>';
       h+='<td class="neg">'+fmtM(d.pne)+'</td>';
       h+='<td class="'+(d.mb>=0?'pos':'neg')+'">'+fmtM(d.mb)+'</td>';
@@ -698,6 +729,7 @@ function renderOv(){
     document.getElementById('rank-wrap').innerHTML=h;
   } else {
     document.getElementById('alert-bar').classList.add('hidden');
+    const _at=document.getElementById('alert-trend');if(_at)_at.classList.add('hidden');
     document.getElementById('alert-ok').classList.add('hidden');
   }
 
@@ -1183,18 +1215,40 @@ function renderEt(){
     {key:'diff', label:'Petits \u00e0 relancer',   desc:'<35kt & EBITDA/t\u22640',color:'#ef4444',filt:p=>p.y<=THRESH_EB&&p.x<THRESH_TN},
   ];
 
+  // Régression linéaire
+  const trendDs=(function(){
+    const n=allPts.length; if(n<2) return null;
+    const sx=allPts.reduce(function(a,p){return a+p.x;},0);
+    const sy=allPts.reduce(function(a,p){return a+p.y;},0);
+    const sxy=allPts.reduce(function(a,p){return a+p.x*p.y;},0);
+    const sx2=allPts.reduce(function(a,p){return a+p.x*p.x;},0);
+    const slope=(n*sxy-sx*sy)/(n*sx2-sx*sx);
+    const intercept=(sy-slope*sx)/n;
+    const minX=Math.min.apply(null,allPts.map(function(p){return p.x;}));
+    const maxX=Math.max.apply(null,allPts.map(function(p){return p.x;}));
+    const r2=(function(){
+      const meanY=sy/n;
+      const ss_tot=allPts.reduce(function(a,p){return a+Math.pow(p.y-meanY,2);},0);
+      const ss_res=allPts.reduce(function(a,p){return a+Math.pow(p.y-(slope*p.x+intercept),2);},0);
+      return ss_tot>0?1-ss_res/ss_tot:0;
+    })();
+    return {type:'line',label:'Tendance (R²='+r2.toFixed(2)+')',
+      data:[{x:minX,y:slope*minX+intercept},{x:maxX,y:slope*maxX+intercept}],
+      borderColor:'#94a3b8',borderWidth:2,borderDash:[7,4],
+      pointRadius:0,fill:false,tension:0,order:99};
+  })();
   cScatter=mkChart('c-scatter',{
     type:'scatter',
-    data:{datasets:CATS.map(c=>({
+    data:{datasets:[...CATS.map(c=>({
       label:c.label+' \u2014 '+c.desc,
       data:allPts.filter(c.filt),
       backgroundColor:c.color+'bb',borderColor:c.color,borderWidth:2,
       pointRadius:11,pointHoverRadius:14,
-    }))},
+    })),...(trendDs?[trendDs]:[])]}  ,
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{position:'top',labels:{usePointStyle:true,font:{size:11}}},
-        tooltip:{callbacks:{label:c=>' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t'}}
+        legend:{position:'top',labels:{usePointStyle:true,font:{size:11},filter:function(item){return item.text!==''&&!item.text.startsWith('Tendance')||item.text.startsWith('Tendance');}}},
+        tooltip:{callbacks:{label:function(c){if(c.dataset.type==='line'||!c.raw.label) return null; return ' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t';}}}
       },
       scales:{
         x:{title:{display:true,text:'Tonnes entrantes'},grid:{color:'#f0f0f0'}},
@@ -1209,7 +1263,7 @@ function renderEt(){
   hc+='</div><table class="rank-table" style="margin-top:8px"><thead><tr><th>Cat\u00e9gorie</th><th>Site</th><th>Tonnes</th><th>EBITDA \u20ac/t</th></tr></thead><tbody>';
   CATS.forEach(c=>{
     allPts.filter(c.filt).sort((a,b)=>b.y-a.y).forEach((p,i)=>{
-      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td>'+p.label+'</td><td>'+fmt(p.x)+' t</td><td class="'+(p.y>=0?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
+      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td><span class="site-link" onclick="goToSite(\''+p.label+'\')">'+p.label+'</span></td><td>'+fmt(p.x)+' t</td><td class="'+(p.y>=0?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
     });
   });
   hc+='</tbody></table>';
@@ -1447,7 +1501,7 @@ function renderRg(){
       });
       h+='</tr>';
       sitesInRg.forEach(function(site){
-        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 '+site+'</td>';
+        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(\''+site+'\')">'+site+'</span></td>';
         tableYrs.forEach(function(yr,yi){
           const sub=allRows.filter(function(d){return d.Site===site&&String(d.Annee)===yr;});
           const ca=sub.reduce(function(s,d){return s+(d.CA||0);},0);
@@ -1490,7 +1544,7 @@ function renderRg(){
         const sdiff=sps.length>0?seb-speb:null;
         const sdelta=sdiff!==null?(sdiff>=0?'+':'')+fmtM(sdiff):'—';
         const sdcolor=sdiff!==null&&sdiff>=0?'#10b981':sdiff===null?'#888':'#ef4444';
-        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 '+site+'</td>';
+        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(\''+site+'\')">'+site+'</span></td>';
         h+='<td style="font-size:12px">'+fmtM(sca)+'</td><td class="'+(seb>=0?'pos':'neg')+'" style="font-size:12px">'+fmtM(seb)+'</td><td style="font-size:12px">'+stx+'</td><td style="font-size:12px">'+sebt+'</td><td style="font-size:11px;color:'+sdcolor+'">'+sdelta+'</td><td style="font-size:12px">'+fmtK(stn)+'</td>';
         h+='</tr>';
       });
@@ -1515,7 +1569,7 @@ function renderRg(){
       sites.forEach((d,i)=>{
         const col=isTop?'#10b981':'#ef4444';
         const rank=isTop?(i+1):(SITES.length-i);
-        c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b>'+d.s+'</span>';
+        c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b><span class="site-link" onclick="goToSite(\''+d.s+'\')">'+d.s+'</span></span>';
         c+='<span><b style="color:'+col+'">'+fmtM(d.eb)+'</b>'+(d.tx?'<span style="color:#aaa;font-size:.7rem;margin-left:5px">'+d.tx+'%</span>':'')+'</span></div>';
       });
       c+='</div>';
