@@ -1246,12 +1246,17 @@ function renderEt(){
       ctx.beginPath(); ctx.moveTo(left,yM);  ctx.lineTo(right,yM);  ctx.stroke();
       // Labels quadrants
       ctx.setLineDash([]);
-      ctx.font='600 10px system-ui,sans-serif';
-      ctx.fillStyle='rgba(80,80,80,.45)';
-      ctx.textAlign='right';  ctx.fillText('Grands & Rentables', right-6,  top+14);
-      ctx.textAlign='left';   ctx.fillText('Petits & Rentables',  left+6,   top+14);
-      ctx.textAlign='right';  ctx.fillText('Grands à optimiser',  right-6,  bottom-6);
-      ctx.textAlign='left';   ctx.fillText('Petits à relancer',   left+6,   bottom-6);
+      ctx.font='700 13px system-ui,sans-serif';
+      ctx.textBaseline='middle';
+      const pad=14;
+      const qLabels=[
+        {text:'Grands & Rentables', x:(xM+right)/2,  y:(top+yM)/2,   color:'rgba(16,185,129,.55)'},
+        {text:'Petits & Rentables', x:(left+xM)/2,   y:(top+yM)/2,   color:'rgba(33,150,243,.55)'},
+        {text:'Grands à optimiser', x:(xM+right)/2,  y:(yM+bottom)/2,color:'rgba(245,158,11,.60)'},
+        {text:'Petits à relancer',  x:(left+xM)/2,   y:(yM+bottom)/2,color:'rgba(239,68,68,.55)'},
+      ];
+      ctx.textAlign='center';
+      qLabels.forEach(function(q){ctx.fillStyle=q.color;ctx.fillText(q.text,q.x,q.y);});
       ctx.restore();
     }
   };
