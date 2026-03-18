@@ -705,7 +705,7 @@ function renderOv(){
       });
       if(declining.length>0){
         trendAlertEl.classList.remove('hidden');
-        document.getElementById('alert-trend-msg').innerHTML='<strong>'+declining.length+' site'+(declining.length>1?'s':'')+'</strong> en baisse EBITDA 2 ann\u00e9es cons\u00e9cutives (R2023\u2192R2025) : '+declining.map(function(s){return '<span class="site-link" onclick="goToSite(\''+s+'\')">'+s+'</span>';}).join(', ');
+        document.getElementById('alert-trend-msg').innerHTML='<strong>'+declining.length+' site'+(declining.length>1?'s':'')+'</strong> en baisse EBITDA 2 ann\u00e9es cons\u00e9cutives (R2023\u2192R2025) : '+declining.map(function(s){return '<span class="site-link" data-site="'+s+'" onclick="goToSite(this.dataset.site)">'+s+'</span>';}).join(', ');
       } else {
         trendAlertEl.classList.add('hidden');
       }
@@ -717,7 +717,7 @@ function renderOv(){
       const tauxPct=d.ca?((d.eb/d.ca)*100).toFixed(1)+'%':'—';
       const cls=i===0?'best-row':d.eb<0?'worst-row':'';
       const rnCls=i===0?'rn-g':d.eb<0?'rn-r':'rn-d';
-      h+='<tr class="'+cls+'"><td><span class="rank-num '+rnCls+'">'+(i+1)+'</span><span class="site-link" onclick="goToSite(\''+d.site+'\')">'+d.site+'</span></td>';
+      h+='<tr class="'+cls+'"><td><span class="rank-num '+rnCls+'">'+(i+1)+'</span><span class="site-link" data-site="'+d.site+'" onclick="goToSite(this.dataset.site)">'+d.site+'</span></td>';
       h+='<td>'+fmtM(d.ca)+'</td>';
       h+='<td class="neg">'+fmtM(d.pne)+'</td>';
       h+='<td class="'+(d.mb>=0?'pos':'neg')+'">'+fmtM(d.mb)+'</td>';
@@ -1263,7 +1263,7 @@ function renderEt(){
   hc+='</div><table class="rank-table" style="margin-top:8px"><thead><tr><th>Cat\u00e9gorie</th><th>Site</th><th>Tonnes</th><th>EBITDA \u20ac/t</th></tr></thead><tbody>';
   CATS.forEach(c=>{
     allPts.filter(c.filt).sort((a,b)=>b.y-a.y).forEach((p,i)=>{
-      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td><span class="site-link" onclick="goToSite(\''+p.label+'\')">'+p.label+'</span></td><td>'+fmt(p.x)+' t</td><td class="'+(p.y>=0?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
+      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td><span class="site-link" data-site="'+p.label+'" onclick="goToSite(this.dataset.site)">'+p.label+'</span></td><td>'+fmt(p.x)+' t</td><td class="'+(p.y>=0?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
     });
   });
   hc+='</tbody></table>';
@@ -1501,7 +1501,7 @@ function renderRg(){
       });
       h+='</tr>';
       sitesInRg.forEach(function(site){
-        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(\''+site+'\')">'+site+'</span></td>';
+        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(this.dataset.site)" data-site="'+site+'">'+site+'</span></td>';
         tableYrs.forEach(function(yr,yi){
           const sub=allRows.filter(function(d){return d.Site===site&&String(d.Annee)===yr;});
           const ca=sub.reduce(function(s,d){return s+(d.CA||0);},0);
@@ -1544,7 +1544,7 @@ function renderRg(){
         const sdiff=sps.length>0?seb-speb:null;
         const sdelta=sdiff!==null?(sdiff>=0?'+':'')+fmtM(sdiff):'—';
         const sdcolor=sdiff!==null&&sdiff>=0?'#10b981':sdiff===null?'#888':'#ef4444';
-        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(\''+site+'\')">'+site+'</span></td>';
+        h+='<tr data-drill="'+rg+'" style="display:none;background:#f8fafc"><td style="padding-left:28px;font-size:12px">\u21b3 <span class="site-link" onclick="goToSite(this.dataset.site)" data-site="'+site+'">'+site+'</span></td>';
         h+='<td style="font-size:12px">'+fmtM(sca)+'</td><td class="'+(seb>=0?'pos':'neg')+'" style="font-size:12px">'+fmtM(seb)+'</td><td style="font-size:12px">'+stx+'</td><td style="font-size:12px">'+sebt+'</td><td style="font-size:11px;color:'+sdcolor+'">'+sdelta+'</td><td style="font-size:12px">'+fmtK(stn)+'</td>';
         h+='</tr>';
       });
@@ -1569,7 +1569,7 @@ function renderRg(){
       sites.forEach((d,i)=>{
         const col=isTop?'#10b981':'#ef4444';
         const rank=isTop?(i+1):(SITES.length-i);
-        c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b><span class="site-link" onclick="goToSite(\''+d.s+'\')">'+d.s+'</span></span>';
+        c+='<div class="podium-row"><span><b style="color:#aaa;font-size:.7rem;margin-right:6px">#'+rank+'</b><span class="site-link" data-site="'+d.s+'" onclick="goToSite(this.dataset.site)">'+d.s+'</span></span>';
         c+='<span><b style="color:'+col+'">'+fmtM(d.eb)+'</b>'+(d.tx?'<span style="color:#aaa;font-size:.7rem;margin-left:5px">'+d.tx+'%</span>':'')+'</span></div>';
       });
       c+='</div>';
