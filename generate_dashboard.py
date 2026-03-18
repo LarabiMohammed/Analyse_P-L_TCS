@@ -346,8 +346,8 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-print" onclick="window.print()" title="Imprime l'onglet actif en PDF A4 paysage">&#128438; Exporter PDF</button>
   </div>
   <div class="row2" style="margin-top:18px">
-    <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
     <div class="card"><div class="card-title">CA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-ca"></canvas></div></div>
+    <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
   </div>
   <div class="row2">
     <div class="card full"><div class="card-title">Charges internes &euro;/t par site &#8212; tri&eacute;es par EBITDA &euro;/t</div><div class="ch tall"><canvas id="c-charges-et"></canvas></div></div>
