@@ -1433,9 +1433,9 @@ function renderRg(){
   // ── CA chart ───────────────────────────────────────────────────
   if(isLine){
     const caLine=regions.map(function(rg,i){
-      return {label:rg,data:REAL_YEARS.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
+      return {label:rg,data:activeRgYrs.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
     });
-    cRgCA=mkChart('c-rg-ca',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:caLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
+    cRgCA=mkChart('c-rg-ca',{type:'line',data:{labels:activeRgYrs.map(yr2lbl),datasets:caLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
   } else {
     const yList0=rgIsAll?REAL_YEARS:activeRgYrs;
     const caDs=yList0.map(function(yr,i){return {label:yr2lbl(yr),data:regions.map(function(rg){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.CA||0);},0)/1e6;}),backgroundColor:C3(i),borderRadius:4};});
@@ -1445,9 +1445,9 @@ function renderRg(){
   // ── EBITDA chart ───────────────────────────────────────────────
   if(isLine){
     const ebLine=regions.map(function(rg,i){
-      return {label:rg,data:REAL_YEARS.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
+      return {label:rg,data:activeRgYrs.map(function(yr){return allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)/1e6;}),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2};
     });
-    cRgEB=mkChart('c-rg-eb',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:ebLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
+    cRgEB=mkChart('c-rg-eb',{type:'line',data:{labels:activeRgYrs.map(yr2lbl),datasets:ebLine},options:lineOpts('M\u20ac',function(v){return v.toFixed(2)+' M\u20ac';})});
   } else {
     const sortedRg=regions.map(function(rg){return {rg:rg,v:rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.EBITDA||0);},0)};}).sort(function(a,b){return a.v-b.v;});
     cRgEB=mkChart('c-rg-eb',{type:'bar',data:{labels:sortedRg.map(function(d){return d.rg;}),datasets:[{label:'EBITDA',data:sortedRg.map(function(d){return d.v/1e6;}),backgroundColor:sortedRg.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:sortedRg.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' EBITDA: '+c.parsed.x.toFixed(2)+' M\u20ac';}}}},scales:{x:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
@@ -1456,14 +1456,14 @@ function renderRg(){
   // ── EBITDA \u20ac/t chart ───────────────────────────────────────────
   if(isLine){
     const ebtLine=regions.map(function(rg,i){
-      return {label:rg,data:REAL_YEARS.map(function(yr){
+      return {label:rg,data:activeRgYrs.map(function(yr){
         const sub=allRows.filter(function(d){return d.Reg===rg&&String(d.Annee)===yr;});
         const eb=sub.reduce(function(s,d){return s+(d.EBITDA||0);},0);
         const tn=sub.reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);
         return tn>0?Math.round(eb/tn*10)/10:null;
       }),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',tension:0.3,pointRadius:5,pointHoverRadius:8,fill:false,borderWidth:2,spanGaps:false};
     });
-    cRgEBT=mkChart('c-rg-ebt',{type:'line',data:{labels:REAL_YEARS.map(yr2lbl),datasets:ebtLine},options:lineOpts('\u20ac/t',function(v){return v.toFixed(1)+' \u20ac/t';})});
+    cRgEBT=mkChart('c-rg-ebt',{type:'line',data:{labels:activeRgYrs.map(yr2lbl),datasets:ebtLine},options:lineOpts('\u20ac/t',function(v){return v.toFixed(1)+' \u20ac/t';})});
   } else {
     const ebtArr=regions.map(function(rg){
       const sub=rows.filter(function(d){return d.Reg===rg;});
