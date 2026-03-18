@@ -916,8 +916,9 @@ function renderBench(){
 
   // EBITDA eur/t pour tous les sites pour l'annee selectionnee
   const getEurt=(s)=>{
-    const r=EURT.find(d=>d.Site===s&&d.Annee==='R'+yr&&d.Metrique&&d.Metrique.trim()==='EBITDA');
-    return r&&r.Valeur_EUR_t!==''?Number(r.Valeur_EUR_t):null;
+    const row=DATA.find(d=>d.Site===s&&String(d.Annee)===String(yr));
+    if(!row||!row.Tonnes_entrantes||Number(row.Tonnes_entrantes)===0) return null;
+    return Number(row.EBITDA)/Number(row.Tonnes_entrantes);
   };
   const pts=SITES.map(s=>({s,v:getEurt(s)})).filter(d=>d.v!==null).sort((a,b)=>b.v-a.v);
 
@@ -958,8 +959,10 @@ function renderBench(){
 }
 
 function getEurt_yr(site,yr){
-  const r=EURT.find(d=>d.Site===site&&d.Annee==='R'+yr&&d.Metrique&&d.Metrique.trim()==='EBITDA');
-  return r&&r.Valeur_EUR_t!==''?Number(r.Valeur_EUR_t):null;
+  // Calculé depuis les données principales pour cohérence
+  const row=DATA.find(d=>d.Site===site&&String(d.Annee)===String(yr));
+  if(!row||!row.Tonnes_entrantes||Number(row.Tonnes_entrantes)===0) return null;
+  return Number(row.EBITDA)/Number(row.Tonnes_entrantes);
 }
 
 function renderEvol(rows){
@@ -1103,6 +1106,13 @@ function toggleEtYear(y,btn){
 }
 
 const getVal=(s,yr,metric)=>{
+  // EBITDA €/t : toujours calculé depuis les données principales (évite les incohérences source)
+  if(metric.trim()==='EBITDA'){
+    const yrNum=yr.replace(/^R/,'');
+    const row=DATA.find(d=>d.Site===s&&String(d.Annee)===yrNum);
+    if(!row||!row.Tonnes_entrantes||Number(row.Tonnes_entrantes)===0) return null;
+    return Number(row.EBITDA)/Number(row.Tonnes_entrantes);
+  }
   const r=EURT.find(d=>d.Site===s&&d.Annee===yr&&d.Metrique&&d.Metrique.trim()===metric.trim());
   return r&&r.Valeur_EUR_t!==''?Number(r.Valeur_EUR_t):null;
 };
