@@ -355,7 +355,7 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
   </div>
   <div class="row2">
-    <div class="card full"><div class="card-title">Charges internes &euro;/t par site &#8212; tri&eacute;es par EBITDA &euro;/t</div><div class="ch tall"><canvas id="c-charges-et"></canvas></div></div>
+    <div class="card full"><div class="card-title" id="charges-et-title">Charges internes &euro;/t par site &#8212; tri&eacute;es par EBITDA &euro;/t</div><div class="ch tall"><canvas id="c-charges-et"></canvas></div></div>
   </div>
   <div class="row2">
     <div class="card full">
@@ -1181,6 +1181,8 @@ function renderEt(){
   // Charges internes empilées — triées par EBITDA €/t
   const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
   const chargeYear=etActiveYrs[etActiveYrs.length-1];
+  const chTitle=document.getElementById('charges-et-title');
+  if(chTitle) chTitle.innerHTML='Charges internes \u20ac/t par site \u2014 tri\u00e9es par EBITDA \u20ac/t<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
   const chargeMetrics=[
     {m:"  VE000051 - Co\u00fbts de personnel",                                          l:'Personnel',       color:'#0f3460'},
     {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",       l:'\u00c9nergie',          color:'#e94560'},
@@ -1310,9 +1312,9 @@ function renderEt(){
     };
   });
 
-  // Mise à jour titre carte
+  // Mise à jour titre carte avec année
   const scTitle=document.getElementById('scatter-card-title');
-  if(scTitle) scTitle.textContent=cfg.title;
+  if(scTitle) scTitle.innerHTML=cfg.title+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
 
   // Seuil affiché dans le titre Y
   const threshLabel=etScatterMetric==='ebitda'?'0 \u20ac/t (seuil rentabilit\u00e9)':
@@ -1344,14 +1346,17 @@ function renderEt(){
       ctx.beginPath();ctx.moveTo(xM,top);ctx.lineTo(xM,bottom);ctx.stroke();
       ctx.beginPath();ctx.moveTo(left,yM);ctx.lineTo(right,yM);ctx.stroke();
       ctx.setLineDash([]);ctx.font='700 11px system-ui,sans-serif';
-      // Labels dans les coins
-      const lbls=CATS.map(c=>({text:c.label,color:c.color}));
+      // Labels dans les coins — ordre selon highGood
+      // highGood : top=bon  → [0=gros-bon, 1=petit-bon, 2=gros-bad, 3=petit-bad]
+      // !highGood : top=bad → coins [top-right=gros-bad=2, top-left=petit-bad=3, bot-right=gros-bon=0, bot-left=petit-bon=1]
+      const co=highGood?[0,1,2,3]:[2,3,0,1];
+      const corners=co.map(i=>({text:CATS[i].label,color:CATS[i].color}));
       ctx.textBaseline='top';
-      ctx.fillStyle=lbls[0].color+'cc';ctx.textAlign='right';ctx.fillText(lbls[0].text,right-8,top+8);
-      ctx.fillStyle=lbls[1].color+'cc';ctx.textAlign='left'; ctx.fillText(lbls[1].text,left+8,top+8);
+      ctx.fillStyle=corners[0].color+'cc';ctx.textAlign='right';ctx.fillText(corners[0].text,right-8,top+8);
+      ctx.fillStyle=corners[1].color+'cc';ctx.textAlign='left'; ctx.fillText(corners[1].text,left+8,top+8);
       ctx.textBaseline='bottom';
-      ctx.fillStyle=lbls[2].color+'cc';ctx.textAlign='right';ctx.fillText(lbls[2].text,right-8,bottom-8);
-      ctx.fillStyle=lbls[3].color+'cc';ctx.textAlign='left'; ctx.fillText(lbls[3].text,left+8,bottom-8);
+      ctx.fillStyle=corners[2].color+'cc';ctx.textAlign='right';ctx.fillText(corners[2].text,right-8,bottom-8);
+      ctx.fillStyle=corners[3].color+'cc';ctx.textAlign='left'; ctx.fillText(corners[3].text,left+8,bottom-8);
       // Seuil X annotation
       ctx.textBaseline='top';ctx.textAlign='center';ctx.font='500 10px system-ui,sans-serif';
       ctx.fillStyle='rgba(100,116,139,.6)';
