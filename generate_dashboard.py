@@ -1231,7 +1231,7 @@ function renderEt(){
       return tn>0?row.CA/tn:null;
     } else { // charges
       const tn=row.Tonnes_entrantes;
-      return tn>0?(row.CA-row.Marge_Brute_Cash)/tn:null;
+      return tn>0?(row.PNE-row.Marge_Brute_Cash)/tn:null;
     }
   };
 
@@ -1251,11 +1251,12 @@ function renderEt(){
   } else {
     // moyenne pondérée (total valeur / total tonnes)
     const totalCA_=allPts.reduce((s,p)=>{const r=DATA.find(d=>d.Site===p.label&&String(d.Annee)===scatterYear);return s+(r?r.CA:0);},0);
+    const totalPNE_=allPts.reduce((s,p)=>{const r=DATA.find(d=>d.Site===p.label&&String(d.Annee)===scatterYear);return s+(r?r.PNE:0);},0);
     const totalMBC_=allPts.reduce((s,p)=>{const r=DATA.find(d=>d.Site===p.label&&String(d.Annee)===scatterYear);return s+(r?r.Marge_Brute_Cash:0);},0);
     if(etScatterMetric==='ca'){
       THRESH_Y=totalCA_/totalTn;
     } else {
-      THRESH_Y=(totalCA_-totalMBC_)/totalTn;
+      THRESH_Y=(totalPNE_-totalMBC_)/totalTn;
     }
   }
 
