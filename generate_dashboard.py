@@ -359,7 +359,14 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="row2">
     <div class="card full">
-      <div class="card-title">Matrice de positionnement : Tonnes vs EBITDA &euro;/t</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+        <div class="card-title" id="scatter-card-title" style="margin:0">Matrice de positionnement : Tonnes vs EBITDA &euro;/t</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-pill scatter-metric-btn active" onclick="setScatterMetric(\'ebitda\',this)">EBITDA &euro;/t</button>
+          <button class="btn-pill scatter-metric-btn" onclick="setScatterMetric(\'ca\',this)">CA &euro;/t</button>
+          <button class="btn-pill scatter-metric-btn" onclick="setScatterMetric(\'charges\',this)">Charges &euro;/t</button>
+        </div>
+      </div>
       <div class="ch" style="height:340px"><canvas id="c-scatter"></canvas></div>
       <div id="cat-table-wrap" style="margin-top:16px"></div>
     </div>
@@ -1128,6 +1135,13 @@ function renderPL(rows){
 // ONGLET 3 — EUR/T
 // ══════════════════════════════════════════════════════
 let etYears=new Set(['all']), etSites=new Set(['all']), cEtEB=null, cEtCA=null, cScatter=null, cChargesEt=null;
+let etScatterMetric='ebitda'; // 'ebitda' | 'ca' | 'charges'
+function setScatterMetric(m,btn){
+  etScatterMetric=m;
+  document.querySelectorAll('.scatter-metric-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderEt();
+}
 
 function toggleEtYear(y,btn){
   const allBtn=document.querySelector('.et-yr');
@@ -1201,64 +1215,155 @@ function renderEt(){
     }
   });
 
-  // Scatter quadrant — 4 categories
+  // Scatter quadrant — métrique sélectionnable
   const scatterYear=chargeYear.replace('R','');
+
+  // Calcul de la valeur Y selon la métrique sélectionnée
+  const getScatterY=(s)=>{
+    const row=DATA.find(d=>d.Site===s&&String(d.Annee)===scatterYear);
+    if(!row) return null;
+    if(etScatterMetric==='ebitda'){
+      return getVal(s,'R'+scatterYear,'EBITDA');
+    } else if(etScatterMetric==='ca'){
+      const tn=row.Tonnes_entrantes;
+      return tn>0?row.CA/tn:null;
+    } else { // charges
+      const tn=row.Tonnes_entrantes;
+      return tn>0?(row.CA-row.Marge_Brute_Cash)/tn:null;
+    }
+  };
+
   const allPts=SITES.map(s=>{
     const row=DATA.find(d=>d.Site===s&&String(d.Annee)===scatterYear);
-    const eurt=getVal(s,'R'+scatterYear,'EBITDA');
-    if(!row||eurt===null) return null;
-    return {x:row.Tonnes_entrantes,y:eurt,label:s};
+    const yv=getScatterY(s);
+    if(!row||yv===null) return null;
+    return {x:row.Tonnes_entrantes,y:yv,label:s};
   }).filter(Boolean);
 
-  const THRESH_TN=35000, THRESH_EB=0;
+  // Seuils : moyenne pondérée du parc pour X et Y
+  const totalTn=allPts.reduce((s,p)=>s+p.x,0);
+  const THRESH_TN=totalTn/allPts.length; // moyenne tonnes par site
+  let THRESH_Y;
+  if(etScatterMetric==='ebitda'){
+    THRESH_Y=0; // seuil naturel rentabilité
+  } else {
+    // moyenne pondérée (total valeur / total tonnes)
+    const totalCA_=allPts.reduce((s,p)=>{const r=DATA.find(d=>d.Site===p.label&&String(d.Annee)===scatterYear);return s+(r?r.CA:0);},0);
+    const totalMBC_=allPts.reduce((s,p)=>{const r=DATA.find(d=>d.Site===p.label&&String(d.Annee)===scatterYear);return s+(r?r.Marge_Brute_Cash:0);},0);
+    if(etScatterMetric==='ca'){
+      THRESH_Y=totalCA_/totalTn;
+    } else {
+      THRESH_Y=(totalCA_-totalMBC_)/totalTn;
+    }
+  }
 
-  const CATS=[
-    {key:'champ',label:'Grands & Rentables',    desc:'>35kt & EBITDA/t>0', color:'#10b981',filt:p=>p.y>THRESH_EB&&p.x>=THRESH_TN},
-    {key:'effic',label:'Petits & Rentables',    desc:'<35kt & EBITDA/t>0', color:'#2196f3',filt:p=>p.y>THRESH_EB&&p.x<THRESH_TN},
-    {key:'devel',label:'Grands \u00e0 optimiser',  desc:'>35kt & EBITDA/t\u22640',color:'#f59e0b',filt:p=>p.y<=THRESH_EB&&p.x>=THRESH_TN},
-    {key:'diff', label:'Petits \u00e0 relancer',   desc:'<35kt & EBITDA/t\u22640',color:'#ef4444',filt:p=>p.y<=THRESH_EB&&p.x<THRESH_TN},
-  ];
+  // Config quadrants selon métrique
+  const SCATTER_CFG={
+    ebitda:{
+      title:'Matrice de positionnement : Tonnes vs EBITDA \u20ac/t',
+      yLabel:'EBITDA \u20ac/t',
+      highGood:true,
+      cats:[
+        {key:'champ',label:'Grands & Rentables',    color:'#10b981'},
+        {key:'effic',label:'Petits & Rentables',     color:'#2196f3'},
+        {key:'devel',label:'Grands \u00e0 optimiser',color:'#f59e0b'},
+        {key:'diff', label:'Petits \u00e0 relancer', color:'#ef4444'},
+      ]
+    },
+    ca:{
+      title:'Matrice de positionnement : Tonnes vs CA \u20ac/t',
+      yLabel:'CA \u20ac/t',
+      highGood:true,
+      cats:[
+        {key:'champ',label:'Gros volume, bonne r\u00e9mun\u00e9ration', color:'#10b981'},
+        {key:'effic',label:'Petit volume, bonne r\u00e9mun\u00e9ration', color:'#2196f3'},
+        {key:'devel',label:'Gros volume, faible r\u00e9mun\u00e9ration', color:'#f59e0b'},
+        {key:'diff', label:'Petit volume, faible r\u00e9mun\u00e9ration', color:'#ef4444'},
+      ]
+    },
+    charges:{
+      title:'Matrice de positionnement : Tonnes vs Charges internes \u20ac/t',
+      yLabel:'Charges internes \u20ac/t',
+      highGood:false, // charges élevées = mauvais
+      cats:[
+        {key:'champ',label:'Gros volume, charges ma\u00eetris\u00e9es', color:'#10b981'},
+        {key:'effic',label:'Petit volume, charges ma\u00eetris\u00e9es', color:'#2196f3'},
+        {key:'devel',label:'Gros volume, charges \u00e9lev\u00e9es',    color:'#f59e0b'},
+        {key:'diff', label:'Petit volume, charges \u00e9lev\u00e9es',   color:'#ef4444'},
+      ]
+    }
+  };
+  const cfg=SCATTER_CFG[etScatterMetric];
+  const highGood=cfg.highGood;
 
-  // Plugin quadrants : fond coloré + lignes de séparation + labels
+  // filtres quadrants : haut/bas selon highGood
+  const isGoodY=(y)=>highGood?y>THRESH_Y:y<=THRESH_Y;
+  const isBadY =(y)=>highGood?y<=THRESH_Y:y>THRESH_Y;
+
+  const CATS=cfg.cats.map((c,i)=>{
+    const bigX=(i===0||i===2); // 0=GrandBon, 1=PetitBon, 2=GrandMauvais, 3=PetitMauvais
+    const goodY=(i===0||i===1);
+    return {...c,
+      filt:goodY
+        ?(p=>(isGoodY(p.y))&&(bigX?p.x>=THRESH_TN:p.x<THRESH_TN))
+        :(p=>(isBadY(p.y))&&(bigX?p.x>=THRESH_TN:p.x<THRESH_TN))
+    };
+  });
+
+  // Mise à jour titre carte
+  const scTitle=document.getElementById('scatter-card-title');
+  if(scTitle) scTitle.textContent=cfg.title;
+
+  // Seuil affiché dans le titre Y
+  const threshLabel=etScatterMetric==='ebitda'?'0 \u20ac/t (seuil rentabilit\u00e9)':
+    'moy. parc : '+THRESH_Y.toFixed(0)+' \u20ac/t';
+
+  // Plugin quadrants
   const quadrantPlugin={
     id:'quadrants',
     beforeDraw:function(chart){
       const {ctx,chartArea:{left,right,top,bottom},scales:{x,y}}=chart;
       const xM=x.getPixelForValue(THRESH_TN);
-      const yM=y.getPixelForValue(THRESH_EB);
+      const yM=y.getPixelForValue(THRESH_Y);
       ctx.save();
-      // Fonds des 4 quadrants
+      // Quadrant colors: [haut-droit, haut-gauche, bas-droit, bas-gauche]
+      // Si highGood : haut=bon → vert/bleu ; bas=mauvais → orange/rouge
+      // Si !highGood (charges) : bas=bon → vert/bleu ; haut=mauvais → orange/rouge
+      const topR=highGood?'rgba(16,185,129,.07)':'rgba(245,158,11,.07)';
+      const topL=highGood?'rgba(33,150,243,.07)':'rgba(239,68,68,.07)';
+      const botR=highGood?'rgba(245,158,11,.07)':'rgba(16,185,129,.07)';
+      const botL=highGood?'rgba(239,68,68,.07)':'rgba(33,150,243,.07)';
       const quads=[
-        {x1:xM,y1:top,   x2:right, y2:yM,    color:'rgba(16,185,129,.06)'},  // grand & rentable
-        {x1:left,y1:top,  x2:xM,   y2:yM,    color:'rgba(33,150,243,.06)'},  // petit & rentable
-        {x1:xM,y1:yM,    x2:right, y2:bottom, color:'rgba(245,158,11,.07)'},  // grand à optimiser
-        {x1:left,y1:yM,  x2:xM,   y2:bottom, color:'rgba(239,68,68,.07)'},   // petit à relancer
+        {x1:xM,  y1:top, x2:right, y2:yM,     color:topR},
+        {x1:left,y1:top, x2:xM,   y2:yM,      color:topL},
+        {x1:xM,  y1:yM,  x2:right, y2:bottom,  color:botR},
+        {x1:left,y1:yM,  x2:xM,   y2:bottom,   color:botL},
       ];
-      quads.forEach(function(q){
-        ctx.fillStyle=q.color;
-        ctx.fillRect(q.x1,q.y1,q.x2-q.x1,q.y2-q.y1);
-      });
-      // Lignes de séparation
-      ctx.strokeStyle='rgba(100,116,139,.35)';
-      ctx.lineWidth=1.5;
-      ctx.setLineDash([6,4]);
-      ctx.beginPath(); ctx.moveTo(xM,top);   ctx.lineTo(xM,bottom); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(left,yM);  ctx.lineTo(right,yM);  ctx.stroke();
-      // Labels quadrants
-      ctx.setLineDash([]);
-      ctx.font='700 12px system-ui,sans-serif';
+      quads.forEach(function(q){ctx.fillStyle=q.color;ctx.fillRect(q.x1,q.y1,q.x2-q.x1,q.y2-q.y1);});
+      ctx.strokeStyle='rgba(100,116,139,.35)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+      ctx.beginPath();ctx.moveTo(xM,top);ctx.lineTo(xM,bottom);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(left,yM);ctx.lineTo(right,yM);ctx.stroke();
+      ctx.setLineDash([]);ctx.font='700 11px system-ui,sans-serif';
+      // Labels dans les coins
+      const lbls=CATS.map(c=>({text:c.label,color:c.color}));
       ctx.textBaseline='top';
-      ctx.fillStyle='rgba(16,185,129,.7)';  ctx.textAlign='right'; ctx.fillText('Grands & Rentables', right-8, top+8);
-      ctx.fillStyle='rgba(33,150,243,.7)';  ctx.textAlign='left';  ctx.fillText('Petits & Rentables',  left+8,  top+8);
-      ctx.fillStyle='rgba(245,158,11,.75)'; ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText('Grands à optimiser',  right-8, bottom-8);
-      ctx.fillStyle='rgba(239,68,68,.7)';   ctx.textAlign='left';  ctx.fillText('Petits à relancer',   left+8,  bottom-8);
+      ctx.fillStyle=lbls[0].color+'cc';ctx.textAlign='right';ctx.fillText(lbls[0].text,right-8,top+8);
+      ctx.fillStyle=lbls[1].color+'cc';ctx.textAlign='left'; ctx.fillText(lbls[1].text,left+8,top+8);
+      ctx.textBaseline='bottom';
+      ctx.fillStyle=lbls[2].color+'cc';ctx.textAlign='right';ctx.fillText(lbls[2].text,right-8,bottom-8);
+      ctx.fillStyle=lbls[3].color+'cc';ctx.textAlign='left'; ctx.fillText(lbls[3].text,left+8,bottom-8);
+      // Seuil X annotation
+      ctx.textBaseline='top';ctx.textAlign='center';ctx.font='500 10px system-ui,sans-serif';
+      ctx.fillStyle='rgba(100,116,139,.6)';
+      ctx.fillText('moy. '+Math.round(THRESH_TN/1000)+'kt',xM,top+2);
       ctx.restore();
     }
   };
+
   cScatter=mkChart('c-scatter',{
     type:'scatter',
     data:{datasets:CATS.map(c=>({
-      label:c.label+' \u2014 '+c.desc,
+      label:c.label,
       data:allPts.filter(c.filt),
       backgroundColor:c.color+'bb',borderColor:c.color,borderWidth:2,
       pointRadius:11,pointHoverRadius:14,
@@ -1266,23 +1371,28 @@ function renderEt(){
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{position:'top',labels:{usePointStyle:true,font:{size:11}}},
-        tooltip:{callbacks:{label:function(c){if(!c.raw.label) return null; return ' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t';}}}
+        tooltip:{callbacks:{label:function(c){
+          if(!c.raw.label) return null;
+          return ' '+c.raw.label+' \u2014 '+fmt(c.raw.x)+' t / '+c.raw.y.toFixed(1)+' \u20ac/t';
+        }}}
       },
       scales:{
         x:{title:{display:true,text:'Tonnes entrantes'},grid:{color:'#f0f0f0'}},
-        y:{title:{display:true,text:'EBITDA \u20ac/t'},grid:{color:'#f0f0f0'}}
+        y:{title:{display:true,text:cfg.yLabel+' ('+threshLabel+')'},grid:{color:'#f0f0f0'}}
       }
     },
     plugins:[quadrantPlugin]
   });
 
   // Category table
+  const metricColLabel=cfg.yLabel;
   let hc='<div class="cat-legend">';
   CATS.forEach(c=>{const n=allPts.filter(c.filt).length;if(n) hc+='<div class="cat-badge '+c.key+'"><div class="cat-dot" style="background:'+c.color+'"></div>'+c.label+' ('+n+')</div>';});
-  hc+='</div><table class="rank-table" style="margin-top:8px"><thead><tr><th>Cat\u00e9gorie</th><th>Site</th><th>Tonnes</th><th>EBITDA \u20ac/t</th></tr></thead><tbody>';
+  hc+='</div><table class="rank-table" style="margin-top:8px"><thead><tr><th>Cat\u00e9gorie</th><th>Site</th><th>Tonnes</th><th>'+metricColLabel+'</th></tr></thead><tbody>';
   CATS.forEach(c=>{
-    allPts.filter(c.filt).sort((a,b)=>b.y-a.y).forEach((p,i)=>{
-      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td><span class="site-link" data-site="'+p.label+'" onclick="goToSite(this.dataset.site)">'+p.label+'</span></td><td>'+fmt(p.x)+' t</td><td class="'+(p.y>=0?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
+    allPts.filter(c.filt).sort((a,b)=>highGood?(b.y-a.y):(a.y-b.y)).forEach((p,i)=>{
+      const good=isGoodY(p.y);
+      hc+='<tr><td style="color:'+c.color+';font-weight:700">'+(i===0?c.label:'')+'</td><td><span class="site-link" data-site="'+p.label+'" onclick="goToSite(this.dataset.site)">'+p.label+'</span></td><td>'+fmt(p.x)+' t</td><td class="'+(good?'pos':'neg')+'">'+p.y.toFixed(1)+' \u20ac/t</td></tr>';
     });
   });
   hc+='</tbody></table>';
