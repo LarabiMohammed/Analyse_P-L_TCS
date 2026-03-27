@@ -448,11 +448,6 @@ const YEARS = ['2023','2024','2025','2026'];
 const REAL_YEARS = ['2023','2024','2025'];
 const yr2lbl = yr => (yr==='2026'||yr==='B2026')?'B2026':yr.startsWith('R')?yr:'R'+yr;
 
-// ── Segmentation sites ────────────────────────────────
-  'Portes les Valences':'G\u00e9n\u00e9ration 2','B\u00e8gles':'G\u00e9n\u00e9ration 2','Millau':'G\u00e9n\u00e9ration 2'
-};
-
-// ── Index PERF par site ───────────────────────────────
 
 // ══════════════════════════════════════════════════════
 // TABS
