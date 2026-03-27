@@ -37,11 +37,9 @@ def load_csv(filename):
 
 data      = load_csv("data_synthese.csv")
 data_eur_t = load_csv("data_synthese_eur_t.csv")
-data_perf  = load_csv("data_perf_2025.csv")
 
 DATA_JSON  = json.dumps(data,       ensure_ascii=True)
 EUR_T_JSON = json.dumps(data_eur_t, ensure_ascii=True)
-PERF_JSON  = json.dumps(data_perf,  ensure_ascii=True)
 
 # ── Template HTML ────────────────────────────────────────────────────────────
 HTML = """\
@@ -229,7 +227,6 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('et',this)">Vue &euro;/t</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
-  <div class="tab"         onclick="showTab('pf',this)">Perf &times; P&amp;L</div>
 </div>
 
 <!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
@@ -428,27 +425,6 @@ select.sel:focus{border-color:#00a3e0}
 </div>
 
 <!-- ═══ ONGLET PERF × P&L ═══════════════════════════════════════════════════ -->
-<div class="page" id="tab-pf">
-  <div class="toolbar">
-    <span style="font-size:12px;color:#666">Donn&eacute;es de performance R2025 &mdash; crois&eacute;es avec P&amp;L R2025</span>
-    <div class="spacer"></div>
-    <button class="btn-print" onclick="window.print()">&#128438; Exporter PDF</button>
-  </div>
-  <div class="row2" style="margin-top:12px">
-    <div class="card">
-      <div class="card-title">Disponibilit&eacute; globale vs EBITDA &euro;/t &mdash; R2025 &nbsp;<span style="font-size:10px;font-weight:400;color:#999">Taille bulle = tonnage</span></div>
-      <div class="ch" style="height:320px"><canvas id="c-pf-dispo"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Utilisation capacit&eacute; vs Personnel &euro;/t &mdash; R2025 &nbsp;<span style="font-size:10px;font-weight:400;color:#999">Taille bulle = tonnage</span></div>
-      <div class="ch" style="height:320px"><canvas id="c-pf-util"></canvas></div>
-    </div>
-  </div>
-  <div class="card" style="margin-top:4px">
-    <div class="card-title">Tableau de bord synth&egrave;se &mdash; P&amp;L &times; Performance R2025</div>
-    <div id="pf-table-wrap"></div>
-  </div>
-</div>
 
 <script>
 // ══════════════════════════════════════════════════════
@@ -456,7 +432,6 @@ select.sel:focus{border-color:#00a3e0}
 // ══════════════════════════════════════════════════════
 const DATA = %%DATA%%;
 const EURT = %%EURT%%;
-const PERF_RAW = %%PERF%%;
 
 // ══════════════════════════════════════════════════════
 // UTILS
@@ -474,17 +449,10 @@ const REAL_YEARS = ['2023','2024','2025'];
 const yr2lbl = yr => (yr==='2026'||yr==='B2026')?'B2026':yr.startsWith('R')?yr:'R'+yr;
 
 // ── Segmentation sites ────────────────────────────────
-const SITE_GEN = {
-  'Amiens':'Ancien','Le Havre':'Ancien','Sevran':'Ancien','Paris 15':'Ancien','Ch\u00e9zy':'Ancien',
-  'Saran':'G\u00e9n\u00e9ration 2','Montpellier':'G\u00e9n\u00e9ration 2','Nantes':'G\u00e9n\u00e9ration 2',
   'Portes les Valences':'G\u00e9n\u00e9ration 2','B\u00e8gles':'G\u00e9n\u00e9ration 2','Millau':'G\u00e9n\u00e9ration 2'
 };
-const GEN_COLOR = {'Ancien':'#0f3460','G\u00e9n\u00e9ration 2':'#00b4cd'};
 
 // ── Index PERF par site ───────────────────────────────
-const PERF = {};
-PERF_RAW.forEach(r=>{ PERF[r.Site]=r; });
-function pfv(site,key){ const v=PERF[site]?PERF[site][key]:null; return (v===''||v===null||v===undefined)?null:+v; }
 
 // ══════════════════════════════════════════════════════
 // TABS
@@ -513,7 +481,6 @@ function showTab(id,el){
     if(id==='dt') renderDt();
     if(id==='et') renderEt();
     if(id==='rg') renderRg();
-    if(id==='pf') renderPerf();
   }));
 }
 
@@ -1788,6 +1755,11 @@ function renderRg(){
 }
 
 // ══════════════════════════════════════════════════════
+// PERF × P&L
+// ══════════════════════════════════════════════════════
+
+
+// ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 (function init(){
@@ -1820,156 +1792,6 @@ function renderRg(){
   }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{renderHome();}));
 
-// ══════════════════════════════════════════════════════
-// PERF × P&L
-// ══════════════════════════════════════════════════════
-let cPfDispo=null, cPfUtil=null;
-
-function renderPerf(){
-  const GENS=['Ancien','G\u00e9n\u00e9ration 2'];
-  const GEN_COL={'Ancien':'#0f3460','G\u00e9n\u00e9ration 2':'#00b4cd'};
-
-  // ── Construire les points croisés P&L R2025 + Perf ──
-  const sites25=DATA.filter(d=>d.Annee==='2025');
-  const maxTn=Math.max(...sites25.map(d=>d.Tonnes_entrantes||0));
-
-  function bubbleR(tn){ return Math.round(7+((tn||0)/maxTn)*18); }
-
-  const ptsDispo=[], ptsUtil=[];
-  sites25.forEach(function(d){
-    const s=d.Site;
-    const tn=d.Tonnes_entrantes||0;
-    const ebitdaT=tn>0?(d.EBITDA||0)/tn:null;
-    const persT=tn>0?(d.Couts_personnel||0)/tn:null;
-    const dispo=pfv(s,'Dispo_globale');
-    const util=pfv(s,'Taux_utilisation_capacite');
-    if(dispo!==null&&ebitdaT!==null)
-      ptsDispo.push({x:dispo,y:ebitdaT,r:bubbleR(tn),label:s,gen:SITE_GEN[s]||'?'});
-    if(util!==null&&persT!==null)
-      ptsUtil.push({x:util,y:persT,r:bubbleR(tn),label:s,gen:SITE_GEN[s]||'?'});
-  });
-
-  // ── Scatter 1 : Dispo × EBITDA €/t ──────────────────
-  const dsD=GENS.map(g=>({
-    label:g,
-    data:ptsDispo.filter(p=>p.gen===g),
-    backgroundColor:GEN_COL[g]+'99',
-    borderColor:GEN_COL[g],
-    borderWidth:2
-  }));
-
-  const bubbleOpts=function(xLbl,yLbl,xSuffix,ySuffix){return {
-    responsive:true,maintainAspectRatio:false,
-    plugins:{
-      legend:{position:'top',labels:{usePointStyle:true,font:{size:11}}},
-      tooltip:{callbacks:{label:function(ctx){
-        const p=ctx.raw;
-        return p.label+' — '+xLbl+': '+p.x.toFixed(1)+xSuffix+' | '+yLbl+': '+p.y.toFixed(1)+ySuffix;
-      }}}
-    },
-    scales:{
-      x:{title:{display:true,text:xLbl+' ('+xSuffix+')',font:{size:11}},grid:{color:'#eee'}},
-      y:{title:{display:true,text:yLbl+' ('+ySuffix+')',font:{size:11}},grid:{color:'#eee'}}
-    }
-  };};
-
-  cPfDispo=mkChart('c-pf-dispo',{type:'bubble',data:{datasets:dsD},
-    options:bubbleOpts('Disponibilit\u00e9 globale','EBITDA','%','\u20ac/t')});
-
-  // ── Scatter 2 : Utilisation × Personnel €/t ─────────
-  const dsU=GENS.map(g=>({
-    label:g,
-    data:ptsUtil.filter(p=>p.gen===g),
-    backgroundColor:GEN_COL[g]+'99',
-    borderColor:GEN_COL[g],
-    borderWidth:2
-  }));
-  cPfUtil=mkChart('c-pf-util',{type:'bubble',data:{datasets:dsU},
-    options:bubbleOpts('Utilisation capacit\u00e9','Personnel','\u0025','\u20ac/t')});
-
-  // ── Tableau synthèse ─────────────────────────────────
-  function badge(gen){
-    const col=GEN_COL[gen]||'#aaa';
-    return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:'+col+'22;color:'+col+';border:1px solid '+col+'40">'+gen+'</span>';
-  }
-  function cell(val,thresholds,fmt,invert){
-    // thresholds = [goodMin, warnMin] pour valeur normale
-    // invert = true si bas = mauvais (ex: charges négatives)
-    if(val===null||val===undefined) return '<td style="color:#bbb;text-align:center">\u2014</td>';
-    let col='#10b981'; // green
-    const [t1,t2]=thresholds;
-    // Pour valeurs en % positif : >t1=vert, t2<x<t1=orange, <t2=rouge
-    if(!invert){ if(val<t2) col='#ef4444'; else if(val<t1) col='#f59e0b'; }
-    // Pour valeurs négatives (charges, EBITDA) : invert=true
-    else { if(val>t2) col='#ef4444'; else if(val>t1) col='#f59e0b'; }
-    return '<td style="text-align:right;font-weight:600;color:'+col+';padding:6px 12px">'+fmt(val)+'</td>';
-  }
-
-  const cols=[
-    {k:'CA_t',    lbl:'CA \u20ac/t',       fmt:v=>Math.round(v)+'\u20ac/t', thresh:[220,160], inv:false},
-    {k:'EBITDA_t',lbl:'EBITDA \u20ac/t',   fmt:v=>v.toFixed(1)+'\u20ac/t',  thresh:[-5,-20],  inv:true},
-    {k:'Maint_t', lbl:'Maint. \u20ac/t',   fmt:v=>v.toFixed(1)+'\u20ac/t',  thresh:[-12,-22], inv:true},
-    {k:'Pers_t',  lbl:'Pers. \u20ac/t',    fmt:v=>v.toFixed(1)+'\u20ac/t',  thresh:[-70,-110],inv:true},
-    {k:'Dispo',   lbl:'Dispo',             fmt:v=>v.toFixed(1)+'%',         thresh:[85,75],   inv:false},
-    {k:'Refus',   lbl:'Refus',             fmt:v=>v.toFixed(1)+'%',         thresh:[25,35],   inv:true},
-    {k:'Util',    lbl:'Util. cap.',        fmt:v=>v.toFixed(0)+'%',         thresh:[100,85],  inv:false},
-    {k:'Fin',     lbl:'Fin contrat',       fmt:v=>v>0?Math.round(v):'?',    thresh:[2030,2027],inv:false},
-  ];
-
-  let h='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  h+='<thead><tr style="background:#f0f4f8">';
-  h+='<th style="padding:8px 12px;text-align:left;font-weight:700;color:#003b5c">Site</th>';
-  h+='<th style="padding:8px 12px;text-align:center;font-weight:700;color:#003b5c">G\u00e9n\u00e9ration</th>';
-  cols.forEach(c=>{ h+='<th style="padding:8px 12px;text-align:right;font-weight:700;color:#003b5c">'+c.lbl+'</th>'; });
-  h+='</tr></thead><tbody>';
-
-  sites25.sort((a,b)=>((b.EBITDA||0)/Math.max(1,b.Tonnes_entrantes))-((a.EBITDA||0)/Math.max(1,a.Tonnes_entrantes)));
-  sites25.forEach(function(d,i){
-    const s=d.Site; const gen=SITE_GEN[s]||'?';
-    const tn=d.Tonnes_entrantes||0;
-    const row={
-      CA_t:    tn>0?(d.CA||0)/tn:null,
-      EBITDA_t:tn>0?(d.EBITDA||0)/tn:null,
-      Maint_t: tn>0?((d.Maintenance_courante||0)+(d.Maintenance_obligatoire||0))/tn:null,
-      Pers_t:  tn>0?(d.Couts_personnel||0)/tn:null,
-      Dispo:   pfv(s,'Dispo_globale'),
-      Refus:   pfv(s,'Taux_refus_sortant'),
-      Util:    pfv(s,'Taux_utilisation_capacite'),
-      Fin:     pfv(s,'Fin_contrat'),
-    };
-    const bg=i%2===0?'#fff':'#f9fbfd';
-    h+='<tr style="background:'+bg+';border-bottom:1px solid #eef2f7">';
-    h+='<td style="padding:6px 12px;font-weight:600;color:#003b5c">'+
-       '<span class="site-link" onclick="goToSite(this.dataset.site)" data-site="'+s+'" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+s+'</span></td>';
-    h+='<td style="padding:6px 12px;text-align:center">'+badge(gen)+'</td>';
-    cols.forEach(function(c){
-      h+=cell(row[c.k],c.thresh,c.fmt,c.inv);
-    });
-    h+='</tr>';
-  });
-
-  // Ligne moyenne
-  h+='<tr style="background:#f0f4f8;border-top:2px solid #003b5c;font-weight:700">';
-  h+='<td style="padding:6px 12px;color:#003b5c">Moyenne parc</td><td></td>';
-  cols.forEach(function(c){
-    const vals=sites25.map(d=>{
-      const tn=d.Tonnes_entrantes||0;
-      const s=d.Site;
-      const map={
-        CA_t:tn>0?(d.CA||0)/tn:null,EBITDA_t:tn>0?(d.EBITDA||0)/tn:null,
-        Maint_t:tn>0?((d.Maintenance_courante||0)+(d.Maintenance_obligatoire||0))/tn:null,
-        Pers_t:tn>0?(d.Couts_personnel||0)/tn:null,
-        Dispo:pfv(s,'Dispo_globale'),Refus:pfv(s,'Taux_refus_sortant'),
-        Util:pfv(s,'Taux_utilisation_capacite'),Fin:pfv(s,'Fin_contrat')
-      };
-      return map[c.k];
-    }).filter(v=>v!==null&&v!==undefined);
-    const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
-    h+=cell(avg,c.thresh,c.fmt,c.inv);
-  });
-  h+='</tr></tbody></table>';
-  document.getElementById('pf-table-wrap').innerHTML=h;
-}
 
   // ── Redimensionnement charts avant/après impression ─────────────────────
   window.addEventListener('beforeprint', function(){
@@ -1994,7 +1816,6 @@ function renderPerf(){
       else if(id==='dt') renderDt();
       else if(id==='et') renderEt();
       else if(id==='rg') renderRg();
-      else if(id==='pf') renderPerf();
     }); });
   });
 })();
@@ -2010,7 +1831,6 @@ html_out = (HTML
     .replace("%%LOGO%%",    LOGO_B64)
     .replace("%%DATA%%",    DATA_JSON)
     .replace("%%EURT%%",    EUR_T_JSON)
-    .replace("%%PERF%%",    PERF_JSON)
 )
 
 out_path = os.path.join(BASE, "dashboard.html")
