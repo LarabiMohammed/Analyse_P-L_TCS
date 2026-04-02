@@ -173,6 +173,13 @@ select.sel:focus{border-color:#00a3e0}
   canvas{max-width:100%!important}
   @page{size:A4 landscape;margin:8mm 10mm}
 }
+/* ── Perfs & Charges DG ──────────────────────────────── */
+.section-sep{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-size:.92rem;font-weight:700;color:#003a63}
+.section-sep::before{content:'';display:block;width:4px;height:22px;border-radius:2px;flex-shrink:0;background:#003a63}
+.section-sep.orange::before{background:#f59e0b}
+.section-sep.red::before{background:#ef4444}
+.verdict-badge{font-size:.72rem;font-weight:600;padding:2px 10px;border-radius:12px;margin-left:8px;vertical-align:middle}
+.tk-note{font-size:.78rem;color:#666;margin:0 0 14px;font-style:italic;line-height:1.5}
 /* ── Présentation mode ────────────────────────────────── */
 .card{transition:box-shadow .2s,transform .12s ease}
 .btn-pill{transition:all .15s ease}
@@ -229,7 +236,7 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('et',this)">Vue &euro;/t</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
-  <div class="tab"         onclick="showTab('tk',this)">Perfs &amp; Charges</div>
+  <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
 </div>
 
 <!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
@@ -427,69 +434,112 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 </div>
 
-<!-- ═══ ONGLET — PERFS TECHNIQUES & CHARGES ════════════════════════════════ -->
+<!-- ═══ ONGLET — PERFS → CHARGES ════════════════════════════════ -->
 <div class="page" id="tab-tk">
   <div class="toolbar">
     <label>Ann&eacute;e :</label>
-    <button class="btn-pill tk-yr active" onclick="tkSetYr('all',this)">Toutes</button>
-    <button class="btn-pill tk-yr" onclick="tkSetYr(2023,this)">R2023</button>
-    <button class="btn-pill tk-yr" onclick="tkSetYr(2024,this)">R2024</button>
-    <button class="btn-pill tk-yr" onclick="tkSetYr(2025,this)">R2025</button>
+    <button class="btn-pill tk-sc-yr active" onclick="tkScSetYr('all',this)">Toutes (moy.)</button>
+    <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2023,this)">R2023</button>
+    <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2024,this)">R2024</button>
+    <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2025,this)">R2025</button>
     <div class="spacer"></div>
-    <span style="font-size:.75rem;color:#555;background:#f0f6ff;padding:4px 14px;border-radius:12px;border:1px solid #c3dafe">
-      <span style="color:#d97706;font-weight:700">&#11044;</span> Anciens : Le Havre, Amiens, Sevran, Paris&nbsp;15, Ch&eacute;zy &nbsp;&nbsp;
-      <span style="color:#0082b3;font-weight:700">&#11044;</span> R&eacute;cents : B&egrave;gles, Millau, Saran, Nantes, Montpellier, Portes les Valences
-    </span>
     <button class="btn-print" onclick="window.print()" style="margin-left:12px">&#128438; Exporter PDF</button>
   </div>
 
-  <div style="margin:14px 0 12px;font-size:.9rem;font-weight:700;color:#003a63;border-bottom:2px solid #e8eaed;padding-bottom:6px">
-    KPIs techniques &mdash; &eacute;volution par site
+  <!-- SECTION A — Corrélations parc -->
+  <div class="section-sep orange" style="margin-top:18px">Corr&eacute;lations parc &mdash; influence des perfs techniques sur les charges &euro;/t</div>
+  <p class="tk-note">Chaque point = un site. Choisissez l&rsquo;indicateur et l&rsquo;ann&eacute;e pour explorer les corr&eacute;lations.</p>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <span style="font-size:.78rem;font-weight:700;color:#555">KPI :</span>
+    <button class="btn-pill tk-kpi active" onclick="tkSetKpi('debit',this)">D&eacute;bit (t/h)</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo',this)">Disponibilit&eacute; (%)</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('refus',this)">Taux de refus (%)</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('heures',this)">Heures fonct.</button>
   </div>
-  <div class="card full" style="margin-bottom:18px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div class="card-title" style="margin:0">Site :</div>
-      <select class="sel" id="tk-site-sel" onchange="tkSetSite(this.value)"></select>
+  <div class="row2" style="margin-bottom:28px">
+    <div class="card" style="border-top:3px solid #f59e0b">
+      <div class="card-title">Personnel &euro;/t &larr; <span id="tk-kpi-lbl-pers">D&eacute;bit (t/h)</span> <span id="tk-verdict-pers" class="verdict-badge"></span></div>
+      <div style="position:relative;height:400px"><canvas id="tk-sc-pers"></canvas></div>
     </div>
-    <div class="row2">
-      <div class="card"><div class="card-title">D&eacute;bit moyen (t/h)</div><div class="ch"><canvas id="tk-debit-ev"></canvas></div></div>
-      <div class="card"><div class="card-title">Disponibilit&eacute; globale (%)</div><div class="ch"><canvas id="tk-dispo-ev"></canvas></div></div>
-      <div class="card"><div class="card-title">Tonnage entrant (t)</div><div class="ch"><canvas id="tk-tonne-ev"></canvas></div></div>
-      <div class="card"><div class="card-title">Heures de fonctionnement</div><div class="ch"><canvas id="tk-heures-ev"></canvas></div></div>
+    <div class="card" style="border-top:3px solid #ef4444">
+      <div class="card-title">Maintenance &euro;/t &larr; <span id="tk-kpi-lbl-maint">D&eacute;bit (t/h)</span> <span id="tk-verdict-maint" class="verdict-badge"></span></div>
+      <div style="position:relative;height:400px"><canvas id="tk-sc-maint"></canvas></div>
     </div>
   </div>
 
-  <div style="margin:14px 0 12px;font-size:.9rem;font-weight:700;color:#003a63;border-bottom:2px solid #e8eaed;padding-bottom:6px">
-    Vue comparative &mdash; tous les sites
-  </div>
-  <div class="row2" style="margin-bottom:18px">
-    <div class="card"><div class="card-title">D&eacute;bit par site (t/h)</div><div class="ch tall"><canvas id="tk-debit-all"></canvas></div></div>
-    <div class="card"><div class="card-title">Disponibilit&eacute; globale par site (%)</div><div class="ch tall"><canvas id="tk-dispo-all"></canvas></div></div>
-  </div>
-
-  <div style="margin:14px 0 12px;font-size:.9rem;font-weight:700;color:#003a63;border-bottom:2px solid #e8eaed;padding-bottom:6px">
-    Corr&eacute;lations &mdash; Personnel &euro;/t
-  </div>
-  <div class="row2" style="margin-bottom:18px">
-    <div class="card"><div class="card-title">Personnel &euro;/t vs Productivit&eacute; machine (t/h r&eacute;el = Tonnage/Heures)</div><div class="ch tall"><canvas id="tk-sc-pers-prod"></canvas></div></div>
-    <div class="card"><div class="card-title">Personnel &euro;/t vs Disponibilit&eacute; globale (%)</div><div class="ch tall"><canvas id="tk-sc-pers-dispo"></canvas></div></div>
-    <div class="card"><div class="card-title">Personnel &euro;/t vs D&eacute;bit (t/h)</div><div class="ch tall"><canvas id="tk-sc-pers-debit"></canvas></div></div>
-    <div class="card"><div class="card-title">&Eacute;volution Personnel &euro;/t &mdash; Anciens vs R&eacute;cents</div><div class="ch tall"><canvas id="tk-pers-gen-ev"></canvas></div></div>
+  <!-- SECTION B — Vue par site -->
+  <div class="section-sep">Analyse par site &mdash; &eacute;volution 2023&nbsp;&rarr;&nbsp;2025</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <label style="font-size:.82rem;color:#555;font-weight:600">Site :</label>
+    <select class="sel" id="tk-site-sel" onchange="tkSetSite(this.value)" style="font-size:.8rem;padding:4px 10px"></select>
   </div>
 
-  <div style="margin:14px 0 12px;font-size:.9rem;font-weight:700;color:#003a63;border-bottom:2px solid #e8eaed;padding-bottom:6px">
-    Corr&eacute;lations &mdash; Maintenance &euro;/t
-  </div>
-  <div class="row2" style="margin-bottom:18px">
-    <div class="card"><div class="card-title">Maintenance &euro;/t vs Disponibilit&eacute; globale (%)</div><div class="ch tall"><canvas id="tk-sc-maint-dispo"></canvas></div></div>
-    <div class="card"><div class="card-title">Maintenance &euro;/t vs Heures de fonctionnement</div><div class="ch tall"><canvas id="tk-sc-maint-heures"></canvas></div></div>
-    <div class="card"><div class="card-title">Maintenance &euro;/t vs Productivit&eacute; machine (t/h r&eacute;el)</div><div class="ch tall"><canvas id="tk-sc-maint-prod"></canvas></div></div>
-    <div class="card"><div class="card-title">&Eacute;volution Maintenance &euro;/t &mdash; Anciens vs R&eacute;cents</div><div class="ch tall"><canvas id="tk-maint-gen-ev"></canvas></div></div>
+  <!-- 5 KPI cards site avec tendances -->
+  <div class="kpi-grid" style="margin-bottom:22px">
+    <div class="kpi-card" style="border-left-color:#00a3e0">
+      <div class="kpi-label">Disponibilit&eacute;</div>
+      <div class="kpi-value" id="tk-sk-dispo">—</div>
+      <div class="kpi-sub" id="tk-sk-dispo-s">R2025</div>
+      <div class="kpi-trend" id="tk-sk-dispo-t"></div>
+    </div>
+    <div class="kpi-card g">
+      <div class="kpi-label">D&eacute;bit</div>
+      <div class="kpi-value" id="tk-sk-debit">—</div>
+      <div class="kpi-sub" id="tk-sk-debit-s">t/h · R2025</div>
+      <div class="kpi-trend" id="tk-sk-debit-t"></div>
+    </div>
+    <div class="kpi-card" style="border-left-color:#8b5cf6">
+      <div class="kpi-label">Taux de refus</div>
+      <div class="kpi-value" id="tk-sk-refus">—</div>
+      <div class="kpi-sub" id="tk-sk-refus-s">% · R2025</div>
+      <div class="kpi-trend" id="tk-sk-refus-t"></div>
+    </div>
+    <div class="kpi-card o">
+      <div class="kpi-label">Personnel &euro;/t</div>
+      <div class="kpi-value" id="tk-sk-pers">—</div>
+      <div class="kpi-sub" id="tk-sk-pers-s">&euro;/t · R2025</div>
+      <div class="kpi-trend" id="tk-sk-pers-t"></div>
+    </div>
+    <div class="kpi-card r">
+      <div class="kpi-label">Maintenance &euro;/t</div>
+      <div class="kpi-value" id="tk-sk-maint">—</div>
+      <div class="kpi-sub" id="tk-sk-maint-s">&euro;/t · R2025</div>
+      <div class="kpi-trend" id="tk-sk-maint-t"></div>
+    </div>
   </div>
 
-  <div style="margin:14px 0 12px;font-size:.9rem;font-weight:700;color:#003a63;border-bottom:2px solid #e8eaed;padding-bottom:6px">
-    Synth&egrave;se &mdash; KPIs techniques &amp; charges par site
+  <!-- CA + contexte -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <span style="font-size:.82rem;font-weight:700;color:#003a63">CA &amp; contexte :</span>
+    <button class="btn-pill tk-cax active" onclick="tkSetCaX('tonnage',this)" style="font-size:.78rem;padding:4px 14px">Tonnage entrant</button>
+    <button class="btn-pill tk-cax" onclick="tkSetCaX('refus',this)" style="font-size:.78rem;padding:4px 14px">Taux de refus</button>
   </div>
+  <div class="card full" style="margin-bottom:22px">
+    <div style="position:relative;height:280px"><canvas id="tk-ca-chart"></canvas></div>
+  </div>
+
+  <!-- Charges + KPI overlay -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <span style="font-size:.78rem;font-weight:700;color:#555">Afficher en courbe :</span>
+    <button class="btn-pill tk-kline" data-col="#0082b3" onclick="tkToggleKpiLine('debit',this)" style="border-color:#0082b3;color:#0082b3">D&eacute;bit</button>
+    <button class="btn-pill tk-kline" data-col="#059669" onclick="tkToggleKpiLine('dispo',this)" style="border-color:#059669;color:#059669">Dispo</button>
+    <button class="btn-pill tk-kline" data-col="#ef4444" onclick="tkToggleKpiLine('refus',this)" style="border-color:#ef4444;color:#ef4444">Taux de refus</button>
+    <button class="btn-pill tk-kline" data-col="#8b5cf6" onclick="tkToggleKpiLine('heures',this)" style="border-color:#8b5cf6;color:#8b5cf6">Heures fonct.</button>
+    <span class="tk-note" style="margin:0">Courbes en indice base&nbsp;100&nbsp;(2023), axe droit</span>
+  </div>
+  <div class="row2" style="margin-bottom:26px">
+    <div class="card" style="border-top:3px solid #f59e0b">
+      <div class="card-title">Co&ucirc;ts de Personnel &euro;/t</div>
+      <div style="position:relative;height:320px"><canvas id="tk-pers-chart"></canvas></div>
+    </div>
+    <div class="card" style="border-top:3px solid #ef4444">
+      <div class="card-title">Co&ucirc;ts de Maintenance &euro;/t</div>
+      <div style="position:relative;height:320px"><canvas id="tk-maint-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION C — Tableau récap -->
+  <div class="section-sep">Synth&egrave;se &mdash; tous les sites</div>
   <div class="card full" style="margin-bottom:18px">
     <div id="tk-table-wrap"></div>
   </div>
@@ -1825,6 +1875,333 @@ function renderRg(){
 
 
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// PERFS TECHNIQUES & CHARGES
+// ══════════════════════════════════════════════════════
+const KPI_RAW = %%KPI%%;
+const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Ch\u00e9zy']);
+const TK_YRS = [2023,2024,2025];
+const TK_YR_COL   = {2023:'rgba(99,102,241,.8)', 2024:'rgba(0,163,224,.8)',  2025:'rgba(16,185,129,.8)'};
+const TK_YR_BDR   = {2023:'#4338ca',             2024:'#0082b3',             2025:'#059669'};
+const TK_GEN_COL  = {ancien:'rgba(245,158,11,.82)',recent:'rgba(0,163,224,.82)'};
+const TK_GEN_BDR  = {ancien:'#d97706',            recent:'#0082b3'};
+let _tkMerged=null, tkYr='all', tkSite=null, tkC={}, tkScYr='all', tkScGen='all', tkKpi='debit', tkCaX='tonnage';
+
+function getTkMerged(){
+  if(_tkMerged) return _tkMerged;
+  _tkMerged=[];
+  KPI_RAW.forEach(function(k){
+    var yr=+k.Annee;
+    var pl=DATA.find(function(d){return d.Site===k.Site&&+d.Annee===yr;});
+    if(!pl) return;
+    var tn=Math.abs(+(pl.Tonnes_entrantes||0)); if(!tn) return;
+    var cp=pl.Couts_personnel!=null?Math.abs(+pl.Couts_personnel)/tn:null;
+    var mo=Math.abs(+(pl.Maintenance_obligatoire||0));
+    var mc=Math.abs(+(pl.Maintenance_courante||0));
+    var maint=(mo+mc)>0?(mo+mc)/tn:null;
+    var dispo=k.Dispo_globale!=null?+k.Dispo_globale*100:null;
+    var prod=(k.Tonnage&&+k.Heures_fonctionnement>0)?+k.Tonnage/+k.Heures_fonctionnement:null;
+    _tkMerged.push({site:k.Site,annee:yr,
+      gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
+      dispo:dispo,
+      heures:k.Heures_fonctionnement!=null?+k.Heures_fonctionnement:null,
+      tonnage:k.Tonnage!=null?+k.Tonnage:null,
+      debit:k.Debit!=null?+k.Debit:null,
+      productivite:prod,
+      personnel:cp,
+      maintenance:maint,
+      refus:k.Taux_refus!=null&&k.Taux_refus!==''?+k.Taux_refus:null});
+  });
+  return _tkMerged;
+}
+
+function tkFiltered(){ return tkYr==='all'?getTkMerged():getTkMerged().filter(function(d){return d.annee===+tkYr;}); }
+
+function tkScFiltered(){
+  var m=getTkMerged().filter(function(d){
+    return tkScGen==='all' || d.gen===tkScGen;
+  });
+  if(tkScYr!=='all'){
+    return m.filter(function(d){ return d.annee===+tkScYr; });
+  }
+  // Mode "Toutes" : moyenne par site
+  var bySite={};
+  m.forEach(function(d){
+    if(!bySite[d.site]) bySite[d.site]={site:d.site,gen:d.gen,_n:0,dispo:0,debit:0,heures:0,tonnage:0,productivite:0,personnel:0,maintenance:0,refus:0,_cnt:{}};
+    var r=bySite[d.site];
+    ['dispo','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+      if(d[k]!=null){ r[k]+=d[k]; r._cnt[k]=(r._cnt[k]||0)+1; }
+    });
+  });
+  return Object.values(bySite).map(function(r){
+    var out={site:r.site,gen:r.gen,annee:'moy.'};
+    ['dispo','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+      out[k]=r._cnt[k]?r[k]/r._cnt[k]:null;
+    });
+    return out;
+  });
+}
+
+function tkScSetYr(yr,el){
+  tkScYr=yr;
+  document.querySelectorAll('.tk-sc-yr').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkScatter();
+}
+
+function tkScSetGen(gen,el){
+  tkScGen=gen;
+  document.querySelectorAll('.tk-sc-gen').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkScatter();
+}
+
+var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 (%)',refus:'Taux de refus (%)',heures:'Heures de fonctionnement'};
+
+function tkSetKpi(kpi,el){
+  tkKpi=kpi;
+  document.querySelectorAll('.tk-kpi').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkScatter();
+}
+
+function tkSetCaX(key,el){
+  tkCaX=key;
+  document.querySelectorAll('.tk-cax').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkCaChart();
+}
+
+function renderTkScatter(){
+  var data=tkScFiltered();
+  var xLbl=TK_KPI_LABELS[tkKpi]||tkKpi;
+  var lp=document.getElementById('tk-kpi-lbl-pers');  if(lp) lp.textContent=xLbl;
+  var lm=document.getElementById('tk-kpi-lbl-maint'); if(lm) lm.textContent=xLbl;
+  var pPts=data.filter(function(d){return d[tkKpi]!=null&&d.personnel!=null;})
+               .map(function(d){return {x:d[tkKpi],y:d.personnel,label:d.site,annee:d.annee};});
+  mkScatterTk('tk-sc-pers',pPts,xLbl,'Personnel \u20ac/t','tk-verdict-pers');
+  var qPts=data.filter(function(d){return d[tkKpi]!=null&&d.maintenance!=null;})
+               .map(function(d){return {x:d[tkKpi],y:d.maintenance,label:d.site,annee:d.annee};});
+  mkScatterTk('tk-sc-maint',qPts,xLbl,'Maintenance \u20ac/t','tk-verdict-maint');
+}
+
+function linReg(pts){
+  var n=pts.length; if(n<2) return null;
+  var sx=0,sy=0,sxy=0,sxx=0;
+  pts.forEach(function(p){sx+=p.x;sy+=p.y;sxy+=p.x*p.y;sxx+=p.x*p.x;});
+  var det=n*sxx-sx*sx; if(Math.abs(det)<1e-9) return null;
+  var m=(n*sxy-sx*sy)/det, b=(sy-m*sx)/n;
+  var ymean=sy/n, ss_tot=0, ss_res=0;
+  pts.forEach(function(p){ss_tot+=(p.y-ymean)*(p.y-ymean);ss_res+=(p.y-(m*p.x+b))*(p.y-(m*p.x+b));});
+  var r2=ss_tot>0?1-ss_res/ss_tot:0;
+  var xs=pts.map(function(p){return p.x;});
+  return {m:m,b:b,r2:r2,xmin:Math.min.apply(null,xs),xmax:Math.max.apply(null,xs)};
+}
+
+function tkScatterDs(data, xKey, yKey){
+  var anc=[],rec=[];
+  data.forEach(function(d){
+    if(d[xKey]==null||d[yKey]==null) return;
+    var pt={x:d[xKey],y:d[yKey],label:d.site,annee:d.annee};
+    if(d.gen==='ancien') anc.push(pt); else rec.push(pt);
+  });
+  return {anc:anc,rec:rec};
+}
+
+var tkLabelPlugin={id:'tkLabels',afterDraw:function(chart){
+  var ctx=chart.ctx;
+  chart.data.datasets.forEach(function(ds,di){
+    var meta=chart.getDatasetMeta(di);
+    if(meta.type!=='scatter') return;
+    meta.data.forEach(function(pt,i){
+      var raw=ds.data[i]; if(!raw||!raw.label) return;
+      ctx.save();
+      ctx.font='bold 10px "Segoe UI",sans-serif';
+      ctx.fillStyle='#334155';
+      ctx.fillText(raw.label,pt.x+8,pt.y-5);
+      ctx.restore();
+    });
+  });
+}};
+
+function tkSetVerdict(elId,r2){
+  var el=document.getElementById(elId); if(!el||r2==null) return;
+  var v=r2>0.5?{t:'Corr\u00e9lation forte',   c:'#059669',b:'#d1fae5',bd:'#059669'}
+         :r2>0.2?{t:'Corr\u00e9lation mod\u00e9r\u00e9e',c:'#d97706',b:'#fef3c7',bd:'#d97706'}
+         :        {t:'Corr\u00e9lation faible', c:'#6b7280',b:'#f3f4f6',bd:'#9ca3af'};
+  el.textContent=v.t;
+  el.style.color=v.c; el.style.background=v.b; el.style.border='1px solid '+v.bd;
+}
+
+function mkScatterTk(id, pts, xLbl, yLbl, verdictId){
+  var reg=linReg(pts);
+  if(reg&&verdictId) tkSetVerdict(verdictId,reg.r2);
+  var ds=[{label:'Sites',data:pts,backgroundColor:'rgba(0,130,179,.75)',borderColor:'#0082b3',
+    pointRadius:10,pointHoverRadius:13,type:'scatter'}];
+  if(reg) ds.push({label:'Tendance (R\u00b2='+reg.r2.toFixed(2)+')',
+    data:[{x:reg.xmin,y:reg.m*reg.xmin+reg.b},{x:reg.xmax,y:reg.m*reg.xmax+reg.b}],
+    type:'line',borderColor:'#f59e0b',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,tension:0});
+  return mkChart(id,{type:'scatter',data:{datasets:ds},plugins:[tkLabelPlugin],options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:11}}},
+      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;return (r.label||'')+' '+(r.annee||'')+': ('+r.x.toFixed(1)+', '+r.y.toFixed(1)+')';}}}},
+    scales:{
+      x:{title:{display:true,text:xLbl,font:{size:11}},grid:{color:'#f0f0f0'}},
+      y:{title:{display:true,text:yLbl,font:{size:11}},grid:{color:'#f0f0f0'}}
+    }}});
+}
+
+function tkSetYr(yr,el){
+  tkYr=yr;
+  document.querySelectorAll('.tk-yr').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTk();
+}
+
+function tkSetSite(s){ tkSite=s; renderTkSiteDetail(); }
+
+function renderTkSiteDetail(){
+  var site=tkSite;
+  var d=getTkMerged().filter(function(r){return r.site===site;}).sort(function(a,b){return a.annee-b.annee;});
+  if(!d.length) return;
+  var yrs=d.map(function(r){return r.annee;});
+
+  // 5 KPI cards avec tendance 2023→2025
+  function setSkCard(valId,subId,trendId,vals,unit,higherIsBetter){
+    var v25=vals[vals.length-1],v23=vals[0];
+    var el=document.getElementById(valId); if(el) el.textContent=v25!=null?v25.toFixed(1)+unit:'\u2014';
+    var s=document.getElementById(subId);  if(s)  s.textContent='R'+yrs[yrs.length-1];
+    var t=document.getElementById(trendId); if(!t) return;
+    if(v23!=null&&v25!=null&&v23!==0){
+      var pct=(v25-v23)/Math.abs(v23)*100;
+      var up=pct>=0;
+      var good=(higherIsBetter&&up)||(!higherIsBetter&&!up);
+      t.textContent=(up?'\u25b2 ':'\u25bc ')+Math.abs(pct).toFixed(1)+'% vs 2023';
+      t.style.color=good?'#10b981':'#ef4444';
+    } else { t.textContent=''; }
+  }
+  setSkCard('tk-sk-dispo', 'tk-sk-dispo-s','tk-sk-dispo-t', d.map(function(r){return r.dispo;}),    '%',   true);
+  setSkCard('tk-sk-debit', 'tk-sk-debit-s','tk-sk-debit-t', d.map(function(r){return r.debit;}),    ' t/h',true);
+  setSkCard('tk-sk-refus', 'tk-sk-refus-s','tk-sk-refus-t', d.map(function(r){return r.refus;}),    '%',   false);
+  setSkCard('tk-sk-pers',  'tk-sk-pers-s', 'tk-sk-pers-t',  d.map(function(r){return r.personnel;}),'\u20ac',false);
+  setSkCard('tk-sk-maint', 'tk-sk-maint-s','tk-sk-maint-t', d.map(function(r){return r.maintenance;}),'\u20ac',false);
+
+  // CA + contexte
+  renderTkCaChart();
+
+  renderTkSiteCharts();
+}
+
+var tkKpiLines={debit:false,dispo:false,refus:false,heures:false};
+var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6'};
+var TK_KLINE_LBL={debit:'D\u00e9bit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)'};
+var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h'};
+
+function tkToggleKpiLine(key,el){
+  var wasActive=tkKpiLines[key];
+  // comportement radio : un seul KPI à la fois
+  Object.keys(tkKpiLines).forEach(function(k){tkKpiLines[k]=false;});
+  document.querySelectorAll('.tk-kline').forEach(function(b){
+    b.style.background=''; b.style.color=b.dataset.col; b.style.borderColor=b.dataset.col;
+  });
+  if(!wasActive){
+    tkKpiLines[key]=true;
+    el.style.background=TK_KLINE_COL[key]; el.style.color='#fff'; el.style.borderColor=TK_KLINE_COL[key];
+  }
+  renderTkSiteCharts();
+}
+
+function renderTkSiteCharts(){
+  var site=tkSite;
+  var d=getTkMerged().filter(function(r){return r.site===site;}).sort(function(a,b){return a.annee-b.annee;});
+  if(!d.length) return;
+  var yrs=d.map(function(r){return r.annee;});
+  var activeKpi=Object.keys(tkKpiLines).find(function(k){return tkKpiLines[k];})||null;
+  var hasLines=!!activeKpi;
+
+  function buildCfg(chargeKey,chargeLabel,barColor,barBorder){
+    // Barre en arrière-plan (order élevé = dessiné en premier)
+    var ds=[{label:chargeLabel,data:d.map(function(r){return r[chargeKey];}),
+      type:'bar',backgroundColor:barColor,borderColor:barBorder,borderWidth:2,yAxisID:'y',order:2}];
+    // Courbe KPI au premier plan (order faible = dessiné en dernier)
+    if(activeKpi){
+      ds.push({label:TK_KLINE_LBL[activeKpi],data:d.map(function(r){return r[activeKpi];}),
+        type:'line',borderColor:TK_KLINE_COL[activeKpi],backgroundColor:'transparent',
+        borderWidth:2.5,pointRadius:7,pointHoverRadius:10,tension:.35,fill:false,yAxisID:'y2',order:1});
+    }
+    var scales={y:{position:'left',title:{display:true,text:'\u20ac/t',font:{size:10}},grid:{color:'#f0f0f0'}}};
+    if(hasLines) scales.y2={position:'right',
+      title:{display:true,text:TK_KLINE_UNIT[activeKpi],font:{size:10}},
+      grid:{drawOnChartArea:false}};
+    return {type:'bar',data:{labels:yrs,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:scales}};
+  }
+  mkChart('tk-pers-chart',  buildCfg('personnel',  'Personnel \u20ac/t',  'rgba(245,158,11,.85)','#d97706'));
+  mkChart('tk-maint-chart', buildCfg('maintenance','Maintenance \u20ac/t','rgba(239,68,68,.8)',  '#dc2626'));
+}
+
+function renderTkCaChart(){
+  var site=tkSite;
+  var pl=DATA.filter(function(d){return d.Site===site&&[2023,2024,2025].indexOf(+d.Annee)>=0;})
+             .sort(function(a,b){return +a.Annee-+b.Annee;});
+  if(!pl.length) return;
+  var yrs=pl.map(function(d){return +d.Annee;});
+  var caData=pl.map(function(d){return d.CA!=null?Math.round(Math.abs(+d.CA)/1e4)/100:null;}); // M€
+  var tkd=getTkMerged().filter(function(d){return d.site===site;}).sort(function(a,b){return a.annee-b.annee;});
+  var xData,xLbl,xColor,xBg;
+  if(tkCaX==='refus'){
+    xData=tkd.map(function(r){return r.refus;});
+    xLbl='Taux de refus (%)'; xColor='#ef4444'; xBg='rgba(239,68,68,.10)';
+  } else {
+    xData=pl.map(function(d){return d.Tonnes_entrantes!=null?Math.round(Math.abs(+d.Tonnes_entrantes)):null;});
+    xLbl='Tonnage entrant (t)'; xColor='#8b5cf6'; xBg='rgba(139,92,246,.10)';
+  }
+  mkChart('tk-ca-chart',{type:'bar',data:{labels:yrs,datasets:[
+    {label:'CA (M\u20ac)',data:caData,backgroundColor:'rgba(0,58,99,.75)',borderColor:'#003a63',borderWidth:2,yAxisID:'y',order:2},
+    {label:xLbl,data:xData,type:'line',borderColor:xColor,backgroundColor:xBg,borderWidth:2.5,pointRadius:7,tension:.3,fill:true,yAxisID:'y2',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},
+    scales:{
+      y: {position:'left', title:{display:true,text:'M\u20ac',font:{size:10}},grid:{color:'#f0f0f0'}},
+      y2:{position:'right',title:{display:true,text:tkCaX==='refus'?'%':'t',font:{size:10}},grid:{drawOnChartArea:false}}
+    }}});
+}
+
+function renderTk(){
+  var m=getTkMerged();
+  var sites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
+  var sel=document.getElementById('tk-site-sel');
+  if(!sel.options.length){ sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;sel.appendChild(o);}); }
+  if(!tkSite) tkSite=sites[0];
+  sel.value=tkSite;
+  renderTkSiteDetail();
+
+  // Scatter corrélations clés
+  renderTkScatter();
+
+  // Tableau synthèse
+  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
+  var dispYrs=tkYr==='all'?TK_YRS:[+tkYr];
+  var h='<div class="hm-wrap"><table class="hm-table"><thead><tr><th>Site</th><th>Cat.</th>';
+  dispYrs.forEach(function(yr){
+    h+='<th>Dispo '+yr+'</th><th>D\u00e9bit '+yr+'</th><th>Refus '+yr+'</th><th>Pers. \u20ac/t '+yr+'</th><th>Maint. \u20ac/t '+yr+'</th>';
+  });
+  h+='</tr></thead><tbody>';
+  allSites.forEach(function(s){
+    var isAnc=TK_ANCIENS.has(s);
+    var bg=isAnc?'#fff9f0':'#f0f7ff';
+    var badge=isAnc?'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e">Ancien</span>':'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#1e40af">R\u00e9cent</span>';
+    h+='<tr style="background:'+bg+'"><td style="font-weight:600">'+s+'</td><td>'+badge+'</td>';
+    dispYrs.forEach(function(yr){
+      var d=m.find(function(r){return r.site===s&&r.annee===yr;});
+      function f(v,u){return v!=null?v.toFixed(1)+u:'—';}
+      h+='<td>'+f(d&&d.dispo,'%')+'</td><td>'+f(d&&d.debit,' t/h')+'</td><td>'+f(d&&d.refus,'%')+'</td><td>'+f(d&&d.personnel,'\u20ac')+'</td><td>'+f(d&&d.maintenance,'\u20ac')+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('tk-table-wrap').innerHTML=h;
+}
+
 // INIT
 // ══════════════════════════════════════════════════════
 (function init(){
@@ -1867,217 +2244,6 @@ function renderRg(){
       if(c){ var chart = Chart.getChart(c); if(chart) chart.resize(); }
     });
   });
-// ══════════════════════════════════════════════════════
-// PERFS TECHNIQUES & CHARGES
-// ══════════════════════════════════════════════════════
-const KPI_RAW = %%KPI%%;
-const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Ch\u00e9zy']);
-const TK_YRS = [2023,2024,2025];
-const TK_YR_COL   = {2023:'rgba(99,102,241,.8)', 2024:'rgba(0,163,224,.8)',  2025:'rgba(16,185,129,.8)'};
-const TK_YR_BDR   = {2023:'#4338ca',             2024:'#0082b3',             2025:'#059669'};
-const TK_GEN_COL  = {ancien:'rgba(245,158,11,.82)',recent:'rgba(0,163,224,.82)'};
-const TK_GEN_BDR  = {ancien:'#d97706',            recent:'#0082b3'};
-let _tkMerged=null, tkYr='all', tkSite=null, tkC={};
-
-function getTkMerged(){
-  if(_tkMerged) return _tkMerged;
-  _tkMerged=[];
-  KPI_RAW.forEach(function(k){
-    var yr=+k.Annee;
-    var pl=DATA.find(function(d){return d.Site===k.Site&&+d.Annee===yr;});
-    if(!pl) return;
-    var tn=Math.abs(+(pl.Tonnes_entrantes||0)); if(!tn) return;
-    var cp=pl.Couts_personnel!=null?Math.abs(+pl.Couts_personnel)/tn:null;
-    var mo=Math.abs(+(pl.Maintenance_obligatoire||0));
-    var mc=Math.abs(+(pl.Maintenance_courante||0));
-    var maint=(mo+mc)>0?(mo+mc)/tn:null;
-    var dispo=k.Dispo_globale!=null?+k.Dispo_globale*100:null;
-    var prod=(k.Tonnage&&+k.Heures_fonctionnement>0)?+k.Tonnage/+k.Heures_fonctionnement:null;
-    _tkMerged.push({site:k.Site,annee:yr,
-      gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
-      dispo:dispo,
-      heures:k.Heures_fonctionnement!=null?+k.Heures_fonctionnement:null,
-      tonnage:k.Tonnage!=null?+k.Tonnage:null,
-      debit:k.Debit!=null?+k.Debit:null,
-      productivite:prod,
-      personnel:cp,
-      maintenance:maint});
-  });
-  return _tkMerged;
-}
-
-function tkFiltered(){ return tkYr==='all'?getTkMerged():getTkMerged().filter(function(d){return d.annee===+tkYr;}); }
-
-function linReg(pts){
-  var n=pts.length; if(n<2) return null;
-  var sx=0,sy=0,sxy=0,sxx=0;
-  pts.forEach(function(p){sx+=p.x;sy+=p.y;sxy+=p.x*p.y;sxx+=p.x*p.x;});
-  var det=n*sxx-sx*sx; if(Math.abs(det)<1e-9) return null;
-  var m=(n*sxy-sx*sy)/det, b=(sy-m*sx)/n;
-  var ymean=sy/n, ss_tot=0, ss_res=0;
-  pts.forEach(function(p){ss_tot+=(p.y-ymean)*(p.y-ymean);ss_res+=(p.y-(m*p.x+b))*(p.y-(m*p.x+b));});
-  var r2=ss_tot>0?1-ss_res/ss_tot:0;
-  var xs=pts.map(function(p){return p.x;});
-  return {m:m,b:b,r2:r2,xmin:Math.min.apply(null,xs),xmax:Math.max.apply(null,xs)};
-}
-
-function tkScatterDs(data, xKey, yKey){
-  var anc=[],rec=[];
-  data.forEach(function(d){
-    if(d[xKey]==null||d[yKey]==null) return;
-    var pt={x:d[xKey],y:d[yKey],label:d.site,annee:d.annee};
-    if(d.gen==='ancien') anc.push(pt); else rec.push(pt);
-  });
-  return {anc:anc,rec:rec};
-}
-
-function mkScatterTk(id, anc, rec, xLbl, yLbl){
-  var all=anc.concat(rec);
-  var reg=linReg(all);
-  var ds=[
-    {label:'Sites anciens',data:anc,backgroundColor:TK_GEN_COL.ancien,borderColor:TK_GEN_BDR.ancien,pointRadius:6,pointHoverRadius:9,type:'scatter'},
-    {label:'Sites r\u00e9cents',data:rec,backgroundColor:TK_GEN_COL.recent,borderColor:TK_GEN_BDR.recent,pointRadius:6,pointHoverRadius:9,type:'scatter'}
-  ];
-  if(reg) ds.push({label:'Tendance (R\u00b2='+reg.r2.toFixed(2)+')',
-    data:[{x:reg.xmin,y:reg.m*reg.xmin+reg.b},{x:reg.xmax,y:reg.m*reg.xmax+reg.b}],
-    type:'line',borderColor:'#ef4444',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,tension:0});
-  return mkChart(id,{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'bottom',labels:{font:{size:11}}},
-      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;return (r.label||'')+' '+( r.annee||'')+': ('+r.x.toFixed(1)+', '+r.y.toFixed(1)+')';}}}},
-    scales:{
-      x:{title:{display:true,text:xLbl,font:{size:11}},grid:{color:'#f0f0f0'}},
-      y:{title:{display:true,text:yLbl,font:{size:11}},grid:{color:'#f0f0f0'}}
-    }}});
-}
-
-function tkSetYr(yr,el){
-  tkYr=yr;
-  document.querySelectorAll('.tk-yr').forEach(function(b){b.classList.remove('active');});
-  el.classList.add('active');
-  renderTk();
-}
-
-function tkSetSite(s){ tkSite=s; renderTkSite(); }
-
-function renderTkSite(){
-  var site=tkSite;
-  var d=getTkMerged().filter(function(r){return r.site===site;}).sort(function(a,b){return a.annee-b.annee;});
-  if(!d.length) return;
-  var yrs=d.map(function(r){return r.annee;});
-  function barCfg(key,unit){
-    return {type:'bar',data:{labels:yrs,datasets:[{label:unit,
-      data:d.map(function(r){return r[key];}),
-      backgroundColor:yrs.map(function(y){return TK_YR_COL[y]||'#aaa';}),
-      borderColor:yrs.map(function(y){return TK_YR_BDR[y]||'#888';}),
-      borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y!=null?c.parsed.y.toFixed(1)+' '+unit:'—';}}}},
-      scales:{x:{grid:{display:false}},y:{title:{display:true,text:unit,font:{size:10}},grid:{color:'#f0f0f0'}}}}};
-  }
-  mkChart('tk-debit-ev', barCfg('debit','t/h'));
-  mkChart('tk-dispo-ev', barCfg('dispo','%'));
-  mkChart('tk-tonne-ev', barCfg('tonnage','t'));
-  mkChart('tk-heures-ev',barCfg('heures','h'));
-}
-
-function renderTk(){
-  var m=getTkMerged();
-  var sites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
-  var sel=document.getElementById('tk-site-sel');
-  if(!sel.options.length){ sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;sel.appendChild(o);}); }
-  if(!tkSite) tkSite=sites[0];
-  sel.value=tkSite;
-  renderTkSite();
-
-  // Vue comparative — Débit
-  var yr23d=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2023;});return r?r.debit:null;});
-  var yr24d=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2024;});return r?r.debit:null;});
-  var yr25d=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2025;});return r?r.debit:null;});
-  mkChart('tk-debit-all',{type:'bar',data:{labels:sites,datasets:[
-    {label:'R2023',data:yr23d,backgroundColor:'rgba(99,102,241,.75)',borderColor:'#4338ca',borderWidth:1},
-    {label:'R2024',data:yr24d,backgroundColor:'rgba(0,163,224,.75)', borderColor:'#0082b3',borderWidth:1},
-    {label:'R2025',data:yr25d,backgroundColor:'rgba(16,185,129,.75)',borderColor:'#059669',borderWidth:1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
-    scales:{x:{grid:{display:false}},y:{title:{display:true,text:'t/h',font:{size:10}},grid:{color:'#f0f0f0'}}}}});
-
-  // Vue comparative — Dispo
-  var yr23v=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2023;});return r?r.dispo:null;});
-  var yr24v=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2024;});return r?r.dispo:null;});
-  var yr25v=sites.map(function(s){var r=m.find(function(d){return d.site===s&&d.annee===2025;});return r?r.dispo:null;});
-  mkChart('tk-dispo-all',{type:'bar',data:{labels:sites,datasets:[
-    {label:'R2023',data:yr23v,backgroundColor:'rgba(99,102,241,.75)',borderColor:'#4338ca',borderWidth:1},
-    {label:'R2024',data:yr24v,backgroundColor:'rgba(0,163,224,.75)', borderColor:'#0082b3',borderWidth:1},
-    {label:'R2025',data:yr25v,backgroundColor:'rgba(16,185,129,.75)',borderColor:'#059669',borderWidth:1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
-    scales:{x:{grid:{display:false}},y:{title:{display:true,text:'%',font:{size:10}},min:50,max:100,grid:{color:'#f0f0f0'}}}}});
-
-  // Scatter Personnel
-  var data=tkFiltered();
-  var p1=tkScatterDs(data,'productivite','personnel');
-  mkScatterTk('tk-sc-pers-prod',p1.anc,p1.rec,'Productivit\u00e9 machine (t/h r\u00e9el)','Personnel \u20ac/t');
-  var p2=tkScatterDs(data,'dispo','personnel');
-  mkScatterTk('tk-sc-pers-dispo',p2.anc,p2.rec,'Disponibilit\u00e9 globale (%)','Personnel \u20ac/t');
-  var p3=tkScatterDs(data,'debit','personnel');
-  mkScatterTk('tk-sc-pers-debit',p3.anc,p3.rec,'D\u00e9bit (t/h)','Personnel \u20ac/t');
-
-  // Évolution Personnel €/t par génération
-  var persEv=TK_YRS.map(function(yr){
-    var anc=m.filter(function(d){return d.annee===yr&&d.gen==='ancien'&&d.personnel!=null;});
-    var rec=m.filter(function(d){return d.annee===yr&&d.gen==='recent'&&d.personnel!=null;});
-    return {anc:anc.length?anc.reduce(function(s,d){return s+d.personnel;},0)/anc.length:null,
-            rec:rec.length?rec.reduce(function(s,d){return s+d.personnel;},0)/rec.length:null};
-  });
-  mkChart('tk-pers-gen-ev',{type:'line',data:{labels:TK_YRS,datasets:[
-    {label:'Sites anciens',data:persEv.map(function(d){return d.anc;}),borderColor:TK_GEN_BDR.ancien,backgroundColor:TK_GEN_COL.ancien,tension:.3,pointRadius:6,fill:false},
-    {label:'Sites r\u00e9cents',data:persEv.map(function(d){return d.rec;}),borderColor:TK_GEN_BDR.recent,backgroundColor:TK_GEN_COL.recent,tension:.3,pointRadius:6,fill:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
-    scales:{x:{grid:{display:false}},y:{title:{display:true,text:'\u20ac/t',font:{size:10}},grid:{color:'#f0f0f0'}}}}});
-
-  // Scatter Maintenance
-  var m1=tkScatterDs(data,'dispo','maintenance');
-  mkScatterTk('tk-sc-maint-dispo',m1.anc,m1.rec,'Disponibilit\u00e9 globale (%)','Maintenance \u20ac/t');
-  var m2=tkScatterDs(data,'heures','maintenance');
-  mkScatterTk('tk-sc-maint-heures',m2.anc,m2.rec,'Heures de fonctionnement','Maintenance \u20ac/t');
-  var m3=tkScatterDs(data,'productivite','maintenance');
-  mkScatterTk('tk-sc-maint-prod',m3.anc,m3.rec,'Productivit\u00e9 machine (t/h r\u00e9el)','Maintenance \u20ac/t');
-
-  // Évolution Maintenance €/t par génération
-  var maintEv=TK_YRS.map(function(yr){
-    var anc=m.filter(function(d){return d.annee===yr&&d.gen==='ancien'&&d.maintenance!=null;});
-    var rec=m.filter(function(d){return d.annee===yr&&d.gen==='recent'&&d.maintenance!=null;});
-    return {anc:anc.length?anc.reduce(function(s,d){return s+d.maintenance;},0)/anc.length:null,
-            rec:rec.length?rec.reduce(function(s,d){return s+d.maintenance;},0)/rec.length:null};
-  });
-  mkChart('tk-maint-gen-ev',{type:'line',data:{labels:TK_YRS,datasets:[
-    {label:'Sites anciens',data:maintEv.map(function(d){return d.anc;}),borderColor:TK_GEN_BDR.ancien,backgroundColor:TK_GEN_COL.ancien,tension:.3,pointRadius:6,fill:false},
-    {label:'Sites r\u00e9cents',data:maintEv.map(function(d){return d.rec;}),borderColor:TK_GEN_BDR.recent,backgroundColor:TK_GEN_COL.recent,tension:.3,pointRadius:6,fill:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
-    scales:{x:{grid:{display:false}},y:{title:{display:true,text:'\u20ac/t',font:{size:10}},grid:{color:'#f0f0f0'}}}}});
-
-  // Tableau synthèse
-  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
-  var dispYrs=tkYr==='all'?TK_YRS:[+tkYr];
-  var h='<div class="hm-wrap"><table class="hm-table"><thead><tr><th>Site</th><th>Cat.</th>';
-  dispYrs.forEach(function(yr){
-    h+='<th>Dispo '+yr+'</th><th>D\u00e9bit '+yr+'</th><th>Prod. '+yr+'</th><th>Pers. \u20ac/t '+yr+'</th><th>Maint. \u20ac/t '+yr+'</th>';
-  });
-  h+='</tr></thead><tbody>';
-  allSites.forEach(function(s){
-    var isAnc=TK_ANCIENS.has(s);
-    var bg=isAnc?'#fff9f0':'#f0f7ff';
-    var badge=isAnc?'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e">Ancien</span>':'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#1e40af">R\u00e9cent</span>';
-    h+='<tr style="background:'+bg+'"><td style="font-weight:600">'+s+'</td><td>'+badge+'</td>';
-    dispYrs.forEach(function(yr){
-      var d=m.find(function(r){return r.site===s&&r.annee===yr;});
-      function f(v,u){return v!=null?v.toFixed(1)+u:'—';}
-      h+='<td>'+f(d&&d.dispo,'%')+'</td><td>'+f(d&&d.debit,' t/h')+'</td><td>'+f(d&&d.productivite,' t/h')+'</td><td>'+f(d&&d.personnel,'\u20ac')+'</td><td>'+f(d&&d.maintenance,'\u20ac')+'</td>';
-    });
-    h+='</tr>';
-  });
-  h+='</tbody></table></div>';
-  document.getElementById('tk-table-wrap').innerHTML=h;
-}
-
   window.addEventListener('afterprint', function(){
     document.querySelectorAll('.ch').forEach(function(el){
       el.style.height = el.dataset.origH || '';
