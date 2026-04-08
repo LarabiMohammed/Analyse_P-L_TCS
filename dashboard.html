@@ -199,7 +199,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="header-right">
     <div>R2023 &middot; R2024 &middot; R2025 &middot; <span style="background:rgba(245,158,11,.35);border:1px solid rgba(245,158,11,.6);padding:1px 7px;border-radius:4px;font-size:.75rem;font-weight:700">B2026</span></div>
-    <div>Mis &agrave; jour le 07/04/2026 15:51</div>
+    <div>Mis &agrave; jour le 08/04/2026 17:24</div>
   </div>
 </header>
 
@@ -226,7 +226,7 @@ select.sel:focus{border-color:#00a3e0}
       <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
       <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
     </div>
-    <div class="home-date">Mis &agrave; jour le 07/04/2026 15:51</div>
+    <div class="home-date">Mis &agrave; jour le 08/04/2026 17:24</div>
   </div>
 </div>
 
@@ -482,13 +482,12 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 
   <!-- CA + contexte -->
-  <div id="tk-note-ca" style="margin-bottom:8px"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:.82rem;font-weight:700;color:#003a63">CA &amp; contexte :</span>
     <button class="btn-pill tk-cax active" onclick="tkSetCaX('tonnage',this)" style="font-size:.78rem;padding:4px 14px">Tonnage entrant</button>
     <button class="btn-pill tk-cax" onclick="tkSetCaX('refus',this)" style="font-size:.78rem;padding:4px 14px">Taux de refus</button>
   </div>
-  <div class="card full" style="margin-bottom:22px">
+  <div class="card full" style="margin-bottom:4px">
     <div style="position:relative;height:280px"><canvas id="tk-ca-chart"></canvas></div>
   </div>
 
@@ -503,16 +502,35 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="row2" style="margin-bottom:26px">
     <div class="card" style="border-top:3px solid #f59e0b">
-      <div id="tk-note-pers" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Personnel &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-pers-chart"></canvas></div>
     </div>
     <div class="card" style="border-top:3px solid #ef4444">
-      <div id="tk-note-maint" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Maintenance &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-maint-chart"></canvas></div>
     </div>
   </div>
+
+  <!-- SECTION B.5 — Synthèse corrélations -->
+  <div class="section-sep" style="margin-top:18px">Synth&egrave;se des corr&eacute;lations &mdash; KPI le plus influent par site</div>
+  <p class="tk-note">Coefficient de Pearson calcul&eacute; sur 3 ans (2023&ndash;2025). Indique la force et le sens du lien entre chaque KPI et la charge &euro;/t &mdash; &agrave; lire comme une tendance, non une causalit&eacute;.
+    &nbsp;<strong>|r|&nbsp;&ge;&nbsp;0,7</strong> = lien fort &nbsp;&middot;&nbsp; <strong>0,4&nbsp;&ndash;&nbsp;0,7</strong> = mod&eacute;r&eacute; &nbsp;&middot;&nbsp; <strong>&lt;&nbsp;0,4</strong> = faible.</p>
+  <details style="margin-bottom:14px;font-size:.78rem;color:#555;cursor:pointer">
+    <summary style="font-weight:600;color:#003a63;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:.7rem;border:1px solid #003a63;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center">?</span>
+      Comment est calcul&eacute; le r ?
+    </summary>
+    <div style="margin-top:8px;padding:12px 14px;background:#f8fafc;border-radius:8px;line-height:1.8">
+      <strong>Formule :</strong> r = &Sigma;(x<sub>i</sub>&minus;x&#773;)(y<sub>i</sub>&minus;y&#773;) &nbsp;/&nbsp; &radic;[&Sigma;(x<sub>i</sub>&minus;x&#773;)&sup2; &times; &Sigma;(y<sub>i</sub>&minus;y&#773;)&sup2;]<br>
+      <strong>Exemple &mdash; Dispo (x) vs Personnel &euro;/t (y) sur un site :</strong><br>
+      &nbsp;&nbsp;2023 : x&nbsp;=&nbsp;89,2&nbsp;% &nbsp; y&nbsp;=&nbsp;87,8&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;2024 : x&nbsp;=&nbsp;88,1&nbsp;% &nbsp; y&nbsp;=&nbsp;99,3&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;2025 : x&nbsp;=&nbsp;86,9&nbsp;% &nbsp; y&nbsp;=&nbsp;100,8&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;x&#773;&nbsp;=&nbsp;88,1 &nbsp;&middot;&nbsp; y&#773;&nbsp;=&nbsp;96,0 &nbsp;&middot;&nbsp; &Sigma;(x<sub>i</sub>&minus;x&#773;)(y<sub>i</sub>&minus;y&#773;)&nbsp;=&nbsp;&minus;14,8<br>
+      &nbsp;&nbsp;r&nbsp;=&nbsp;&minus;14,8&nbsp;/&nbsp;&radic;(2,65&nbsp;&times;&nbsp;101,3)&nbsp;=&nbsp;<strong>&minus;0,90</strong> &nbsp;&rarr;&nbsp; quand la dispo baisse, le co&ucirc;t de personnel monte.
+    </div>
+  </details>
+  <div id="tk-corr-summary" style="margin-bottom:28px"></div>
 
   <!-- SECTION C — Tableau récap -->
   <div class="section-sep">Synth&egrave;se &mdash; tous les sites</div>
@@ -1952,6 +1970,113 @@ function tkSetCaX(key,el){
   renderTkCaChart();
 }
 
+// ── Données corrélations pré-calculées ───────────────────────────────────────
+const TK_CORR={
+  'Amiens':         {pers:{dispo:-0.904,debit:0.706,heures:0.525,refus:0.072,tonnage:0.904},  maint:{dispo:0.51,debit:-0.189,heures:-0.911,refus:-0.617,tonnage:-0.511}},
+  'Bègles':    {pers:{dispo:-0.267,debit:-0.895,heures:-0.622,refus:-0.769,tonnage:-0.998},maint:{dispo:0.436,debit:-0.967,heures:0.051,refus:-0.155,tonnage:-0.789}},
+  'Chézy':     {pers:{dispo:0.088,debit:-0.135,heures:0.564,refus:0.785,tonnage:0.215},  maint:{dispo:1.0,debit:0.979,heures:-0.784,refus:0.674,tonnage:0.989}},
+  'Le Havre':       {pers:{dispo:0.607,debit:-0.96,heures:0.988,refus:0.968,tonnage:-0.917},  maint:{dispo:0.994,debit:-0.863,heures:0.79,refus:0.482,tonnage:-0.92}},
+  'Millau':         {pers:{dispo:-0.999,debit:-0.855,heures:-0.986,refus:null,tonnage:-0.995}, maint:{dispo:0.971,debit:0.964,heures:0.903,refus:null,tonnage:0.93}},
+  'Montpellier':    {pers:{dispo:-0.798,debit:-0.559,heures:-0.878,refus:-0.037,tonnage:-0.998},maint:{dispo:0.456,debit:0.721,heures:0.322,refus:0.978,tonnage:-0.24}},
+  'Nantes':         {pers:{dispo:0.264,debit:-0.739,heures:-0.997,refus:-0.905,tonnage:-0.894},maint:{dispo:-0.692,debit:0.971,heures:0.915,refus:0.998,tonnage:0.999}},
+  'Paris 15':       {pers:{dispo:-0.873,debit:0.331,heures:-0.529,refus:0.928,tonnage:0.351}, maint:{dispo:-1.0,debit:0.743,heures:-0.872,refus:0.636,tonnage:-0.141}},
+  'Portes les Valences':{pers:{dispo:0.785,debit:0.787,heures:0.66,refus:0.836,tonnage:0.385},maint:{dispo:-0.953,debit:-0.951,heures:-0.992,refus:-0.922,tonnage:-0.981}},
+  'Saran':          {pers:{dispo:0.628,debit:0.942,heures:0.628,refus:0.947,tonnage:0.976},   maint:{dispo:0.202,debit:-0.857,heures:0.203,refus:-0.353,tonnage:-0.451}},
+  'Sevran':         {pers:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0},            maint:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0}}
+};
+const TK_CORR_SITES=['Amiens','Bègles','Chézy','Le Havre','Millau','Montpellier','Nantes','Paris 15','Portes les Valences','Saran','Sevran'];
+const TK_CORR_KPIS=['dispo','debit','heures','refus','tonnage'];
+const TK_CORR_KPI_LBL={dispo:'Dispo',debit:'Débit',heures:'Heures',refus:'Taux de refus',tonnage:'Tonnage'};
+
+function corrColor(r){
+  if(r===null)return{bg:'#f1f5f9',fg:'#94a3b8'};
+  var a=Math.abs(r);
+  if(r<0){
+    // bleu : charge baisse quand KPI monte
+    var i=Math.round(a*180);
+    return{bg:'rgb('+(255-i)+','+(255-i)+',255)',fg:a>0.6?'#1e3a8a':'#334155'};
+  } else {
+    // orange : charge monte quand KPI monte
+    var i=Math.round(a*180);
+    return{bg:'rgb(255,'+(255-Math.round(a*130))+','+(255-Math.round(a*200))+')',fg:a>0.6?'#7c2d12':'#334155'};
+  }
+}
+
+function bestKpi(corrObj){
+  var best=null,bestR=0;
+  Object.keys(corrObj).forEach(function(k){
+    var r=corrObj[k];
+    if(r!==null&&Math.abs(r)>Math.abs(bestR)){bestR=r;best=k;}
+  });
+  return {k:best,r:bestR};
+}
+
+function renderTkCorr(){
+  var sites=TK_CORR_SITES;
+  var kpis=TK_CORR_KPIS;
+
+  // Tendance réelle 2023→2025 par site et KPI (pour afficher le sens observé)
+  var tkTrend={};
+  getTkMerged().forEach(function(d){
+    if(!tkTrend[d.site]) tkTrend[d.site]={};
+    ['dispo','debit','heures','refus','tonnage','productivite'].forEach(function(k){
+      if(d.annee===2023&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v23=d[k]; }
+      if(d.annee===2025&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v25=d[k]; }
+    });
+  });
+  function kpiWentUp(site, kpiKey){
+    var t=(tkTrend[site]||{})[kpiKey]||{};
+    if(t.v23==null||t.v25==null) return null; // inconnu
+    return t.v25>t.v23; // true=hausse, false=baisse
+  }
+
+  // ── 1. Tableau synthèse ──────────────────────────────────────────────────
+  var s='<div class="hm-wrap"><table style="font-size:.8rem;border-collapse:collapse;width:100%">';
+  s+='<thead><tr style="background:#f8fafc">';
+  s+='<th style="padding:8px 12px;text-align:left">Site</th>';
+  s+='<th style="padding:8px 12px;text-align:center;color:#d97706" colspan="2">Personnel €/t &mdash; KPI dominant</th>';
+  s+='<th style="padding:8px 12px;text-align:center;color:#dc2626" colspan="2">Maintenance €/t &mdash; KPI dominant</th>';
+  s+='</tr><tr style="background:#fafafa;font-size:.72rem;color:#64748b">';
+  s+='<th></th><th style="padding:4px 12px">KPI</th><th style="padding:4px 12px">r &nbsp;&nbsp; ce qui s’est passé</th>';
+  s+='<th style="padding:4px 12px">KPI</th><th style="padding:4px 12px">r &nbsp;&nbsp; ce qui s’est passé</th></tr></thead><tbody>';
+  sites.forEach(function(site,i){
+    var c=TK_CORR[site]||{};
+    var bp=bestKpi(c.pers||{}), bm=bestKpi(c.maint||{});
+    var bg=i%2?'#fafbff':'#fff';
+    var note=site==='Sevran'?' <span style="font-size:.65rem;color:#94a3b8">(2 ans)</span>':'';
+    function cell(b){
+      if(!b.k)return '<td colspan="2" style="text-align:center;color:#94a3b8;padding:7px 12px">—</td>';
+      var cl=corrColor(b.r);
+      // Sens observé : KPI a-t-il monté ou baissé entre 2023 et 2025 ?
+      var up=kpiWentUp(site, b.k);
+      var kpiDir=up===null?null:(up?'↑':'↓');
+      var chargeDir; // charge a évolué dans le sens donné par le signe de r × direction KPI
+      if(kpiDir!==null){
+        var chargeUp=(up&&b.r>0)||(!up&&b.r<0);
+        chargeDir=chargeUp?'↑':'↓';
+      }
+      var sens;
+      if(kpiDir===null){
+        sens=b.r>0?'↑ KPI → ↑ charge':'↑ KPI → ↓ charge';
+      } else {
+        // Direction observée en premier (gras), direction inverse en gris
+        sens='<strong>'+kpiDir+' KPI → '+chargeDir+' charge</strong>';
+      }
+      return '<td style="padding:7px 12px;text-align:center;font-weight:600">'+TK_CORR_KPI_LBL[b.k]+'</td>'
+        +'<td style="padding:7px 12px;text-align:center"><span style="background:'+cl.bg+';color:'+cl.fg+';padding:2px 8px;border-radius:10px;font-weight:600;font-size:.75rem">'+b.r.toFixed(2)+'</span>'
+        +' <span style="font-size:.68rem;color:#475569">'+sens+'</span></td>';
+    }
+    s+='<tr style="border-bottom:1px solid #f1f5f9;background:'+bg+'">';
+    s+='<td style="padding:7px 12px;font-weight:600">'+site+note+'</td>';
+    s+=cell(bp)+cell(bm);
+    s+='</tr>';
+  });
+  s+='</tbody></table></div>';
+  var el=document.getElementById('tk-corr-summary');
+  if(el) el.innerHTML=s;
+
+}
+
 function renderTkScatter(){
   var data=tkScFiltered();
   var xLbl=TK_KPI_LABELS[tkKpi]||tkKpi;
@@ -2107,67 +2232,6 @@ function renderTkSiteDetail(){
   renderTkCaChart();
 
   // Note analytique
-  var TK_NOTES={
-    'Amiens':{
-      ca:'Le CA suit la progression des tonnages. Une baisse du taux de refus s’accompagne d’une hausse du CA, suggérant un effet positif sur la qualité de service.',
-      pers:'Les coûts progressent malgré l’amélioration du débit — le lien attendu ne se confirme pas. La baisse du taux de refus mobilise paradoxalement davantage de ressources. Une dispo en recul corrèle logiquement avec une hausse des coûts.',
-      maint:'Pas de corrélation claire avec les KPIs disponibles — l’origine des variations reste à identifier.'
-    },
-    'Chézy':{
-      ca:'Pas de progression marquée du CA en lien avec le tonnage entrant.',
-      pers:'Les coûts n’évoluent pas proportionnellement au tonnage traité ni au taux de refus — comportement atypique qui mérite analyse.',
-      maint:'Les corrélations avec le débit, la disponibilité et le taux de refus restent à affiner avec davantage de recul.'
-    },
-    'Le Havre':{
-      ca:'Le CA progresse avec les tonnages. La baisse du taux de refus contribue positivement au CA.',
-      pers:'La disponibilité est le principal levier : une meilleure dispo se traduit directement par un coût unitaire plus faible. L’organisation en 3 postes ou le samedi génère des heures majorées dont l’impact économique mérite une évaluation.',
-      maint:'Paradoxe : une meilleure disponibilité s’accompagne de coûts de maintenance plus élevés, ce qui suggère un investissement préventif actif pour maintenir la performance.'
-    },
-    'Millau':{
-      ca:'Le CA suit la progression des tonnages de manière cohérente.',
-      pers:'La disponibilité joue un rôle clair : une meilleure dispo corrèle avec des coûts de personnel plus faibles.',
-      maint:'Un débit élevé tend à faire progresser les coûts, de même que les heures de fonctionnement. Paradoxe identique à d’autres sites : une meilleure disponibilité s’accompagne de coûts de maintenance plus élevés.'
-    },
-    'Montpellier':{
-      ca:'Le CA progresse généralement avec les tonnages, sauf en 2024 où une anomalie est à investiguer.',
-      pers:'La disponibilité n’a pas d’impact visible sur les coûts. La rémunération tend à progresser avec le taux de refus — à recroiser avec la formule contractuelle.',
-      maint:'Un taux de refus élevé entraîne une hausse des coûts. Paradoxe : les meilleures performances (débit, dispo) s’accompagnent de coûts de maintenance plus élevés.'
-    },
-    'Nantes':{
-      ca:'Le CA suit le tonnage traité de manière cohérente et marquée.',
-      pers:'La disponibilité et le taux de refus sont les deux leviers principaux. À l’inverse, davantage d’heures de fonctionnement s’accompagne d’un coût unitaire plus faible.',
-      maint:'Le débit élevé et les heures de fonctionnement font progresser les coûts. Une baisse de dispo ou une hausse du taux de refus ont le même effet.'
-    },
-    'Paris 15':{
-      ca:'Le CA progresse logiquement avec les tonnages. La formule de révision contractuelle présente un intérêt à analyser.',
-      pers:'Un débit élevé et un taux de refus important font monter les coûts. Des heures de fonctionnement plus élevées s’accompagnent d’un coût unitaire plus faible — effet de dilution.',
-      maint:'Peu sensible au débit, mais augmente avec la baisse de disponibilité et la hausse du taux de refus.'
-    },
-    'Saran':{
-      ca:'Le CA suit les tonnages avec une légère inflexion 2024→2025 à analyser. Progresse également avec le taux de refus.',
-      pers:'Un débit élevé tend à faire progresser les coûts, tandis qu’une meilleure disponibilité les réduit. La hausse du taux de refus s’accompagne d’une hausse des coûts.',
-      maint:'La maintenance diminue quand le débit et les heures augmentent. Contexte : fort correctif en 2024, optimisation en 2025 — trajectoire à confirmer pour le B2026.'
-    },
-    'Sevran':{
-      ca:'Le CA progresse avec les tonnages et avec le taux de refus. Données disponibles sur 2 ans seulement.',
-      pers:'Malgré un débit stable, les coûts progressent — facteurs structurels indépendants de la performance technique. La dispo élevée corrèle avec des coûts plus importants, comportement inverse des autres sites.',
-      maint:'Débit stable mais coûts en hausse. La disponibilité ne joue pas le rôle attendu.'
-    },
-    'Portes les Valences':{
-      ca:'Le CA suit les tonnages, mais une forte hausse entre 2024 et 2025 reste à expliquer (révision tarifaire ?).',
-      pers:'Un débit élevé tend à faire progresser les coûts, mais une meilleure disponibilité les réduit. Le taux de refus a un effet modérément favorable.',
-      maint:'Le débit et les heures de fonctionnement élevés font baisser les coûts. Une meilleure disponibilité a le même effet favorable.'
-    }
-  };
-  function tkSetNote(elId, txt){
-    var el=document.getElementById(elId); if(!el) return;
-    el.innerHTML=txt?'<div style="font-size:.77rem;line-height:1.55;color:#4b5563;font-style:italic;padding:0 2px 6px">'+txt+'</div>':'';
-  }
-  var sn=TK_NOTES[site]||{};
-  tkSetNote('tk-note-ca',   sn.ca||null);
-  tkSetNote('tk-note-pers', sn.pers||null);
-  tkSetNote('tk-note-maint',sn.maint||null);
-
   renderTkSiteCharts();
 }
 
@@ -2375,6 +2439,7 @@ function renderTk(){
   if(!tkSite) tkSite=sites[0];
   sel.value=tkSite;
   renderTkSiteDetail();
+  renderTkCorr();
   renderTkScatter();
   renderTkTable();
 }
