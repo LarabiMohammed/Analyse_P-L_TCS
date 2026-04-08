@@ -453,8 +453,8 @@ select.sel:focus{border-color:#00a3e0}
     <span style="font-size:.78rem;font-weight:700;color:#555">KPI :</span>
     <button class="btn-pill tk-kpi active" onclick="tkSetKpi('debit',this)">D&eacute;bit (t/h)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo',this)">Disponibilit&eacute; (%)</button>
-    <button class="btn-pill tk-kpi" onclick="tkSetKpi('refus',this)">Taux de refus (%)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('heures',this)">Heures fonct.</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('productivite',this)">Productivit&eacute; (t/h/op.)</button>
   </div>
   <div class="row2" style="margin-bottom:28px">
     <div class="card" style="border-top:3px solid #f59e0b">
@@ -509,6 +509,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 
   <!-- CA + contexte -->
+  <div id="tk-note-ca" style="margin-bottom:8px"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:.82rem;font-weight:700;color:#003a63">CA &amp; contexte :</span>
     <button class="btn-pill tk-cax active" onclick="tkSetCaX('tonnage',this)" style="font-size:.78rem;padding:4px 14px">Tonnage entrant</button>
@@ -525,14 +526,16 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-pill tk-kline" data-col="#059669" onclick="tkToggleKpiLine('dispo',this)" style="border-color:#059669;color:#059669">Dispo</button>
     <button class="btn-pill tk-kline" data-col="#ef4444" onclick="tkToggleKpiLine('refus',this)" style="border-color:#ef4444;color:#ef4444">Taux de refus</button>
     <button class="btn-pill tk-kline" data-col="#8b5cf6" onclick="tkToggleKpiLine('heures',this)" style="border-color:#8b5cf6;color:#8b5cf6">Heures fonct.</button>
-    <span class="tk-note" style="margin:0">Courbes en indice base&nbsp;100&nbsp;(2023), axe droit</span>
+    <button class="btn-pill tk-kline" data-col="#6366f1" onclick="tkToggleKpiLine('tonnage',this)" style="border-color:#6366f1;color:#6366f1">Tonnage entrant</button>
   </div>
   <div class="row2" style="margin-bottom:26px">
     <div class="card" style="border-top:3px solid #f59e0b">
+      <div id="tk-note-pers" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Personnel &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-pers-chart"></canvas></div>
     </div>
     <div class="card" style="border-top:3px solid #ef4444">
+      <div id="tk-note-maint" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Maintenance &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-maint-chart"></canvas></div>
     </div>
@@ -1900,14 +1903,16 @@ function getTkMerged(){
     var mc=Math.abs(+(pl.Maintenance_courante||0));
     var maint=(mo+mc)>0?(mo+mc)/tn:null;
     var dispo=k.Dispo_globale!=null?+k.Dispo_globale*100:null;
-    var prod=(k.Tonnage&&+k.Heures_fonctionnement>0)?+k.Tonnage/+k.Heures_fonctionnement:null;
+    var debit=k.Debit!=null?+k.Debit:null;
+    var nbOp=k.Nb_trieurs_poste!=null&&k.Nb_trieurs_poste!==''?+k.Nb_trieurs_poste:null;
+    var productivite=(debit!=null&&nbOp!=null&&nbOp>0)?debit/nbOp:null;
     _tkMerged.push({site:k.Site,annee:yr,
       gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
       dispo:dispo,
       heures:k.Heures_fonctionnement!=null?+k.Heures_fonctionnement:null,
       tonnage:k.Tonnage!=null?+k.Tonnage:null,
-      debit:k.Debit!=null?+k.Debit:null,
-      productivite:prod,
+      debit:debit,
+      productivite:productivite,
       personnel:cp,
       maintenance:maint,
       refus:k.Taux_refus!=null&&k.Taux_refus!==''?+k.Taux_refus:null});
@@ -1944,9 +1949,11 @@ function tkScFiltered(){
 
 function tkScSetYr(yr,el){
   tkScYr=yr;
+  tkYr=yr;
   document.querySelectorAll('.tk-sc-yr').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
   renderTkScatter();
+  renderTkTable();
 }
 
 function tkScSetGen(gen,el){
@@ -1956,7 +1963,7 @@ function tkScSetGen(gen,el){
   renderTkScatter();
 }
 
-var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 (%)',refus:'Taux de refus (%)',heures:'Heures de fonctionnement'};
+var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivit\u00e9 (t/h/op.)'};
 
 function tkSetKpi(kpi,el){
   tkKpi=kpi;
@@ -2036,17 +2043,55 @@ function tkSetVerdict(elId,r2){
 function mkScatterTk(id, pts, xLbl, yLbl, verdictId){
   var reg=linReg(pts);
   if(reg&&verdictId) tkSetVerdict(verdictId,reg.r2);
-  var ds=[{label:'Sites',data:pts,backgroundColor:'rgba(0,130,179,.75)',borderColor:'#0082b3',
-    pointRadius:10,pointHoverRadius:13,type:'scatter'}];
+  if(!pts.length) return;
+  var labelPlugin={
+    id:'lbl_'+id,
+    afterDraw:function(chart){
+      if(chart.tooltip&&chart.tooltip.getActiveElements&&chart.tooltip.getActiveElements().length) return;
+      var ctx=chart.ctx;
+      chart.data.datasets.forEach(function(ds,di){
+        var meta=chart.getDatasetMeta(di);
+        if(meta.type!=='scatter') return;
+        meta.data.forEach(function(pt,i){
+          var raw=ds.data[i];
+          if(!raw||!raw.label) return;
+          ctx.save();
+          ctx.font='600 10px system-ui,sans-serif';
+          ctx.textAlign='left';
+          ctx.strokeStyle='rgba(255,255,255,.95)';
+          ctx.lineWidth=3;
+          ctx.lineJoin='round';
+          ctx.strokeText(raw.label,pt.x+12,pt.y-4);
+          ctx.fillStyle='#1e293b';
+          ctx.fillText(raw.label,pt.x+12,pt.y-4);
+          ctx.restore();
+        });
+      });
+    }
+  };
+  var ds=[{label:'Sites',data:pts,
+    backgroundColor:'rgba(0,130,179,.8)',
+    borderColor:'#fff',
+    borderWidth:2,
+    pointRadius:11,pointHoverRadius:14,
+    type:'scatter'}];
   if(reg) ds.push({label:'Tendance (R\u00b2='+reg.r2.toFixed(2)+')',
     data:[{x:reg.xmin,y:reg.m*reg.xmin+reg.b},{x:reg.xmax,y:reg.m*reg.xmax+reg.b}],
-    type:'line',borderColor:'#f59e0b',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,tension:0});
-  return mkChart(id,{type:'scatter',data:{datasets:ds},plugins:[tkLabelPlugin],options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'bottom',labels:{font:{size:11}}},
-      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;return (r.label||'')+' '+(r.annee||'')+': ('+r.x.toFixed(1)+', '+r.y.toFixed(1)+')';}}}},
+    type:'line',borderColor:'#f59e0b',borderWidth:2,pointRadius:0,fill:false,tension:0});
+  return mkChart(id,{type:'scatter',data:{datasets:ds},plugins:[labelPlugin],options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:!!reg,position:'bottom',labels:{font:{size:10},color:'#64748b',boxWidth:24,padding:14}},
+      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;
+        var xUnit=(xLbl.match(/\(([^)]+)\)/)||['',''])[1]||'';
+        var xFmt=xUnit==='h'?Math.round(r.x).toString():r.x.toFixed(1);
+        return (r.label||'')+(r.annee?' ('+r.annee+')':'')
+          +' \u2014 '+(xFmt+(xUnit?' '+xUnit:''))
+          +' / '+r.y.toFixed(1)+'\u20ac/t';}}}},
     scales:{
-      x:{title:{display:true,text:xLbl,font:{size:11}},grid:{color:'#f0f0f0'}},
-      y:{title:{display:true,text:yLbl,font:{size:11}},grid:{color:'#f0f0f0'}}
+      x:{title:{display:true,text:xLbl,font:{size:11},color:'#475569'},
+         grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#64748b'}},
+      y:{title:{display:true,text:yLbl,font:{size:11},color:'#475569'},
+         grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#64748b'}}
     }}});
 }
 
@@ -2088,13 +2133,75 @@ function renderTkSiteDetail(){
   // CA + contexte
   renderTkCaChart();
 
+  // Note analytique
+  var TK_NOTES={
+    'Amiens':{
+      ca:'Le CA suit la progression des tonnages. Une baisse du taux de refus s\u2019accompagne d\u2019une hausse du CA, sugg\u00e9rant un effet positif sur la qualit\u00e9 de service.',
+      pers:'Les co\u00fbts progressent malgr\u00e9 l\u2019am\u00e9lioration du d\u00e9bit \u2014 le lien attendu ne se confirme pas. La baisse du taux de refus mobilise paradoxalement davantage de ressources. Une dispo en recul corr\u00e8le logiquement avec une hausse des co\u00fbts.',
+      maint:'Pas de corr\u00e9lation claire avec les KPIs disponibles \u2014 l\u2019origine des variations reste \u00e0 identifier.'
+    },
+    'Ch\u00e9zy':{
+      ca:'Pas de progression marqu\u00e9e du CA en lien avec le tonnage entrant.',
+      pers:'Les co\u00fbts n\u2019\u00e9voluent pas proportionnellement au tonnage trait\u00e9 ni au taux de refus \u2014 comportement atypique qui m\u00e9rite analyse.',
+      maint:'Les corr\u00e9lations avec le d\u00e9bit, la disponibilit\u00e9 et le taux de refus restent \u00e0 affiner avec davantage de recul.'
+    },
+    'Le Havre':{
+      ca:'Le CA progresse avec les tonnages. La baisse du taux de refus contribue positivement au CA.',
+      pers:'La disponibilit\u00e9 est le principal levier : une meilleure dispo se traduit directement par un co\u00fbt unitaire plus faible. L\u2019organisation en 3 postes ou le samedi g\u00e9n\u00e8re des heures major\u00e9es dont l\u2019impact \u00e9conomique m\u00e9rite une \u00e9valuation.',
+      maint:'Paradoxe : une meilleure disponibilit\u00e9 s\u2019accompagne de co\u00fbts de maintenance plus \u00e9lev\u00e9s, ce qui sugg\u00e8re un investissement pr\u00e9ventif actif pour maintenir la performance.'
+    },
+    'Millau':{
+      ca:'Le CA suit la progression des tonnages de mani\u00e8re coh\u00e9rente.',
+      pers:'La disponibilit\u00e9 joue un r\u00f4le clair : une meilleure dispo corr\u00e8le avec des co\u00fbts de personnel plus faibles.',
+      maint:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, de m\u00eame que les heures de fonctionnement. Paradoxe identique \u00e0 d\u2019autres sites : une meilleure disponibilit\u00e9 s\u2019accompagne de co\u00fbts de maintenance plus \u00e9lev\u00e9s.'
+    },
+    'Montpellier':{
+      ca:'Le CA progresse g\u00e9n\u00e9ralement avec les tonnages, sauf en 2024 o\u00f9 une anomalie est \u00e0 investiguer.',
+      pers:'La disponibilit\u00e9 n\u2019a pas d\u2019impact visible sur les co\u00fbts. La r\u00e9mun\u00e9ration tend \u00e0 progresser avec le taux de refus \u2014 \u00e0 recroiser avec la formule contractuelle.',
+      maint:'Un taux de refus \u00e9lev\u00e9 entra\u00eene une hausse des co\u00fbts. Paradoxe : les meilleures performances (d\u00e9bit, dispo) s\u2019accompagnent de co\u00fbts de maintenance plus \u00e9lev\u00e9s.'
+    },
+    'Nantes':{
+      ca:'Le CA suit le tonnage trait\u00e9 de mani\u00e8re coh\u00e9rente et marqu\u00e9e.',
+      pers:'La disponibilit\u00e9 et le taux de refus sont les deux leviers principaux. \u00c0 l\u2019inverse, davantage d\u2019heures de fonctionnement s\u2019accompagne d\u2019un co\u00fbt unitaire plus faible.',
+      maint:'Le d\u00e9bit \u00e9lev\u00e9 et les heures de fonctionnement font progresser les co\u00fbts. Une baisse de dispo ou une hausse du taux de refus ont le m\u00eame effet.'
+    },
+    'Paris 15':{
+      ca:'Le CA progresse logiquement avec les tonnages. La formule de r\u00e9vision contractuelle pr\u00e9sente un int\u00e9r\u00eat \u00e0 analyser.',
+      pers:'Un d\u00e9bit \u00e9lev\u00e9 et un taux de refus important font monter les co\u00fbts. Des heures de fonctionnement plus \u00e9lev\u00e9es s\u2019accompagnent d\u2019un co\u00fbt unitaire plus faible \u2014 effet de dilution.',
+      maint:'Peu sensible au d\u00e9bit, mais augmente avec la baisse de disponibilit\u00e9 et la hausse du taux de refus.'
+    },
+    'Saran':{
+      ca:'Le CA suit les tonnages avec une l\u00e9g\u00e8re inflexion 2024\u21922025 \u00e0 analyser. Progresse \u00e9galement avec le taux de refus.',
+      pers:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, tandis qu\u2019une meilleure disponibilit\u00e9 les r\u00e9duit. La hausse du taux de refus s\u2019accompagne d\u2019une hausse des co\u00fbts.',
+      maint:'La maintenance diminue quand le d\u00e9bit et les heures augmentent. Contexte : fort correctif en 2024, optimisation en 2025 \u2014 trajectoire \u00e0 confirmer pour le B2026.'
+    },
+    'Sevran':{
+      ca:'Le CA progresse avec les tonnages et avec le taux de refus. Donn\u00e9es disponibles sur 2 ans seulement.',
+      pers:'Malgr\u00e9 un d\u00e9bit stable, les co\u00fbts progressent \u2014 facteurs structurels ind\u00e9pendants de la performance technique. La dispo \u00e9lev\u00e9e corr\u00e8le avec des co\u00fbts plus importants, comportement inverse des autres sites.',
+      maint:'D\u00e9bit stable mais co\u00fbts en hausse. La disponibilit\u00e9 ne joue pas le r\u00f4le attendu.'
+    },
+    'Portes les Valences':{
+      ca:'Le CA suit les tonnages, mais une forte hausse entre 2024 et 2025 reste \u00e0 expliquer (r\u00e9vision tarifaire\u00a0?).',
+      pers:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, mais une meilleure disponibilit\u00e9 les r\u00e9duit. Le taux de refus a un effet mod\u00e9r\u00e9ment favorable.',
+      maint:'Le d\u00e9bit et les heures de fonctionnement \u00e9lev\u00e9s font baisser les co\u00fbts. Une meilleure disponibilit\u00e9 a le m\u00eame effet favorable.'
+    }
+  };
+  function tkSetNote(elId, txt){
+    var el=document.getElementById(elId); if(!el) return;
+    el.innerHTML=txt?'<div style="font-size:.77rem;line-height:1.55;color:#4b5563;font-style:italic;padding:0 2px 6px">'+txt+'</div>':'';
+  }
+  var sn=TK_NOTES[site]||{};
+  tkSetNote('tk-note-ca',   sn.ca||null);
+  tkSetNote('tk-note-pers', sn.pers||null);
+  tkSetNote('tk-note-maint',sn.maint||null);
+
   renderTkSiteCharts();
 }
 
-var tkKpiLines={debit:false,dispo:false,refus:false,heures:false};
-var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6'};
-var TK_KLINE_LBL={debit:'D\u00e9bit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)'};
-var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h'};
+var tkKpiLines={debit:false,dispo:false,refus:false,heures:false,tonnage:false};
+var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6',tonnage:'#6366f1'};
+var TK_KLINE_LBL={debit:'D\u00e9bit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)',tonnage:'Tonnage entrant (t)'};
+var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h',tonnage:'t'};
 
 function tkToggleKpiLine(key,el){
   var wasActive=tkKpiLines[key];
@@ -2124,14 +2231,16 @@ function renderTkSiteCharts(){
       type:'bar',backgroundColor:barColor,borderColor:barBorder,borderWidth:2,yAxisID:'y',order:2}];
     // Courbe KPI au premier plan (order faible = dessiné en dernier)
     if(activeKpi){
-      ds.push({label:TK_KLINE_LBL[activeKpi],data:d.map(function(r){return r[activeKpi];}),
+      var lineData=d.map(function(r){return activeKpi==='tonnage'?Math.round(r[activeKpi]):r[activeKpi];});
+      ds.push({label:TK_KLINE_LBL[activeKpi],data:lineData,
         type:'line',borderColor:TK_KLINE_COL[activeKpi],backgroundColor:'transparent',
         borderWidth:2.5,pointRadius:7,pointHoverRadius:10,tension:.35,fill:false,yAxisID:'y2',order:1});
     }
     var scales={y:{position:'left',title:{display:true,text:'\u20ac/t',font:{size:10}},grid:{color:'#f0f0f0'}}};
     if(hasLines) scales.y2={position:'right',
       title:{display:true,text:TK_KLINE_UNIT[activeKpi],font:{size:10}},
-      grid:{drawOnChartArea:false}};
+      grid:{drawOnChartArea:false},
+      ticks:{callback:function(v){return activeKpi==='tonnage'?Math.round(v).toLocaleString('fr-FR'):v;}}};
     return {type:'bar',data:{labels:yrs,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:scales}};
   }
@@ -2166,6 +2275,125 @@ function renderTkCaChart(){
     }}});
 }
 
+var tkTblSort={col:'site',asc:true};
+function tkSortBy(col){
+  if(tkTblSort.col===col) tkTblSort.asc=!tkTblSort.asc;
+  else{tkTblSort.col=col;tkTblSort.asc=col==='site';}
+  renderTkTable();
+}
+
+function renderTkTable(){
+  var m=getTkMerged();
+  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
+  // Année affichée et année N-1 pour l'évolution
+  var yrCur=tkYr==='all'?2025:+tkYr;
+  var yrRef=yrCur>2023?yrCur-1:null;
+  var yrLbl=yrCur;
+  var rows=allSites.map(function(s){
+    var dc=m.find(function(r){return r.site===s&&r.annee===yrCur;})||{};
+    var dr=yrRef?m.find(function(r){return r.site===s&&r.annee===yrRef;})||{}:{};
+    return{site:s,
+      tonnage:dc.tonnage??null,
+      dispo:dc.dispo??null,   dispoR:dr.dispo??null,
+      debit:dc.debit??null,   debitR:dr.debit??null,
+      refus:dc.refus??null,   refusR:dr.refus??null,
+      pers:dc.personnel??null, persR:dr.personnel??null,
+      maint:dc.maintenance??null,maintR:dr.maintenance??null};
+  });
+  // Plages heatmap
+  var COLS=['dispo','debit','refus','pers','maint'];
+  var rng={};
+  COLS.forEach(function(k){
+    var v=rows.map(function(r){return r[k];}).filter(function(v){return v!=null;});
+    rng[k]={mn:Math.min.apply(null,v),mx:Math.max.apply(null,v)};
+  });
+  // Rangs (pas pour débit ni tonnage)
+  var RANK_CFG={dispo:true,refus:false,pers:false,maint:false};
+  var rnk={};
+  Object.keys(RANK_CFG).forEach(function(k){
+    var hib=RANK_CFG[k];
+    var sorted=rows.filter(function(r){return r[k]!=null;}).slice()
+      .sort(function(a,b){return hib?b[k]-a[k]:a[k]-b[k];});
+    sorted.forEach(function(r,i){rnk[r.site]=rnk[r.site]||{};rnk[r.site][k]=i+1;});
+  });
+  // Tri
+  rows.sort(function(a,b){
+    var k=tkTblSort.col;
+    var va=k==='site'?a.site:a[k], vb=k==='site'?b.site:b[k];
+    if(va==null&&vb==null)return 0;
+    if(va==null)return 1; if(vb==null)return -1;
+    var r=k==='site'?va.localeCompare(vb):va-vb;
+    return tkTblSort.asc?r:-r;
+  });
+  // Couleur texte heatmap
+  function heatCol(val,key,hib){
+    if(val==null)return '#1e293b';
+    var r=rng[key]; if(!r||r.mx===r.mn)return '#1e293b';
+    var t=(val-r.mn)/(r.mx-r.mn);
+    var good=hib?t:1-t;
+    if(good>=0.72)return '#059669';
+    if(good>=0.45)return '#1e293b';
+    return '#dc2626';
+  }
+  function heatW(val,key,hib){
+    if(val==null)return '400';
+    var r=rng[key]; if(!r||r.mx===r.mn)return '400';
+    var t=(val-r.mn)/(r.mx-r.mn);
+    var good=hib?t:1-t;
+    return (good>=0.72||good<=0.28)?'700':'400';
+  }
+  // Flèche évolution vs N-1
+  function evo(vCur,vRef,hib){
+    if(!yrRef||vCur==null||vRef==null||vRef===0)return '';
+    var pct=(vCur-vRef)/Math.abs(vRef)*100;
+    if(Math.abs(pct)<0.1)return '';
+    var up=pct>=0;
+    var good=(hib&&up)||(!hib&&!up);
+    return '<span style="font-size:.7rem;color:'+(good?'#059669':'#dc2626')+';margin-left:4px">'+(up?'\u25b2':'\u25bc')+Math.abs(pct).toFixed(1)+'%</span>';
+  }
+  function si(col){
+    if(tkTblSort.col!==col)return '<span style="opacity:.25;font-size:.65rem"> \u21c5</span>';
+    return '<span style="font-size:.65rem"> '+(tkTblSort.asc?'\u2191':'\u2193')+'</span>';
+  }
+  function th(col,lbl){return '<th onclick="tkSortBy(&#39;'+col+'&#39;)" style="cursor:pointer;white-space:nowrap;user-select:none;padding:8px 12px">'+lbl+si(col)+'</th>';}
+  var n=rows.length;
+  function rb(site,key){
+    if(!rnk[site]||!rnk[site][key])return '';
+    var r=rnk[site][key];
+    var col=r<=3?'#059669':r>=n-2?'#dc2626':'#94a3b8';
+    return '<sup style="font-size:.62rem;font-weight:700;color:'+col+';margin-left:2px">'+r+'</sup>';
+  }
+  var suffix=' '+yrLbl;
+  var evoNote=yrRef?'<div style="font-size:.75rem;color:#64748b;margin-bottom:8px">\u25b2\u25bc \u00c9volution par rapport \u00e0 '+(yrRef)+'</div>':'';
+  var h=evoNote+'<div class="hm-wrap"><table class="hm-table" style="font-size:.82rem;border-collapse:collapse;width:100%"><thead><tr style="background:#f8fafc">';
+  h+=th('site','Site');
+  h+=th('tonnage','Tonnage'+suffix);
+  h+=th('dispo','Dispo'+suffix);
+  h+=th('debit','D\u00e9bit'+suffix);
+  h+=th('refus','Refus'+suffix);
+  h+=th('pers','Personnel \u20ac/t');
+  h+=th('maint','Maintenance \u20ac/t');
+  h+='</tr></thead><tbody>';
+  function td(val,fmt,key,hib,ref,evoVal){
+    var col=heatCol(val,key,hib), fw=heatW(val,key,hib);
+    var txt=val!=null?'<span style="color:'+col+';font-weight:'+fw+'">'+fmt(val)+'</span>':'—';
+    return '<td style="text-align:center;padding:7px 10px">'+txt+(key?rb('__site__',key):'')+(evoVal||'')+'</td>';
+  }
+  rows.forEach(function(r,i){
+    h+='<tr style="border-bottom:1px solid #f1f5f9;'+(i%2?'background:#fafbff':'')+'\">';
+    h+='<td style="font-weight:600;padding:7px 12px;white-space:nowrap">'+r.site+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px;color:#475569">'+(r.tonnage!=null?Math.round(r.tonnage).toLocaleString('fr-FR')+' t':'—')+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.dispo,'dispo',true)+';font-weight:'+heatW(r.dispo,'dispo',true)+'">'+(r.dispo!=null?r.dispo.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'dispo')+evo(r.dispo,r.dispoR,true)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px">'+(r.debit!=null?r.debit.toFixed(1)+' t/h':'—')+evo(r.debit,r.debitR,true)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.refus,'refus',false)+';font-weight:'+heatW(r.refus,'refus',false)+'">'+(r.refus!=null?r.refus.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'refus')+evo(r.refus,r.refusR,false)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.pers,'pers',false)+';font-weight:'+heatW(r.pers,'pers',false)+'">'+(r.pers!=null?r.pers.toFixed(1)+'\u20ac':'—')+'</span>'+rb(r.site,'pers')+evo(r.pers,r.persR,false)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.maint,'maint',false)+';font-weight:'+heatW(r.maint,'maint',false)+'">'+(r.maint!=null?r.maint.toFixed(1)+'\u20ac':'—')+'</span>'+rb(r.site,'maint')+evo(r.maint,r.maintR,false)+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('tk-table-wrap').innerHTML=h;
+}
+
 function renderTk(){
   var m=getTkMerged();
   var sites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
@@ -2174,32 +2402,8 @@ function renderTk(){
   if(!tkSite) tkSite=sites[0];
   sel.value=tkSite;
   renderTkSiteDetail();
-
-  // Scatter corrélations clés
   renderTkScatter();
-
-  // Tableau synthèse
-  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
-  var dispYrs=tkYr==='all'?TK_YRS:[+tkYr];
-  var h='<div class="hm-wrap"><table class="hm-table"><thead><tr><th>Site</th><th>Cat.</th>';
-  dispYrs.forEach(function(yr){
-    h+='<th>Dispo '+yr+'</th><th>D\u00e9bit '+yr+'</th><th>Refus '+yr+'</th><th>Pers. \u20ac/t '+yr+'</th><th>Maint. \u20ac/t '+yr+'</th>';
-  });
-  h+='</tr></thead><tbody>';
-  allSites.forEach(function(s){
-    var isAnc=TK_ANCIENS.has(s);
-    var bg=isAnc?'#fff9f0':'#f0f7ff';
-    var badge=isAnc?'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e">Ancien</span>':'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#1e40af">R\u00e9cent</span>';
-    h+='<tr style="background:'+bg+'"><td style="font-weight:600">'+s+'</td><td>'+badge+'</td>';
-    dispYrs.forEach(function(yr){
-      var d=m.find(function(r){return r.site===s&&r.annee===yr;});
-      function f(v,u){return v!=null?v.toFixed(1)+u:'—';}
-      h+='<td>'+f(d&&d.dispo,'%')+'</td><td>'+f(d&&d.debit,' t/h')+'</td><td>'+f(d&&d.refus,'%')+'</td><td>'+f(d&&d.personnel,'\u20ac')+'</td><td>'+f(d&&d.maintenance,'\u20ac')+'</td>';
-    });
-    h+='</tr>';
-  });
-  h+='</tbody></table></div>';
-  document.getElementById('tk-table-wrap').innerHTML=h;
+  renderTkTable();
 }
 
 // INIT

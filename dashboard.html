@@ -199,7 +199,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="header-right">
     <div>R2023 &middot; R2024 &middot; R2025 &middot; <span style="background:rgba(245,158,11,.35);border:1px solid rgba(245,158,11,.6);padding:1px 7px;border-radius:4px;font-size:.75rem;font-weight:700">B2026</span></div>
-    <div>Mis &agrave; jour le 02/04/2026 16:59</div>
+    <div>Mis &agrave; jour le 07/04/2026 15:51</div>
   </div>
 </header>
 
@@ -226,7 +226,7 @@ select.sel:focus{border-color:#00a3e0}
       <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
       <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
     </div>
-    <div class="home-date">Mis &agrave; jour le 02/04/2026 16:59</div>
+    <div class="home-date">Mis &agrave; jour le 07/04/2026 15:51</div>
   </div>
 </div>
 
@@ -426,8 +426,8 @@ select.sel:focus{border-color:#00a3e0}
     <span style="font-size:.78rem;font-weight:700;color:#555">KPI :</span>
     <button class="btn-pill tk-kpi active" onclick="tkSetKpi('debit',this)">D&eacute;bit (t/h)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo',this)">Disponibilit&eacute; (%)</button>
-    <button class="btn-pill tk-kpi" onclick="tkSetKpi('refus',this)">Taux de refus (%)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('heures',this)">Heures fonct.</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('productivite',this)">Productivit&eacute; (t/h/op.)</button>
   </div>
   <div class="row2" style="margin-bottom:28px">
     <div class="card" style="border-top:3px solid #f59e0b">
@@ -482,6 +482,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 
   <!-- CA + contexte -->
+  <div id="tk-note-ca" style="margin-bottom:8px"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:.82rem;font-weight:700;color:#003a63">CA &amp; contexte :</span>
     <button class="btn-pill tk-cax active" onclick="tkSetCaX('tonnage',this)" style="font-size:.78rem;padding:4px 14px">Tonnage entrant</button>
@@ -498,14 +499,16 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-pill tk-kline" data-col="#059669" onclick="tkToggleKpiLine('dispo',this)" style="border-color:#059669;color:#059669">Dispo</button>
     <button class="btn-pill tk-kline" data-col="#ef4444" onclick="tkToggleKpiLine('refus',this)" style="border-color:#ef4444;color:#ef4444">Taux de refus</button>
     <button class="btn-pill tk-kline" data-col="#8b5cf6" onclick="tkToggleKpiLine('heures',this)" style="border-color:#8b5cf6;color:#8b5cf6">Heures fonct.</button>
-    <span class="tk-note" style="margin:0">Courbes en indice base&nbsp;100&nbsp;(2023), axe droit</span>
+    <button class="btn-pill tk-kline" data-col="#6366f1" onclick="tkToggleKpiLine('tonnage',this)" style="border-color:#6366f1;color:#6366f1">Tonnage entrant</button>
   </div>
   <div class="row2" style="margin-bottom:26px">
     <div class="card" style="border-top:3px solid #f59e0b">
+      <div id="tk-note-pers" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Personnel &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-pers-chart"></canvas></div>
     </div>
     <div class="card" style="border-top:3px solid #ef4444">
+      <div id="tk-note-maint" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Maintenance &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-maint-chart"></canvas></div>
     </div>
@@ -1851,7 +1854,7 @@ function renderRg(){
 // ══════════════════════════════════════════════════════
 // PERFS TECHNIQUES & CHARGES
 // ══════════════════════════════════════════════════════
-const KPI_RAW = [{"Site": "Le Havre", "Annee": 2023.0, "Tonnage": 37066.0, "Dispo_globale": 0.87, "Heures_fonctionnement": 4685.0, "Debit": 7.702896411, "Taux_refus": 33.5}, {"Site": "Le Havre", "Annee": 2024.0, "Tonnage": 41554.0, "Dispo_globale": 0.839, "Heures_fonctionnement": 4497.0, "Debit": 9.151313629, "Taux_refus": 32.9}, {"Site": "Le Havre", "Annee": 2025.0, "Tonnage": 42413.0, "Dispo_globale": 0.85, "Heures_fonctionnement": 4372.0, "Debit": 9.720248827, "Taux_refus": 31.0}, {"Site": "Nantes", "Annee": 2023.0, "Tonnage": 41462.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 3577.0, "Debit": 11.550265319, "Taux_refus": 22.6}, {"Site": "Nantes", "Annee": 2024.0, "Tonnage": 51127.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 4090.0, "Debit": 12.458673745, "Taux_refus": 24.7}, {"Site": "Nantes", "Annee": 2025.0, "Tonnage": 53818.0, "Dispo_globale": 0.732, "Heures_fonctionnement": 3995.0, "Debit": 13.244824764, "Taux_refus": 25.2}, {"Site": "Amiens", "Annee": 2023.0, "Tonnage": 32431.0, "Dispo_globale": 0.892, "Heures_fonctionnement": 5978.0, "Debit": 4.680296583, "Taux_refus": 29.1}, {"Site": "Amiens", "Annee": 2024.0, "Tonnage": 33534.0, "Dispo_globale": 0.881, "Heures_fonctionnement": 6445.0, "Debit": 4.812068551, "Taux_refus": 33.1}, {"Site": "Amiens", "Annee": 2025.0, "Tonnage": 34732.0, "Dispo_globale": 0.869, "Heures_fonctionnement": 6046.0, "Debit": 5.482693723, "Taux_refus": 27.0}, {"Site": "B\u00e8gles", "Annee": 2023.0, "Tonnage": 51897.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 2954.0, "Debit": 17.881933747, "Taux_refus": 21.7}, {"Site": "B\u00e8gles", "Annee": 2024.0, "Tonnage": 49016.0, "Dispo_globale": 0.814, "Heures_fonctionnement": 2995.0, "Debit": 15.947938239, "Taux_refus": 24.0}, {"Site": "B\u00e8gles", "Annee": 2025.0, "Tonnage": 58910.0, "Dispo_globale": 0.813, "Heures_fonctionnement": 3019.0, "Debit": 18.947475985, "Taux_refus": 26.8}, {"Site": "Millau", "Annee": 2023.0, "Tonnage": 20961.0, "Dispo_globale": 0.693, "Heures_fonctionnement": 2134.0, "Debit": 8.267857143, "Taux_refus": 0.0}, {"Site": "Millau", "Annee": 2024.0, "Tonnage": 21635.0, "Dispo_globale": 0.753, "Heures_fonctionnement": 2210.0, "Debit": 9.004854369, "Taux_refus": 0.0}, {"Site": "Millau", "Annee": 2025.0, "Tonnage": 22654.0, "Dispo_globale": 0.809, "Heures_fonctionnement": 2358.0, "Debit": 9.0, "Taux_refus": 0.0}, {"Site": "Paris 15", "Annee": 2023.0, "Tonnage": 33062.0, "Dispo_globale": 0.921, "Heures_fonctionnement": 3288.0, "Debit": 9.987785517, "Taux_refus": 23.5}, {"Site": "Paris 15", "Annee": 2024.0, "Tonnage": 31983.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3120.0, "Debit": 10.140240443, "Taux_refus": 23.8}, {"Site": "Paris 15", "Annee": 2025.0, "Tonnage": 33691.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3201.0, "Debit": 10.037304133, "Taux_refus": 25.3}, {"Site": "Saran", "Annee": 2023.0, "Tonnage": 37939.0, "Dispo_globale": 0.822, "Heures_fonctionnement": 4181.0, "Debit": 8.581269059, "Taux_refus": 24.7}, {"Site": "Saran", "Annee": 2024.0, "Tonnage": 39574.0, "Dispo_globale": 0.853, "Heures_fonctionnement": 4317.0, "Debit": 8.612784611, "Taux_refus": 27.1}, {"Site": "Saran", "Annee": 2025.0, "Tonnage": 40446.0, "Dispo_globale": 0.843, "Heures_fonctionnement": 4273.0, "Debit": 8.796702257, "Taux_refus": 27.9}, {"Site": "Sevran", "Annee": 2023.0, "Tonnage": 18585.0, "Dispo_globale": 0.91, "Heures_fonctionnement": 3453.0, "Debit": 5.062199117, "Taux_refus": 33.5}, {"Site": "Sevran", "Annee": 2024.0, "Tonnage": 18382.0, "Dispo_globale": 0.865, "Heures_fonctionnement": 3378.0, "Debit": 5.158127899, "Taux_refus": 36.7}, {"Site": "Sevran", "Annee": 2025.0, "Tonnage": 19361.0, "Dispo_globale": 0.894, "Heures_fonctionnement": 3608.0, "Debit": 5.098435136, "Taux_refus": 38.9}, {"Site": "Vaux le P\u00e9nil", "Annee": 2023.0, "Tonnage": 23747.0, "Dispo_globale": 0.861, "Heures_fonctionnement": 2944.0, "Debit": 6.085409023, "Taux_refus": null}, {"Site": "Vaux le P\u00e9nil", "Annee": 2024.0, "Tonnage": 24626.0, "Dispo_globale": 0.819, "Heures_fonctionnement": 3180.0, "Debit": 6.277978263, "Taux_refus": null}, {"Site": "Vaux le P\u00e9nil", "Annee": 2025.0, "Tonnage": 22715.0, "Dispo_globale": 0.893, "Heures_fonctionnement": 4022.0, "Debit": 5.940680602, "Taux_refus": null}, {"Site": "Portes les Valences", "Annee": 2023.0, "Tonnage": 36587.0, "Dispo_globale": 0.79, "Heures_fonctionnement": 3000.0, "Debit": 11.55735492, "Taux_refus": 21.1}, {"Site": "Portes les Valences", "Annee": 2024.0, "Tonnage": 36911.0, "Dispo_globale": 0.817, "Heures_fonctionnement": 3050.0, "Debit": 12.095336843, "Taux_refus": 24.5}, {"Site": "Portes les Valences", "Annee": 2025.0, "Tonnage": 38149.0, "Dispo_globale": 0.831, "Heures_fonctionnement": 3100.0, "Debit": 12.37013425, "Taux_refus": 25.7}, {"Site": "Ch\u00e9zy", "Annee": 2023.0, "Tonnage": 22505.0, "Dispo_globale": 0.752, "Heures_fonctionnement": 3236.0, "Debit": 6.418538241, "Taux_refus": 13.2}, {"Site": "Ch\u00e9zy", "Annee": 2024.0, "Tonnage": 22913.0, "Dispo_globale": 0.759, "Heures_fonctionnement": 3298.0, "Debit": 6.424347352, "Taux_refus": 14.6}, {"Site": "Ch\u00e9zy", "Annee": 2025.0, "Tonnage": 23643.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 3157.0, "Debit": 6.941851922, "Taux_refus": 14.6}, {"Site": "Montpellier", "Annee": 2023.0, "Tonnage": 31244.0, "Dispo_globale": 0.713, "Heures_fonctionnement": 2498.0, "Debit": 11.00032231, "Taux_refus": 28.9}, {"Site": "Montpellier", "Annee": 2024.0, "Tonnage": 28777.0, "Dispo_globale": 0.71, "Heures_fonctionnement": 2478.0, "Debit": 10.918198537, "Taux_refus": 33.4}, {"Site": "Montpellier", "Annee": 2025.0, "Tonnage": 30948.0, "Dispo_globale": 0.717, "Heures_fonctionnement": 2514.0, "Debit": 11.602314575, "Taux_refus": 39.3}];
+const KPI_RAW = [{"Site": "Le Havre", "Annee": 2023.0, "Tonnage": 37066.0, "Dispo_globale": 0.87, "Heures_fonctionnement": 4685.0, "Debit": 7.702896411, "Taux_refus": 33.5, "Nb_trieurs_poste": 14.0}, {"Site": "Le Havre", "Annee": 2024.0, "Tonnage": 41554.0, "Dispo_globale": 0.839, "Heures_fonctionnement": 4497.0, "Debit": 9.151313629, "Taux_refus": 32.9, "Nb_trieurs_poste": 14.0}, {"Site": "Le Havre", "Annee": 2025.0, "Tonnage": 42413.0, "Dispo_globale": 0.85, "Heures_fonctionnement": 4372.0, "Debit": 9.720248827, "Taux_refus": 31.0, "Nb_trieurs_poste": 14.0}, {"Site": "Nantes", "Annee": 2023.0, "Tonnage": 41462.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 3577.0, "Debit": 11.550265319, "Taux_refus": 22.6, "Nb_trieurs_poste": 20.0}, {"Site": "Nantes", "Annee": 2024.0, "Tonnage": 51127.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 4090.0, "Debit": 12.458673745, "Taux_refus": 24.7, "Nb_trieurs_poste": 20.0}, {"Site": "Nantes", "Annee": 2025.0, "Tonnage": 53818.0, "Dispo_globale": 0.732, "Heures_fonctionnement": 3995.0, "Debit": 13.244824764, "Taux_refus": 25.2, "Nb_trieurs_poste": 20.0}, {"Site": "Amiens", "Annee": 2023.0, "Tonnage": 32431.0, "Dispo_globale": 0.892, "Heures_fonctionnement": 5978.0, "Debit": 4.680296583, "Taux_refus": 29.1, "Nb_trieurs_poste": 13.0}, {"Site": "Amiens", "Annee": 2024.0, "Tonnage": 33534.0, "Dispo_globale": 0.881, "Heures_fonctionnement": 6445.0, "Debit": 4.812068551, "Taux_refus": 33.1, "Nb_trieurs_poste": 13.0}, {"Site": "Amiens", "Annee": 2025.0, "Tonnage": 34732.0, "Dispo_globale": 0.869, "Heures_fonctionnement": 6046.0, "Debit": 5.482693723, "Taux_refus": 27.0, "Nb_trieurs_poste": 13.0}, {"Site": "B\u00e8gles", "Annee": 2023.0, "Tonnage": 51897.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 2954.0, "Debit": 17.881933747, "Taux_refus": 21.7, "Nb_trieurs_poste": 18.0}, {"Site": "B\u00e8gles", "Annee": 2024.0, "Tonnage": 49016.0, "Dispo_globale": 0.814, "Heures_fonctionnement": 2995.0, "Debit": 15.947938239, "Taux_refus": 24.0, "Nb_trieurs_poste": 18.0}, {"Site": "B\u00e8gles", "Annee": 2025.0, "Tonnage": 58910.0, "Dispo_globale": 0.813, "Heures_fonctionnement": 3019.0, "Debit": 18.947475985, "Taux_refus": 26.8, "Nb_trieurs_poste": 18.0}, {"Site": "Millau", "Annee": 2023.0, "Tonnage": 20961.0, "Dispo_globale": 0.693, "Heures_fonctionnement": 2134.0, "Debit": 8.267857143, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Millau", "Annee": 2024.0, "Tonnage": 21635.0, "Dispo_globale": 0.753, "Heures_fonctionnement": 2210.0, "Debit": 9.004854369, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Millau", "Annee": 2025.0, "Tonnage": 22654.0, "Dispo_globale": 0.809, "Heures_fonctionnement": 2358.0, "Debit": 9.0, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Paris 15", "Annee": 2023.0, "Tonnage": 33062.0, "Dispo_globale": 0.921, "Heures_fonctionnement": 3288.0, "Debit": 9.987785517, "Taux_refus": 23.5, "Nb_trieurs_poste": 20.0}, {"Site": "Paris 15", "Annee": 2024.0, "Tonnage": 31983.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3120.0, "Debit": 10.140240443, "Taux_refus": 23.8, "Nb_trieurs_poste": 20.0}, {"Site": "Paris 15", "Annee": 2025.0, "Tonnage": 33691.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3201.0, "Debit": 10.037304133, "Taux_refus": 25.3, "Nb_trieurs_poste": 20.0}, {"Site": "Saran", "Annee": 2023.0, "Tonnage": 37939.0, "Dispo_globale": 0.822, "Heures_fonctionnement": 4181.0, "Debit": 8.581269059, "Taux_refus": 24.7, "Nb_trieurs_poste": 13.67}, {"Site": "Saran", "Annee": 2024.0, "Tonnage": 39574.0, "Dispo_globale": 0.853, "Heures_fonctionnement": 4317.0, "Debit": 8.612784611, "Taux_refus": 27.1, "Nb_trieurs_poste": 13.67}, {"Site": "Saran", "Annee": 2025.0, "Tonnage": 40446.0, "Dispo_globale": 0.843, "Heures_fonctionnement": 4273.0, "Debit": 8.796702257, "Taux_refus": 27.9, "Nb_trieurs_poste": 13.67}, {"Site": "Sevran", "Annee": 2023.0, "Tonnage": 18585.0, "Dispo_globale": 0.91, "Heures_fonctionnement": 3453.0, "Debit": 5.062199117, "Taux_refus": 33.5, "Nb_trieurs_poste": 12.0}, {"Site": "Sevran", "Annee": 2024.0, "Tonnage": 18382.0, "Dispo_globale": 0.865, "Heures_fonctionnement": 3378.0, "Debit": 5.158127899, "Taux_refus": 36.7, "Nb_trieurs_poste": 12.0}, {"Site": "Sevran", "Annee": 2025.0, "Tonnage": 19361.0, "Dispo_globale": 0.894, "Heures_fonctionnement": 3608.0, "Debit": 5.098435136, "Taux_refus": 38.9, "Nb_trieurs_poste": 12.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2023.0, "Tonnage": 23747.0, "Dispo_globale": 0.861, "Heures_fonctionnement": 2944.0, "Debit": 6.085409023, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2024.0, "Tonnage": 24626.0, "Dispo_globale": 0.819, "Heures_fonctionnement": 3180.0, "Debit": 6.277978263, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2025.0, "Tonnage": 22715.0, "Dispo_globale": 0.893, "Heures_fonctionnement": 4022.0, "Debit": 5.940680602, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Portes les Valences", "Annee": 2023.0, "Tonnage": 36587.0, "Dispo_globale": 0.79, "Heures_fonctionnement": 3000.0, "Debit": 11.55735492, "Taux_refus": 21.1, "Nb_trieurs_poste": 13.0}, {"Site": "Portes les Valences", "Annee": 2024.0, "Tonnage": 36911.0, "Dispo_globale": 0.817, "Heures_fonctionnement": 3050.0, "Debit": 12.095336843, "Taux_refus": 24.5, "Nb_trieurs_poste": 13.0}, {"Site": "Portes les Valences", "Annee": 2025.0, "Tonnage": 38149.0, "Dispo_globale": 0.831, "Heures_fonctionnement": 3100.0, "Debit": 12.37013425, "Taux_refus": 25.7, "Nb_trieurs_poste": 13.0}, {"Site": "Ch\u00e9zy", "Annee": 2023.0, "Tonnage": 22505.0, "Dispo_globale": 0.752, "Heures_fonctionnement": 3236.0, "Debit": 6.418538241, "Taux_refus": 13.2, "Nb_trieurs_poste": 4.0}, {"Site": "Ch\u00e9zy", "Annee": 2024.0, "Tonnage": 22913.0, "Dispo_globale": 0.759, "Heures_fonctionnement": 3298.0, "Debit": 6.424347352, "Taux_refus": 14.6, "Nb_trieurs_poste": 4.0}, {"Site": "Ch\u00e9zy", "Annee": 2025.0, "Tonnage": 23643.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 3157.0, "Debit": 6.941851922, "Taux_refus": 14.6, "Nb_trieurs_poste": 4.0}, {"Site": "Montpellier", "Annee": 2023.0, "Tonnage": 31244.0, "Dispo_globale": 0.713, "Heures_fonctionnement": 2498.0, "Debit": 11.00032231, "Taux_refus": 28.9, "Nb_trieurs_poste": 19.0}, {"Site": "Montpellier", "Annee": 2024.0, "Tonnage": 28777.0, "Dispo_globale": 0.71, "Heures_fonctionnement": 2478.0, "Debit": 10.918198537, "Taux_refus": 33.4, "Nb_trieurs_poste": 19.0}, {"Site": "Montpellier", "Annee": 2025.0, "Tonnage": 30948.0, "Dispo_globale": 0.717, "Heures_fonctionnement": 2514.0, "Debit": 11.602314575, "Taux_refus": 39.3, "Nb_trieurs_poste": 19.0}];
 const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Chézy']);
 const TK_YRS = [2023,2024,2025];
 const TK_YR_COL   = {2023:'rgba(99,102,241,.8)', 2024:'rgba(0,163,224,.8)',  2025:'rgba(16,185,129,.8)'};
@@ -1873,14 +1876,16 @@ function getTkMerged(){
     var mc=Math.abs(+(pl.Maintenance_courante||0));
     var maint=(mo+mc)>0?(mo+mc)/tn:null;
     var dispo=k.Dispo_globale!=null?+k.Dispo_globale*100:null;
-    var prod=(k.Tonnage&&+k.Heures_fonctionnement>0)?+k.Tonnage/+k.Heures_fonctionnement:null;
+    var debit=k.Debit!=null?+k.Debit:null;
+    var nbOp=k.Nb_trieurs_poste!=null&&k.Nb_trieurs_poste!==''?+k.Nb_trieurs_poste:null;
+    var productivite=(debit!=null&&nbOp!=null&&nbOp>0)?debit/nbOp:null;
     _tkMerged.push({site:k.Site,annee:yr,
       gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
       dispo:dispo,
       heures:k.Heures_fonctionnement!=null?+k.Heures_fonctionnement:null,
       tonnage:k.Tonnage!=null?+k.Tonnage:null,
-      debit:k.Debit!=null?+k.Debit:null,
-      productivite:prod,
+      debit:debit,
+      productivite:productivite,
       personnel:cp,
       maintenance:maint,
       refus:k.Taux_refus!=null&&k.Taux_refus!==''?+k.Taux_refus:null});
@@ -1917,9 +1922,11 @@ function tkScFiltered(){
 
 function tkScSetYr(yr,el){
   tkScYr=yr;
+  tkYr=yr;
   document.querySelectorAll('.tk-sc-yr').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
   renderTkScatter();
+  renderTkTable();
 }
 
 function tkScSetGen(gen,el){
@@ -1929,7 +1936,7 @@ function tkScSetGen(gen,el){
   renderTkScatter();
 }
 
-var TK_KPI_LABELS={debit:'Débit (t/h)',dispo:'Disponibilité (%)',refus:'Taux de refus (%)',heures:'Heures de fonctionnement'};
+var TK_KPI_LABELS={debit:'Débit (t/h)',dispo:'Disponibilité (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivité (t/h/op.)'};
 
 function tkSetKpi(kpi,el){
   tkKpi=kpi;
@@ -2009,17 +2016,55 @@ function tkSetVerdict(elId,r2){
 function mkScatterTk(id, pts, xLbl, yLbl, verdictId){
   var reg=linReg(pts);
   if(reg&&verdictId) tkSetVerdict(verdictId,reg.r2);
-  var ds=[{label:'Sites',data:pts,backgroundColor:'rgba(0,130,179,.75)',borderColor:'#0082b3',
-    pointRadius:10,pointHoverRadius:13,type:'scatter'}];
+  if(!pts.length) return;
+  var labelPlugin={
+    id:'lbl_'+id,
+    afterDraw:function(chart){
+      if(chart.tooltip&&chart.tooltip.getActiveElements&&chart.tooltip.getActiveElements().length) return;
+      var ctx=chart.ctx;
+      chart.data.datasets.forEach(function(ds,di){
+        var meta=chart.getDatasetMeta(di);
+        if(meta.type!=='scatter') return;
+        meta.data.forEach(function(pt,i){
+          var raw=ds.data[i];
+          if(!raw||!raw.label) return;
+          ctx.save();
+          ctx.font='600 10px system-ui,sans-serif';
+          ctx.textAlign='left';
+          ctx.strokeStyle='rgba(255,255,255,.95)';
+          ctx.lineWidth=3;
+          ctx.lineJoin='round';
+          ctx.strokeText(raw.label,pt.x+12,pt.y-4);
+          ctx.fillStyle='#1e293b';
+          ctx.fillText(raw.label,pt.x+12,pt.y-4);
+          ctx.restore();
+        });
+      });
+    }
+  };
+  var ds=[{label:'Sites',data:pts,
+    backgroundColor:'rgba(0,130,179,.8)',
+    borderColor:'#fff',
+    borderWidth:2,
+    pointRadius:11,pointHoverRadius:14,
+    type:'scatter'}];
   if(reg) ds.push({label:'Tendance (R²='+reg.r2.toFixed(2)+')',
     data:[{x:reg.xmin,y:reg.m*reg.xmin+reg.b},{x:reg.xmax,y:reg.m*reg.xmax+reg.b}],
-    type:'line',borderColor:'#f59e0b',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,tension:0});
-  return mkChart(id,{type:'scatter',data:{datasets:ds},plugins:[tkLabelPlugin],options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'bottom',labels:{font:{size:11}}},
-      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;return (r.label||'')+' '+(r.annee||'')+': ('+r.x.toFixed(1)+', '+r.y.toFixed(1)+')';}}}},
+    type:'line',borderColor:'#f59e0b',borderWidth:2,pointRadius:0,fill:false,tension:0});
+  return mkChart(id,{type:'scatter',data:{datasets:ds},plugins:[labelPlugin],options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:!!reg,position:'bottom',labels:{font:{size:10},color:'#64748b',boxWidth:24,padding:14}},
+      tooltip:{callbacks:{label:function(ctx){var r=ctx.raw;
+        var xUnit=(xLbl.match(/\(([^)]+)\)/)||['',''])[1]||'';
+        var xFmt=xUnit==='h'?Math.round(r.x).toString():r.x.toFixed(1);
+        return (r.label||'')+(r.annee?' ('+r.annee+')':'')
+          +' — '+(xFmt+(xUnit?' '+xUnit:''))
+          +' / '+r.y.toFixed(1)+'€/t';}}}},
     scales:{
-      x:{title:{display:true,text:xLbl,font:{size:11}},grid:{color:'#f0f0f0'}},
-      y:{title:{display:true,text:yLbl,font:{size:11}},grid:{color:'#f0f0f0'}}
+      x:{title:{display:true,text:xLbl,font:{size:11},color:'#475569'},
+         grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#64748b'}},
+      y:{title:{display:true,text:yLbl,font:{size:11},color:'#475569'},
+         grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#64748b'}}
     }}});
 }
 
@@ -2061,13 +2106,75 @@ function renderTkSiteDetail(){
   // CA + contexte
   renderTkCaChart();
 
+  // Note analytique
+  var TK_NOTES={
+    'Amiens':{
+      ca:'Le CA suit la progression des tonnages. Une baisse du taux de refus s’accompagne d’une hausse du CA, suggérant un effet positif sur la qualité de service.',
+      pers:'Les coûts progressent malgré l’amélioration du débit — le lien attendu ne se confirme pas. La baisse du taux de refus mobilise paradoxalement davantage de ressources. Une dispo en recul corrèle logiquement avec une hausse des coûts.',
+      maint:'Pas de corrélation claire avec les KPIs disponibles — l’origine des variations reste à identifier.'
+    },
+    'Chézy':{
+      ca:'Pas de progression marquée du CA en lien avec le tonnage entrant.',
+      pers:'Les coûts n’évoluent pas proportionnellement au tonnage traité ni au taux de refus — comportement atypique qui mérite analyse.',
+      maint:'Les corrélations avec le débit, la disponibilité et le taux de refus restent à affiner avec davantage de recul.'
+    },
+    'Le Havre':{
+      ca:'Le CA progresse avec les tonnages. La baisse du taux de refus contribue positivement au CA.',
+      pers:'La disponibilité est le principal levier : une meilleure dispo se traduit directement par un coût unitaire plus faible. L’organisation en 3 postes ou le samedi génère des heures majorées dont l’impact économique mérite une évaluation.',
+      maint:'Paradoxe : une meilleure disponibilité s’accompagne de coûts de maintenance plus élevés, ce qui suggère un investissement préventif actif pour maintenir la performance.'
+    },
+    'Millau':{
+      ca:'Le CA suit la progression des tonnages de manière cohérente.',
+      pers:'La disponibilité joue un rôle clair : une meilleure dispo corrèle avec des coûts de personnel plus faibles.',
+      maint:'Un débit élevé tend à faire progresser les coûts, de même que les heures de fonctionnement. Paradoxe identique à d’autres sites : une meilleure disponibilité s’accompagne de coûts de maintenance plus élevés.'
+    },
+    'Montpellier':{
+      ca:'Le CA progresse généralement avec les tonnages, sauf en 2024 où une anomalie est à investiguer.',
+      pers:'La disponibilité n’a pas d’impact visible sur les coûts. La rémunération tend à progresser avec le taux de refus — à recroiser avec la formule contractuelle.',
+      maint:'Un taux de refus élevé entraîne une hausse des coûts. Paradoxe : les meilleures performances (débit, dispo) s’accompagnent de coûts de maintenance plus élevés.'
+    },
+    'Nantes':{
+      ca:'Le CA suit le tonnage traité de manière cohérente et marquée.',
+      pers:'La disponibilité et le taux de refus sont les deux leviers principaux. À l’inverse, davantage d’heures de fonctionnement s’accompagne d’un coût unitaire plus faible.',
+      maint:'Le débit élevé et les heures de fonctionnement font progresser les coûts. Une baisse de dispo ou une hausse du taux de refus ont le même effet.'
+    },
+    'Paris 15':{
+      ca:'Le CA progresse logiquement avec les tonnages. La formule de révision contractuelle présente un intérêt à analyser.',
+      pers:'Un débit élevé et un taux de refus important font monter les coûts. Des heures de fonctionnement plus élevées s’accompagnent d’un coût unitaire plus faible — effet de dilution.',
+      maint:'Peu sensible au débit, mais augmente avec la baisse de disponibilité et la hausse du taux de refus.'
+    },
+    'Saran':{
+      ca:'Le CA suit les tonnages avec une légère inflexion 2024→2025 à analyser. Progresse également avec le taux de refus.',
+      pers:'Un débit élevé tend à faire progresser les coûts, tandis qu’une meilleure disponibilité les réduit. La hausse du taux de refus s’accompagne d’une hausse des coûts.',
+      maint:'La maintenance diminue quand le débit et les heures augmentent. Contexte : fort correctif en 2024, optimisation en 2025 — trajectoire à confirmer pour le B2026.'
+    },
+    'Sevran':{
+      ca:'Le CA progresse avec les tonnages et avec le taux de refus. Données disponibles sur 2 ans seulement.',
+      pers:'Malgré un débit stable, les coûts progressent — facteurs structurels indépendants de la performance technique. La dispo élevée corrèle avec des coûts plus importants, comportement inverse des autres sites.',
+      maint:'Débit stable mais coûts en hausse. La disponibilité ne joue pas le rôle attendu.'
+    },
+    'Portes les Valences':{
+      ca:'Le CA suit les tonnages, mais une forte hausse entre 2024 et 2025 reste à expliquer (révision tarifaire ?).',
+      pers:'Un débit élevé tend à faire progresser les coûts, mais une meilleure disponibilité les réduit. Le taux de refus a un effet modérément favorable.',
+      maint:'Le débit et les heures de fonctionnement élevés font baisser les coûts. Une meilleure disponibilité a le même effet favorable.'
+    }
+  };
+  function tkSetNote(elId, txt){
+    var el=document.getElementById(elId); if(!el) return;
+    el.innerHTML=txt?'<div style="font-size:.77rem;line-height:1.55;color:#4b5563;font-style:italic;padding:0 2px 6px">'+txt+'</div>':'';
+  }
+  var sn=TK_NOTES[site]||{};
+  tkSetNote('tk-note-ca',   sn.ca||null);
+  tkSetNote('tk-note-pers', sn.pers||null);
+  tkSetNote('tk-note-maint',sn.maint||null);
+
   renderTkSiteCharts();
 }
 
-var tkKpiLines={debit:false,dispo:false,refus:false,heures:false};
-var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6'};
-var TK_KLINE_LBL={debit:'Débit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)'};
-var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h'};
+var tkKpiLines={debit:false,dispo:false,refus:false,heures:false,tonnage:false};
+var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6',tonnage:'#6366f1'};
+var TK_KLINE_LBL={debit:'Débit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)',tonnage:'Tonnage entrant (t)'};
+var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h',tonnage:'t'};
 
 function tkToggleKpiLine(key,el){
   var wasActive=tkKpiLines[key];
@@ -2097,14 +2204,16 @@ function renderTkSiteCharts(){
       type:'bar',backgroundColor:barColor,borderColor:barBorder,borderWidth:2,yAxisID:'y',order:2}];
     // Courbe KPI au premier plan (order faible = dessiné en dernier)
     if(activeKpi){
-      ds.push({label:TK_KLINE_LBL[activeKpi],data:d.map(function(r){return r[activeKpi];}),
+      var lineData=d.map(function(r){return activeKpi==='tonnage'?Math.round(r[activeKpi]):r[activeKpi];});
+      ds.push({label:TK_KLINE_LBL[activeKpi],data:lineData,
         type:'line',borderColor:TK_KLINE_COL[activeKpi],backgroundColor:'transparent',
         borderWidth:2.5,pointRadius:7,pointHoverRadius:10,tension:.35,fill:false,yAxisID:'y2',order:1});
     }
     var scales={y:{position:'left',title:{display:true,text:'€/t',font:{size:10}},grid:{color:'#f0f0f0'}}};
     if(hasLines) scales.y2={position:'right',
       title:{display:true,text:TK_KLINE_UNIT[activeKpi],font:{size:10}},
-      grid:{drawOnChartArea:false}};
+      grid:{drawOnChartArea:false},
+      ticks:{callback:function(v){return activeKpi==='tonnage'?Math.round(v).toLocaleString('fr-FR'):v;}}};
     return {type:'bar',data:{labels:yrs,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:scales}};
   }
@@ -2139,6 +2248,125 @@ function renderTkCaChart(){
     }}});
 }
 
+var tkTblSort={col:'site',asc:true};
+function tkSortBy(col){
+  if(tkTblSort.col===col) tkTblSort.asc=!tkTblSort.asc;
+  else{tkTblSort.col=col;tkTblSort.asc=col==='site';}
+  renderTkTable();
+}
+
+function renderTkTable(){
+  var m=getTkMerged();
+  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
+  // Année affichée et année N-1 pour l'évolution
+  var yrCur=tkYr==='all'?2025:+tkYr;
+  var yrRef=yrCur>2023?yrCur-1:null;
+  var yrLbl=yrCur;
+  var rows=allSites.map(function(s){
+    var dc=m.find(function(r){return r.site===s&&r.annee===yrCur;})||{};
+    var dr=yrRef?m.find(function(r){return r.site===s&&r.annee===yrRef;})||{}:{};
+    return{site:s,
+      tonnage:dc.tonnage??null,
+      dispo:dc.dispo??null,   dispoR:dr.dispo??null,
+      debit:dc.debit??null,   debitR:dr.debit??null,
+      refus:dc.refus??null,   refusR:dr.refus??null,
+      pers:dc.personnel??null, persR:dr.personnel??null,
+      maint:dc.maintenance??null,maintR:dr.maintenance??null};
+  });
+  // Plages heatmap
+  var COLS=['dispo','debit','refus','pers','maint'];
+  var rng={};
+  COLS.forEach(function(k){
+    var v=rows.map(function(r){return r[k];}).filter(function(v){return v!=null;});
+    rng[k]={mn:Math.min.apply(null,v),mx:Math.max.apply(null,v)};
+  });
+  // Rangs (pas pour débit ni tonnage)
+  var RANK_CFG={dispo:true,refus:false,pers:false,maint:false};
+  var rnk={};
+  Object.keys(RANK_CFG).forEach(function(k){
+    var hib=RANK_CFG[k];
+    var sorted=rows.filter(function(r){return r[k]!=null;}).slice()
+      .sort(function(a,b){return hib?b[k]-a[k]:a[k]-b[k];});
+    sorted.forEach(function(r,i){rnk[r.site]=rnk[r.site]||{};rnk[r.site][k]=i+1;});
+  });
+  // Tri
+  rows.sort(function(a,b){
+    var k=tkTblSort.col;
+    var va=k==='site'?a.site:a[k], vb=k==='site'?b.site:b[k];
+    if(va==null&&vb==null)return 0;
+    if(va==null)return 1; if(vb==null)return -1;
+    var r=k==='site'?va.localeCompare(vb):va-vb;
+    return tkTblSort.asc?r:-r;
+  });
+  // Couleur texte heatmap
+  function heatCol(val,key,hib){
+    if(val==null)return '#1e293b';
+    var r=rng[key]; if(!r||r.mx===r.mn)return '#1e293b';
+    var t=(val-r.mn)/(r.mx-r.mn);
+    var good=hib?t:1-t;
+    if(good>=0.72)return '#059669';
+    if(good>=0.45)return '#1e293b';
+    return '#dc2626';
+  }
+  function heatW(val,key,hib){
+    if(val==null)return '400';
+    var r=rng[key]; if(!r||r.mx===r.mn)return '400';
+    var t=(val-r.mn)/(r.mx-r.mn);
+    var good=hib?t:1-t;
+    return (good>=0.72||good<=0.28)?'700':'400';
+  }
+  // Flèche évolution vs N-1
+  function evo(vCur,vRef,hib){
+    if(!yrRef||vCur==null||vRef==null||vRef===0)return '';
+    var pct=(vCur-vRef)/Math.abs(vRef)*100;
+    if(Math.abs(pct)<0.1)return '';
+    var up=pct>=0;
+    var good=(hib&&up)||(!hib&&!up);
+    return '<span style="font-size:.7rem;color:'+(good?'#059669':'#dc2626')+';margin-left:4px">'+(up?'▲':'▼')+Math.abs(pct).toFixed(1)+'%</span>';
+  }
+  function si(col){
+    if(tkTblSort.col!==col)return '<span style="opacity:.25;font-size:.65rem"> ⇅</span>';
+    return '<span style="font-size:.65rem"> '+(tkTblSort.asc?'↑':'↓')+'</span>';
+  }
+  function th(col,lbl){return '<th onclick="tkSortBy(&#39;'+col+'&#39;)" style="cursor:pointer;white-space:nowrap;user-select:none;padding:8px 12px">'+lbl+si(col)+'</th>';}
+  var n=rows.length;
+  function rb(site,key){
+    if(!rnk[site]||!rnk[site][key])return '';
+    var r=rnk[site][key];
+    var col=r<=3?'#059669':r>=n-2?'#dc2626':'#94a3b8';
+    return '<sup style="font-size:.62rem;font-weight:700;color:'+col+';margin-left:2px">'+r+'</sup>';
+  }
+  var suffix=' '+yrLbl;
+  var evoNote=yrRef?'<div style="font-size:.75rem;color:#64748b;margin-bottom:8px">▲▼ Évolution par rapport à '+(yrRef)+'</div>':'';
+  var h=evoNote+'<div class="hm-wrap"><table class="hm-table" style="font-size:.82rem;border-collapse:collapse;width:100%"><thead><tr style="background:#f8fafc">';
+  h+=th('site','Site');
+  h+=th('tonnage','Tonnage'+suffix);
+  h+=th('dispo','Dispo'+suffix);
+  h+=th('debit','Débit'+suffix);
+  h+=th('refus','Refus'+suffix);
+  h+=th('pers','Personnel €/t');
+  h+=th('maint','Maintenance €/t');
+  h+='</tr></thead><tbody>';
+  function td(val,fmt,key,hib,ref,evoVal){
+    var col=heatCol(val,key,hib), fw=heatW(val,key,hib);
+    var txt=val!=null?'<span style="color:'+col+';font-weight:'+fw+'">'+fmt(val)+'</span>':'—';
+    return '<td style="text-align:center;padding:7px 10px">'+txt+(key?rb('__site__',key):'')+(evoVal||'')+'</td>';
+  }
+  rows.forEach(function(r,i){
+    h+='<tr style="border-bottom:1px solid #f1f5f9;'+(i%2?'background:#fafbff':'')+'">';
+    h+='<td style="font-weight:600;padding:7px 12px;white-space:nowrap">'+r.site+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px;color:#475569">'+(r.tonnage!=null?Math.round(r.tonnage).toLocaleString('fr-FR')+' t':'—')+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.dispo,'dispo',true)+';font-weight:'+heatW(r.dispo,'dispo',true)+'">'+(r.dispo!=null?r.dispo.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'dispo')+evo(r.dispo,r.dispoR,true)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px">'+(r.debit!=null?r.debit.toFixed(1)+' t/h':'—')+evo(r.debit,r.debitR,true)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.refus,'refus',false)+';font-weight:'+heatW(r.refus,'refus',false)+'">'+(r.refus!=null?r.refus.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'refus')+evo(r.refus,r.refusR,false)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.pers,'pers',false)+';font-weight:'+heatW(r.pers,'pers',false)+'">'+(r.pers!=null?r.pers.toFixed(1)+'€':'—')+'</span>'+rb(r.site,'pers')+evo(r.pers,r.persR,false)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.maint,'maint',false)+';font-weight:'+heatW(r.maint,'maint',false)+'">'+(r.maint!=null?r.maint.toFixed(1)+'€':'—')+'</span>'+rb(r.site,'maint')+evo(r.maint,r.maintR,false)+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('tk-table-wrap').innerHTML=h;
+}
+
 function renderTk(){
   var m=getTkMerged();
   var sites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
@@ -2147,32 +2375,8 @@ function renderTk(){
   if(!tkSite) tkSite=sites[0];
   sel.value=tkSite;
   renderTkSiteDetail();
-
-  // Scatter corrélations clés
   renderTkScatter();
-
-  // Tableau synthèse
-  var allSites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
-  var dispYrs=tkYr==='all'?TK_YRS:[+tkYr];
-  var h='<div class="hm-wrap"><table class="hm-table"><thead><tr><th>Site</th><th>Cat.</th>';
-  dispYrs.forEach(function(yr){
-    h+='<th>Dispo '+yr+'</th><th>Débit '+yr+'</th><th>Refus '+yr+'</th><th>Pers. €/t '+yr+'</th><th>Maint. €/t '+yr+'</th>';
-  });
-  h+='</tr></thead><tbody>';
-  allSites.forEach(function(s){
-    var isAnc=TK_ANCIENS.has(s);
-    var bg=isAnc?'#fff9f0':'#f0f7ff';
-    var badge=isAnc?'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e">Ancien</span>':'<span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#1e40af">Récent</span>';
-    h+='<tr style="background:'+bg+'"><td style="font-weight:600">'+s+'</td><td>'+badge+'</td>';
-    dispYrs.forEach(function(yr){
-      var d=m.find(function(r){return r.site===s&&r.annee===yr;});
-      function f(v,u){return v!=null?v.toFixed(1)+u:'—';}
-      h+='<td>'+f(d&&d.dispo,'%')+'</td><td>'+f(d&&d.debit,' t/h')+'</td><td>'+f(d&&d.refus,'%')+'</td><td>'+f(d&&d.personnel,'€')+'</td><td>'+f(d&&d.maintenance,'€')+'</td>';
-    });
-    h+='</tr>';
-  });
-  h+='</tbody></table></div>';
-  document.getElementById('tk-table-wrap').innerHTML=h;
+  renderTkTable();
 }
 
 // INIT
