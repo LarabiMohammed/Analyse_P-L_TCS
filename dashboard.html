@@ -199,7 +199,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="header-right">
     <div>R2023 &middot; R2024 &middot; R2025 &middot; <span style="background:rgba(245,158,11,.35);border:1px solid rgba(245,158,11,.6);padding:1px 7px;border-radius:4px;font-size:.75rem;font-weight:700">B2026</span></div>
-    <div>Mis &agrave; jour le 08/04/2026 17:24</div>
+    <div>Mis &agrave; jour le 09/04/2026 15:55</div>
   </div>
 </header>
 
@@ -226,7 +226,7 @@ select.sel:focus{border-color:#00a3e0}
       <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
       <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
     </div>
-    <div class="home-date">Mis &agrave; jour le 08/04/2026 17:24</div>
+    <div class="home-date">Mis &agrave; jour le 09/04/2026 15:55</div>
   </div>
 </div>
 
@@ -338,7 +338,21 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
   </div>
   <div class="row2">
-    <div class="card full"><div class="card-title" id="charges-et-title">Charges internes &euro;/t par site &#8212; tri&eacute;es par EBITDA &euro;/t</div><div class="ch tall"><canvas id="c-charges-et"></canvas></div></div>
+    <div class="card full">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="card-title" id="charges-et-title" style="margin:0">Charges internes &euro;/t par site</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap" id="charge-filter-pills">
+          <button class="btn-pill charge-fil active" onclick="toggleChargeFil(&#39;all&#39;,this)" style="font-size:.75rem;padding:3px 12px">Toutes</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Personnel&#39;,this)" style="font-size:.75rem;padding:3px 12px">Personnel</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Énergie&#39;,this)" style="font-size:.75rem;padding:3px 12px">&Eacute;nergie</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Maint. courante&#39;,this)" style="font-size:.75rem;padding:3px 12px">Maint. courante</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Maint. oblig.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Maint. oblig.</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Traitement s.-p.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Traitement s.-p.</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Autres coûts&#39;,this)" style="font-size:.75rem;padding:3px 12px">Autres co&ucirc;ts</button>
+        </div>
+      </div>
+      <div class="ch tall"><canvas id="c-charges-et"></canvas></div>
+    </div>
   </div>
   <div class="row2">
     <div class="card full">
@@ -1253,6 +1267,22 @@ function renderPL(rows){
 // ══════════════════════════════════════════════════════
 let etYears=new Set(['all']), etSites=new Set(['all']), cEtEB=null, cEtCA=null, cScatter=null, cChargesEt=null;
 let etScatterMetric='ebitda'; // 'ebitda' | 'ca' | 'charges'
+let etChargeFilter=new Set(['all']); // filtres charges sélectionnés
+
+function toggleChargeFil(label, btn){
+  var allBtn=document.querySelector('.charge-fil');
+  if(label==='all'){
+    etChargeFilter=new Set(['all']);
+    document.querySelectorAll('.charge-fil').forEach(function(b){b.classList.remove('active');});
+    allBtn.classList.add('active');
+  } else {
+    etChargeFilter.delete('all'); allBtn.classList.remove('active');
+    if(etChargeFilter.has(label)){ etChargeFilter.delete(label); btn.classList.remove('active'); }
+    else { etChargeFilter.add(label); btn.classList.add('active'); }
+    if(etChargeFilter.size===0){ etChargeFilter=new Set(['all']); allBtn.classList.add('active'); }
+  }
+  renderEt();
+}
 function setScatterMetric(m,btn){
   etScatterMetric=m;
   document.querySelectorAll('.scatter-metric-btn').forEach(b=>b.classList.remove('active'));
@@ -1313,23 +1343,34 @@ function renderEt(){
     const va=getVal(a,chargeYear,'EBITDA')||0, vb=getVal(b,chargeYear,'EBITDA')||0;
     return vb-va;
   });
-  const chargeDs=chargeMetrics.map(cm=>({
-    label:cm.l,
-    data:chargeSites.map(s=>{ const v=getVal(s,chargeYear,cm.m); return v!==null?Math.abs(v):0; }),
-    backgroundColor:cm.color+'cc',
-    borderColor:cm.color,
-    borderWidth:1,
-    borderRadius:2,
-  }));
+  // Filtre charges sélectionnées
+  var isAllCharges=etChargeFilter.has('all');
+  var filteredChargeMetrics=isAllCharges?chargeMetrics:chargeMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
+  var isStacked=isAllCharges||filteredChargeMetrics.length>1; // empilé si tout ou multi-sélection, groupé si 1 seule charge
+  var chargeDs=filteredChargeMetrics.map(function(cm){
+    return {
+      label:cm.l,
+      data:chargeSites.map(function(s){ var v=getVal(s,chargeYear,cm.m); return v!==null?Math.abs(v):0; }),
+      backgroundColor:cm.color+'cc',
+      borderColor:cm.color,
+      borderWidth:isStacked?1:2,
+      borderRadius:isStacked?2:4,
+    };
+  });
+  var chTitleEl=document.getElementById('charges-et-title');
+  if(chTitleEl){
+    var chMode=isAllCharges?'triées par EBITDA €/t':'benchmark';
+    chTitleEl.innerHTML='Charges internes €/t par site — '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+  }
   cChargesEt=mkChart('c-charges-et',{
     type:'bar',
     data:{labels:chargeSites,datasets:chargeDs},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:10},usePointStyle:true}},
-        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' €/t'}}},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' €/t';}}}},
       scales:{
-        x:{stacked:true,grid:{display:false}},
-        y:{stacked:true,title:{display:true,text:'€/t'},grid:{color:'#f0f0f0'}}
+        x:{stacked:isStacked,grid:{display:false}},
+        y:{stacked:isStacked,title:{display:true,text:'€/t'},grid:{color:'#f0f0f0'}}
       }
     }
   });
