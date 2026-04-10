@@ -1,13 +1,44 @@
 """
 generate_dashboard.py  —  Génère dashboard.html (standalone, offline-ready)
 Usage : python generate_dashboard.py
+
+────────────────────────────────────────────────────────────────────────────
+ARCHITECTURE GÉNÉRALE
+────────────────────────────────────────────────────────────────────────────
+Ce script Python remplit une unique fonction : assembler un fichier HTML
+autonome (dashboard.html) qui contient TOUT — données, styles, graphiques —
+sans dépendance externe (sauf Chart.js si chart.min.js est absent).
+
+Fonctionnement :
+  1. Lecture des fichiers CSV source (données P&L, €/t, KPIs techniques)
+  2. Sérialisation en JSON, encodée en ASCII pour éviter les problèmes d'encodage
+  3. Injection dans un template HTML via des balises %%PLACEHOLDER%%
+  4. Écriture du fichier dashboard.html final
+
+Fichiers source nécessaires (dans le même dossier) :
+  - data_synthese.csv         : données P&L brutes par site et année
+  - data_synthese_eur_t.csv   : charges détaillées en €/t (format long)
+  - data_kpi_techniques.csv   : KPIs techniques (dispo, débit, heures, etc.)
+  - chart.min.js              : Chart.js 4.4.0 en local (optionnel, CDN sinon)
+  - veolia.png                : logo affiché dans l'en-tête (optionnel)
+
+Onglets du dashboard :
+  - Accueil (home)    : KPIs agrégés parc, évolution CA/EBITDA, top/flop sites
+  - Vue d'ensemble    : comparaison multi-sites, drill-down P&L
+  - Détail site       : P&L complet, waterfall, benchmark, évolution
+  - Vue €/t           : charges internes €/t empilées, scatter positionnement
+  - Vue région        : agrégats par région/groupe de sites
+  - Perfs & Charges   : corrélations KPIs techniques ↔ charges (Pearson r)
+────────────────────────────────────────────────────────────────────────────
 """
 import csv, json, os, base64
 from datetime import datetime
 
+# Dossier du script — sert de base pour trouver les fichiers CSV et assets
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-# ── Charge Chart.js (offline si disponible, CDN sinon) ──────────────────────
+# ── Chart.js : embarqué si chart.min.js est présent, CDN sinon ──────────────
+# L'embarquer permet d'utiliser le dashboard sans connexion internet.
 _chartjs_path = os.path.join(BASE, "chart.min.js")
 if os.path.exists(_chartjs_path):
     with open(_chartjs_path, encoding="utf-8") as _f:
@@ -15,13 +46,22 @@ if os.path.exists(_chartjs_path):
 else:
     CHARTJS = '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>'
 
+# Date de génération — affichée dans le pied de page du dashboard
 GENERATED = datetime.now().strftime("%d/%m/%Y %H:%M")
 
+# ── Logo Veolia : encodé en base64 pour être embarqué dans le HTML ───────────
+# Si le fichier n'existe pas, la variable est vide (pas d'erreur).
 _logo_path = os.path.join(BASE, "veolia.png")
 LOGO_B64 = ("data:image/png;base64," + base64.b64encode(open(_logo_path,"rb").read()).decode()) if os.path.exists(_logo_path) else ""
 
 # ── Lecture CSV ──────────────────────────────────────────────────────────────
 def load_csv(filename):
+    """
+    Charge un fichier CSV et convertit automatiquement les valeurs numériques
+    en float. Les cellules vides deviennent None. Les valeurs non-numériques
+    restent des strings.
+    Encodage UTF-8 avec BOM (utf-8-sig) pour compatibilité Excel Windows.
+    """
     path = os.path.join(BASE, filename)
     with open(path, encoding="utf-8-sig") as f:
         rows = []
@@ -35,13 +75,18 @@ def load_csv(filename):
             rows.append(clean)
     return rows
 
-data      = load_csv("data_synthese.csv")
-data_eur_t = load_csv("data_synthese_eur_t.csv")
+# Chargement des trois sources de données
+data       = load_csv("data_synthese.csv")       # P&L brut par site et année
+data_eur_t = load_csv("data_synthese_eur_t.csv") # Charges détaillées en €/t (format long : une ligne par métrique)
+data_kpi   = load_csv("data_kpi_techniques.csv") # KPIs techniques : dispo, débit, heures, nb trieurs, etc.
+data_q1    = load_csv("data_q1_2026.csv")         # Comptes réels Q1 2026 : jan→mars, par site et métrique
 
+# Sérialisation JSON avec ensure_ascii=True : évite les problèmes d'encodage
+# des caractères accentués lors de l'injection dans le template HTML.
 DATA_JSON  = json.dumps(data,       ensure_ascii=True)
 EUR_T_JSON = json.dumps(data_eur_t, ensure_ascii=True)
-data_kpi   = load_csv("data_kpi_techniques.csv")
 KPI_JSON   = json.dumps(data_kpi,   ensure_ascii=True)
+Q1_JSON    = json.dumps(data_q1,    ensure_ascii=True)
 
 # ── Template HTML ────────────────────────────────────────────────────────────
 HTML = """\
@@ -237,6 +282,7 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('et',this)">Vue &euro;/t</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
   <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
+  <div class="tab"         onclick="showTab('q1',this)">Suivi Q1 2026</div>
 </div>
 
 <!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
@@ -365,7 +411,21 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
   </div>
   <div class="row2">
-    <div class="card full"><div class="card-title" id="charges-et-title">Charges internes &euro;/t par site &#8212; tri&eacute;es par EBITDA &euro;/t</div><div class="ch tall"><canvas id="c-charges-et"></canvas></div></div>
+    <div class="card full">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="card-title" id="charges-et-title" style="margin:0">Charges internes &euro;/t par site</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap" id="charge-filter-pills">
+          <button class="btn-pill charge-fil active" onclick="toggleChargeFil(&#39;all&#39;,this)" style="font-size:.75rem;padding:3px 12px">Toutes</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Personnel&#39;,this)" style="font-size:.75rem;padding:3px 12px">Personnel</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;\u00c9nergie&#39;,this)" style="font-size:.75rem;padding:3px 12px">&Eacute;nergie</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Maint. courante&#39;,this)" style="font-size:.75rem;padding:3px 12px">Maint. courante</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Maint. oblig.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Maint. oblig.</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Traitement s.-p.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Traitement s.-p.</button>
+          <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Autres co\u00fbts&#39;,this)" style="font-size:.75rem;padding:3px 12px">Autres co&ucirc;ts</button>
+        </div>
+      </div>
+      <div class="ch tall"><canvas id="c-charges-et"></canvas></div>
+    </div>
   </div>
   <div class="row2">
     <div class="card full">
@@ -509,13 +569,12 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 
   <!-- CA + contexte -->
-  <div id="tk-note-ca" style="margin-bottom:8px"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
     <span style="font-size:.82rem;font-weight:700;color:#003a63">CA &amp; contexte :</span>
     <button class="btn-pill tk-cax active" onclick="tkSetCaX('tonnage',this)" style="font-size:.78rem;padding:4px 14px">Tonnage entrant</button>
     <button class="btn-pill tk-cax" onclick="tkSetCaX('refus',this)" style="font-size:.78rem;padding:4px 14px">Taux de refus</button>
   </div>
-  <div class="card full" style="margin-bottom:22px">
+  <div class="card full" style="margin-bottom:4px">
     <div style="position:relative;height:280px"><canvas id="tk-ca-chart"></canvas></div>
   </div>
 
@@ -530,21 +589,97 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="row2" style="margin-bottom:26px">
     <div class="card" style="border-top:3px solid #f59e0b">
-      <div id="tk-note-pers" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Personnel &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-pers-chart"></canvas></div>
     </div>
     <div class="card" style="border-top:3px solid #ef4444">
-      <div id="tk-note-maint" style="margin-bottom:8px"></div>
       <div class="card-title">Co&ucirc;ts de Maintenance &euro;/t</div>
       <div style="position:relative;height:320px"><canvas id="tk-maint-chart"></canvas></div>
     </div>
   </div>
 
+  <!-- SECTION B.5 — Synthèse corrélations -->
+  <div class="section-sep" style="margin-top:18px">Synth&egrave;se des corr&eacute;lations &mdash; KPI le plus influent par site</div>
+  <p class="tk-note">Coefficient de Pearson calcul&eacute; sur 3 ans (2023&ndash;2025). Indique la force et le sens du lien entre chaque KPI et la charge &euro;/t &mdash; &agrave; lire comme une tendance, non une causalit&eacute;.
+    &nbsp;<strong>|r|&nbsp;&ge;&nbsp;0,7</strong> = lien fort &nbsp;&middot;&nbsp; <strong>0,4&nbsp;&ndash;&nbsp;0,7</strong> = mod&eacute;r&eacute; &nbsp;&middot;&nbsp; <strong>&lt;&nbsp;0,4</strong> = faible.</p>
+  <details style="margin-bottom:14px;font-size:.78rem;color:#555;cursor:pointer">
+    <summary style="font-weight:600;color:#003a63;list-style:none;display:flex;align-items:center;gap:6px">
+      <span style="font-size:.7rem;border:1px solid #003a63;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center">?</span>
+      Comment est calcul&eacute; le r ?
+    </summary>
+    <div style="margin-top:8px;padding:12px 14px;background:#f8fafc;border-radius:8px;line-height:1.8">
+      <strong>Formule :</strong> r = &Sigma;(x<sub>i</sub>&minus;x&#773;)(y<sub>i</sub>&minus;y&#773;) &nbsp;/&nbsp; &radic;[&Sigma;(x<sub>i</sub>&minus;x&#773;)&sup2; &times; &Sigma;(y<sub>i</sub>&minus;y&#773;)&sup2;]<br>
+      <strong>Exemple &mdash; Dispo (x) vs Personnel &euro;/t (y) sur un site :</strong><br>
+      &nbsp;&nbsp;2023 : x&nbsp;=&nbsp;89,2&nbsp;% &nbsp; y&nbsp;=&nbsp;87,8&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;2024 : x&nbsp;=&nbsp;88,1&nbsp;% &nbsp; y&nbsp;=&nbsp;99,3&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;2025 : x&nbsp;=&nbsp;86,9&nbsp;% &nbsp; y&nbsp;=&nbsp;100,8&nbsp;&euro;/t<br>
+      &nbsp;&nbsp;x&#773;&nbsp;=&nbsp;88,1 &nbsp;&middot;&nbsp; y&#773;&nbsp;=&nbsp;96,0 &nbsp;&middot;&nbsp; &Sigma;(x<sub>i</sub>&minus;x&#773;)(y<sub>i</sub>&minus;y&#773;)&nbsp;=&nbsp;&minus;14,8<br>
+      &nbsp;&nbsp;r&nbsp;=&nbsp;&minus;14,8&nbsp;/&nbsp;&radic;(2,65&nbsp;&times;&nbsp;101,3)&nbsp;=&nbsp;<strong>&minus;0,90</strong> &nbsp;&rarr;&nbsp; quand la dispo baisse, le co&ucirc;t de personnel monte.
+    </div>
+  </details>
+  <div id="tk-corr-summary" style="margin-bottom:28px"></div>
+
   <!-- SECTION C — Tableau récap -->
   <div class="section-sep">Synth&egrave;se &mdash; tous les sites</div>
   <div class="card full" style="margin-bottom:18px">
     <div id="tk-table-wrap"></div>
+  </div>
+</div>
+
+<!-- ═══ ONGLET Q1 2026 ══════════════════════════════════════════════════════ -->
+<div class="page" id="tab-q1">
+  <div class="toolbar">
+    <span style="font-size:.82rem;color:#555">Cumul jan&rarr;mars 2026 &mdash; valeurs en M&euro; bruts</span>
+    <div class="spacer"></div>
+    <button class="btn-print" onclick="window.print()">&#128438; Exporter PDF</button>
+  </div>
+
+  <!-- A — KPI globaux parc -->
+  <div class="section-sep" style="margin-top:18px">Vue globale parc</div>
+  <div class="kpi-grid" style="margin-bottom:18px">
+    <div class="kpi-card g"><div class="kpi-label">CA total Q1 R2026</div>
+      <div class="kpi-value" id="q1-ca-r26">&mdash;</div></div>
+    <div class="kpi-card"><div class="kpi-label">Ecart vs Budget Q1</div>
+      <div class="kpi-value" id="q1-ca-ecart-b">&mdash;</div></div>
+    <div class="kpi-card"><div class="kpi-label">Evolution vs Q1 2025</div>
+      <div class="kpi-value" id="q1-ca-ecart-r25">&mdash;</div></div>
+    <div class="kpi-card r"><div class="kpi-label">Personnel total Q1 R2026</div>
+      <div class="kpi-value" id="q1-pers-r26">&mdash;</div></div>
+  </div>
+
+  <!-- Graphe global CA -->
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card full">
+      <div class="card-title">CA Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
+      <div class="ch tall"><canvas id="c-q1-ca"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Graphe global Personnel -->
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card full">
+      <div class="card-title">Co&ucirc;ts de Personnel Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
+      <div class="ch tall"><canvas id="c-q1-pers"></canvas></div>
+    </div>
+  </div>
+
+  <!-- B — Vue par site -->
+  <div class="section-sep">D&eacute;tail par site</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <label style="font-size:.82rem;font-weight:700;color:#003a63">Site :</label>
+    <select class="sel" id="q1-site-sel" onchange="q1SetSite(this.value)"></select>
+  </div>
+
+  <!-- Graphes site : synthèse financière -->
+  <div class="card full" style="margin-bottom:18px">
+    <div class="card-title" id="q1-site-title-fin">&mdash;</div>
+    <div class="ch tall"><canvas id="c-q1-site-fin"></canvas></div>
+  </div>
+
+  <!-- Graphes site : charges détaillées -->
+  <div class="card full" style="margin-bottom:18px">
+    <div class="card-title" id="q1-site-title-chg">&mdash;</div>
+    <div class="ch tall"><canvas id="c-q1-site-chg"></canvas></div>
   </div>
 </div>
 
@@ -558,17 +693,23 @@ const EURT = %%EURT%%;
 // ══════════════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════════════
-const fmt  = n => n==null?'—':new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n);
-const fmtM = n => n==null?'—':(n/1e6).toFixed(2).replace('.',',')+' M\u20ac';
-const fmtK = n => n==null?'—':(n/1e3).toFixed(1).replace('.',',')+' kt';
-const fmtE = n => n==null?'—':fmt(n)+' \u20ac';
-const fmtT = n => (n==null||n==='')?'—':Number(n).toFixed(1)+' \u20ac/t';
+// ── Fonctions de formatage des nombres ──────────────────────────────────────
+// Toutes renvoient '—' si la valeur est null/undefined.
+const fmt  = n => n==null?'—':new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n); // entier séparateur milliers
+const fmtM = n => n==null?'—':(n/1e6).toFixed(2).replace('.',',')+' M\u20ac';                    // millions €
+const fmtK = n => n==null?'—':(n/1e3).toFixed(1).replace('.',',')+' kt';                          // kilo-tonnes
+const fmtE = n => n==null?'—':fmt(n)+' \u20ac';                                                   // valeur en €
+const fmtT = n => (n==null||n==='')?'—':Number(n).toFixed(1)+' \u20ac/t';                         // coût unitaire €/t
+
+// ── Palettes de couleurs ─────────────────────────────────────────────────────
 const COLORS=['#0f3460','#533483','#e94560','#16c79a','#f4a261','#2196f3','#ff9f1c','#118ab2','#e63946','#2a9d8f','#e9c46a'];
-const C3 = (i)=>[COLORS[0],COLORS[2],COLORS[3],'#f59e0b'][i%4];
-const SITES = [...new Set(DATA.map(d=>d.Site))];
-const YEARS = ['2023','2024','2025','2026'];
-const REAL_YEARS = ['2023','2024','2025'];
-const yr2lbl = yr => (yr==='2026'||yr==='B2026')?'B2026':yr.startsWith('R')?yr:'R'+yr;
+const C3 = (i)=>[COLORS[0],COLORS[2],COLORS[3],'#f59e0b'][i%4]; // rotation 4 couleurs pour barres multi-années
+
+// ── Constantes globales issues des données ───────────────────────────────────
+const SITES = [...new Set(DATA.map(d=>d.Site))];           // liste des sites dédupliqués
+const YEARS = ['2023','2024','2025','2026'];                // toutes années (2026 = budget)
+const REAL_YEARS = ['2023','2024','2025'];                  // réalisés uniquement
+const yr2lbl = yr => (yr==='2026'||yr==='B2026')?'B2026':yr.startsWith('R')?yr:'R'+yr; // normalise le label : '2024' → 'R2024'
 
 
 // ══════════════════════════════════════════════════════
@@ -576,7 +717,11 @@ const yr2lbl = yr => (yr==='2026'||yr==='B2026')?'B2026':yr.startsWith('R')?yr:'
 // ══════════════════════════════════════════════════════
 
 // ── Heatmap standalone (sites=lignes, métriques=colonnes) ──
-// Helper : crée un chart en détruisant proprement tout chart existant sur le canvas
+// ── mkChart(id, config) ──────────────────────────────────────────────────────
+// Helper central pour créer un graphique Chart.js.
+// Détruit toujours le graphique précédent sur le même canvas avant d'en créer
+// un nouveau — évite l'erreur "Canvas is already in use".
+// Utilisé par TOUS les onglets du dashboard.
 function mkChart(id, config){
   const canvas=document.getElementById(id);
   if(!canvas) return null;
@@ -599,6 +744,7 @@ function showTab(id,el){
     if(id==='et') renderEt();
     if(id==='rg') renderRg();
     if(id==='tk') renderTk();
+    if(id==='q1') renderQ1();
   }));
 }
 
@@ -617,6 +763,10 @@ function goToSite(site){
 // ══════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════
 // EXECUTIVE SUMMARY
+// ══════════════════════════════════════════════════════
+// ONGLET ACCUEIL — renderHome()
+// Affiche les KPIs agrégés parc (CA, EBITDA, tonnes) pour R2025 vs R2024,
+// le graphique d'évolution CA/EBITDA, et le classement top/flop sites.
 // ══════════════════════════════════════════════════════
 function renderHome(){
   const yr='2025', yrPrev='2024';
@@ -767,6 +917,12 @@ function toggleOvYear(y,btn){
   renderOv();
 }
 
+// ══════════════════════════════════════════════════════
+// ONGLET VUE D'ENSEMBLE — renderOv()
+// Graphiques comparatifs multi-sites : CA, EBITDA, taux EBITDA, tonnes.
+// Filtres : années (multi-sélection) + sites (multi-sélection).
+// Appelle aussi renderExecSummary() pour le résumé KPIs en haut de page.
+// ══════════════════════════════════════════════════════
 function renderOv(){
   renderExecSummary();
   const isAll=ovSites.has('all');
@@ -927,6 +1083,13 @@ function setCmpYear(yr){
   if(site&&site2&&site2!==site) renderCompare(site,site2);
 }
 
+// ══════════════════════════════════════════════════════
+// ONGLET DÉTAIL SITE — renderDt()
+// Affiche le P&L complet d'un site sélectionné : évolution CA/EBITDA,
+// waterfall des charges, benchmark vs parc, comparaison avec un 2e site.
+// Sous-fonctions : renderCompare, renderSiteExec, renderBench,
+//                 renderEvol, renderDonut, renderWaterfall, renderPL
+// ══════════════════════════════════════════════════════
 function renderDt(){
   const site=document.getElementById('dt-site').value;
   const site2=(document.getElementById('dt-site2')||{}).value||'';
@@ -1258,10 +1421,41 @@ function renderPL(rows){
 }
 
 // ══════════════════════════════════════════════════════
-// ONGLET 3 — EUR/T
+// ONGLET VUE €/T — renderEt()
+// Visualise les charges internes en €/t par site.
+// Graphiques : CA €/t, EBITDA €/t, charges empilées par poste,
+//              scatter positionnement (tonnes vs EBITDA/CA/charges),
+//              tableau heatmap €/t toutes métriques.
+//
+// Filtres disponibles :
+//   - Année (multi-sélection) : R2023, R2024, R2025
+//   - Sites (multi-sélection)
+//   - Charges (multi-sélection sur le graphe empilé) :
+//       · "Toutes" → empilées triées par EBITDA
+//       · 1 charge sélectionnée → barres simples (benchmark direct)
+//       · 2+ charges → empilées (sous-ensemble)
+//
+// Source données : data_synthese_eur_t.csv (format long, une ligne par métrique)
+// Accès via getVal(site, année, métrique) qui cherche dans EURT[]
 // ══════════════════════════════════════════════════════
 let etYears=new Set(['all']), etSites=new Set(['all']), cEtEB=null, cEtCA=null, cScatter=null, cChargesEt=null;
-let etScatterMetric='ebitda'; // 'ebitda' | 'ca' | 'charges'
+let etScatterMetric='ebitda'; // métrique axe Y du scatter : 'ebitda' | 'ca' | 'charges'
+let etChargeFilter=new Set(['all']); // charges sélectionnées dans le filtre du graphe empilé
+
+function toggleChargeFil(label, btn){
+  var allBtn=document.querySelector('.charge-fil');
+  if(label==='all'){
+    etChargeFilter=new Set(['all']);
+    document.querySelectorAll('.charge-fil').forEach(function(b){b.classList.remove('active');});
+    allBtn.classList.add('active');
+  } else {
+    etChargeFilter.delete('all'); allBtn.classList.remove('active');
+    if(etChargeFilter.has(label)){ etChargeFilter.delete(label); btn.classList.remove('active'); }
+    else { etChargeFilter.add(label); btn.classList.add('active'); }
+    if(etChargeFilter.size===0){ etChargeFilter=new Set(['all']); allBtn.classList.add('active'); }
+  }
+  renderEt();
+}
 function setScatterMetric(m,btn){
   etScatterMetric=m;
   document.querySelectorAll('.scatter-metric-btn').forEach(b=>b.classList.remove('active'));
@@ -1322,23 +1516,34 @@ function renderEt(){
     const va=getVal(a,chargeYear,'EBITDA')||0, vb=getVal(b,chargeYear,'EBITDA')||0;
     return vb-va;
   });
-  const chargeDs=chargeMetrics.map(cm=>({
-    label:cm.l,
-    data:chargeSites.map(s=>{ const v=getVal(s,chargeYear,cm.m); return v!==null?Math.abs(v):0; }),
-    backgroundColor:cm.color+'cc',
-    borderColor:cm.color,
-    borderWidth:1,
-    borderRadius:2,
-  }));
+  // Filtre charges sélectionnées
+  var isAllCharges=etChargeFilter.has('all');
+  var filteredChargeMetrics=isAllCharges?chargeMetrics:chargeMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
+  var isStacked=isAllCharges||filteredChargeMetrics.length>1; // empilé si tout ou multi-sélection, groupé si 1 seule charge
+  var chargeDs=filteredChargeMetrics.map(function(cm){
+    return {
+      label:cm.l,
+      data:chargeSites.map(function(s){ var v=getVal(s,chargeYear,cm.m); return v!==null?Math.abs(v):0; }),
+      backgroundColor:cm.color+'cc',
+      borderColor:cm.color,
+      borderWidth:isStacked?1:2,
+      borderRadius:isStacked?2:4,
+    };
+  });
+  var chTitleEl=document.getElementById('charges-et-title');
+  if(chTitleEl){
+    var chMode=isAllCharges?'tri\u00e9es par EBITDA \u20ac/t':'benchmark';
+    chTitleEl.innerHTML='Charges internes \u20ac/t par site \u2014 '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+  }
   cChargesEt=mkChart('c-charges-et',{
     type:'bar',
     data:{labels:chargeSites,datasets:chargeDs},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:10},usePointStyle:true}},
-        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t'}}},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';}}}},
       scales:{
-        x:{stacked:true,grid:{display:false}},
-        y:{stacked:true,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}
+        x:{stacked:isStacked,grid:{display:false}},
+        y:{stacked:isStacked,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}
       }
     }
   });
@@ -1599,7 +1804,10 @@ function renderEt(){
 }
 
 // ══════════════════════════════════════════════════════
-// ONGLET 4 — REGION
+// ONGLET RÉGION — renderRg()
+// Agrège les données par région géographique et affiche CA/EBITDA
+// sous forme de barres ou lignes d'évolution.
+// REG_MAP : correspondance site → code région (COU, NNO, IDF, BARA, SO)
 // ══════════════════════════════════════════════════════
 const REG_MAP={'Nantes':'COU','Saran':'COU','Amiens':'NNO','Paris 15':'IDF','Le Havre':'NNO','Sevran':'IDF','Ch\u00e9zy':'IDF','Portes les Valences':'BARA','Montpellier':'BARA','Millau':'BARA','B\u00e8gles':'SO'};
 let rgYears=new Set(['all']), cRgCA=null, cRgEB=null, cRgEBT=null, rgCAType='bar', rgMetric='EBITDA';
@@ -1873,16 +2081,34 @@ function renderRg(){
 }
 
 // ══════════════════════════════════════════════════════
-// PERF × P&L
-// ══════════════════════════════════════════════════════
-
-
-// ══════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════
-// PERFS TECHNIQUES & CHARGES
+// ONGLET PERFS & CHARGES — renderTk()
+//
+// Objectif : croiser les KPIs techniques (dispo, débit, heures, productivité)
+// avec les charges P&L (personnel €/t, maintenance €/t) pour identifier
+// quels indicateurs techniques influencent le plus les coûts.
+//
+// Structure de l'onglet :
+//   1. KPI cards  : dispo, débit, tonnage, personnel €/t, maintenance €/t
+//   2. Scatter plots : corrélations KPI ↔ charges (un point par site)
+//      → verdict qualitatif (Pearson r) via mkScatterTk()
+//   3. Vue par site  : évolution CA + overlay KPI, charges Personnel/Maintenance
+//   4. Synthèse corrélations : tableau KPI dominant par site (Pearson r pré-calculé)
+//   5. Tableau récap : tous les sites, année sélectionnable, flèches N-1
+//
+// Données croisées dans getTkMerged() :
+//   - KPI_RAW (data_kpi_techniques.csv) × DATA (data_synthese.csv)
+//   - Résultat : un objet par (site, année) avec champs KPI + charges €/t
+//
+// TK_CORR : coefficients de Pearson pré-calculés hors-ligne (Python/Excel)
+//   car avec 3 points par site, un calcul JS serait identique mais moins
+//   transparent. Mis à jour manuellement si les données changent.
+//
+// TK_ANCIENS : sites historiques (contrats plus anciens), distinction
+//   visuelle dans les scatter plots.
 // ══════════════════════════════════════════════════════
 const KPI_RAW = %%KPI%%;
-const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Ch\u00e9zy']);
+const Q1_DATA = %%Q1_DATA%%;
+const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Ch\u00e9zy']); // sites à contrats anciens
 const TK_YRS = [2023,2024,2025];
 const TK_YR_COL   = {2023:'rgba(99,102,241,.8)', 2024:'rgba(0,163,224,.8)',  2025:'rgba(16,185,129,.8)'};
 const TK_YR_BDR   = {2023:'#4338ca',             2024:'#0082b3',             2025:'#059669'};
@@ -1890,6 +2116,11 @@ const TK_GEN_COL  = {ancien:'rgba(245,158,11,.82)',recent:'rgba(0,163,224,.82)'}
 const TK_GEN_BDR  = {ancien:'#d97706',            recent:'#0082b3'};
 let _tkMerged=null, tkYr='all', tkSite=null, tkC={}, tkScYr='all', tkScGen='all', tkKpi='debit', tkCaX='tonnage';
 
+// ── getTkMerged() ─────────────────────────────────────────────────────────────
+// Fusionne KPI techniques + données P&L en un tableau plat.
+// Calcule à la volée les charges en €/t (personnel, maintenance).
+// Calcule aussi la productivité = débit / nb_trieurs_poste.
+// Résultat mis en cache dans _tkMerged pour ne pas recalculer à chaque render.
 function getTkMerged(){
   if(_tkMerged) return _tkMerged;
   _tkMerged=[];
@@ -1977,6 +2208,124 @@ function tkSetCaX(key,el){
   document.querySelectorAll('.tk-cax').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
   renderTkCaChart();
+}
+
+// ── TK_CORR : coefficients de Pearson pré-calculés ──────────────────────────
+// Structure : { site: { pers: { kpi: r }, maint: { kpi: r } } }
+// 'pers'  = corrélation entre le KPI et Personnel €/t
+// 'maint' = corrélation entre le KPI et Maintenance €/t
+// null = pas assez de données pour calculer (ex. Millau sans taux de refus)
+//
+// ⚠️  Si les données CSV changent (nouveau site, nouvelle année),
+//     recalculer ces valeurs avec le script extract_data.py ou via Excel.
+// ── Interprétation du signe ──────────────────────────────────────────────────
+// r négatif : quand le KPI monte, la charge baisse (ex. dispo↑ → personnel€/t↓)
+// r positif : quand le KPI monte, la charge monte
+// |r| ≥ 0.7 = lien fort · 0.4–0.7 = modéré · < 0.4 = faible
+const TK_CORR={
+  'Amiens':         {pers:{dispo:-0.904,debit:0.706,heures:0.525,refus:0.072,tonnage:0.904},  maint:{dispo:0.51,debit:-0.189,heures:-0.911,refus:-0.617,tonnage:-0.511}},
+  'B\u00e8gles':    {pers:{dispo:-0.267,debit:-0.895,heures:-0.622,refus:-0.769,tonnage:-0.998},maint:{dispo:0.436,debit:-0.967,heures:0.051,refus:-0.155,tonnage:-0.789}},
+  'Ch\u00e9zy':     {pers:{dispo:0.088,debit:-0.135,heures:0.564,refus:0.785,tonnage:0.215},  maint:{dispo:1.0,debit:0.979,heures:-0.784,refus:0.674,tonnage:0.989}},
+  'Le Havre':       {pers:{dispo:0.607,debit:-0.96,heures:0.988,refus:0.968,tonnage:-0.917},  maint:{dispo:0.994,debit:-0.863,heures:0.79,refus:0.482,tonnage:-0.92}},
+  'Millau':         {pers:{dispo:-0.999,debit:-0.855,heures:-0.986,refus:null,tonnage:-0.995}, maint:{dispo:0.971,debit:0.964,heures:0.903,refus:null,tonnage:0.93}},
+  'Montpellier':    {pers:{dispo:-0.798,debit:-0.559,heures:-0.878,refus:-0.037,tonnage:-0.998},maint:{dispo:0.456,debit:0.721,heures:0.322,refus:0.978,tonnage:-0.24}},
+  'Nantes':         {pers:{dispo:0.264,debit:-0.739,heures:-0.997,refus:-0.905,tonnage:-0.894},maint:{dispo:-0.692,debit:0.971,heures:0.915,refus:0.998,tonnage:0.999}},
+  'Paris 15':       {pers:{dispo:-0.873,debit:0.331,heures:-0.529,refus:0.928,tonnage:0.351}, maint:{dispo:-1.0,debit:0.743,heures:-0.872,refus:0.636,tonnage:-0.141}},
+  'Portes les Valences':{pers:{dispo:0.785,debit:0.787,heures:0.66,refus:0.836,tonnage:0.385},maint:{dispo:-0.953,debit:-0.951,heures:-0.992,refus:-0.922,tonnage:-0.981}},
+  'Saran':          {pers:{dispo:0.628,debit:0.942,heures:0.628,refus:0.947,tonnage:0.976},   maint:{dispo:0.202,debit:-0.857,heures:0.203,refus:-0.353,tonnage:-0.451}},
+  'Sevran':         {pers:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0},            maint:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0}}
+};
+const TK_CORR_SITES=['Amiens','B\u00e8gles','Ch\u00e9zy','Le Havre','Millau','Montpellier','Nantes','Paris 15','Portes les Valences','Saran','Sevran'];
+const TK_CORR_KPIS=['dispo','debit','heures','refus','tonnage'];
+const TK_CORR_KPI_LBL={dispo:'Dispo',debit:'D\u00e9bit',heures:'Heures',refus:'Taux de refus',tonnage:'Tonnage'};
+
+function corrColor(r){
+  if(r===null)return{bg:'#f1f5f9',fg:'#94a3b8'};
+  var a=Math.abs(r);
+  if(r<0){
+    // bleu : charge baisse quand KPI monte
+    var i=Math.round(a*180);
+    return{bg:'rgb('+(255-i)+','+(255-i)+',255)',fg:a>0.6?'#1e3a8a':'#334155'};
+  } else {
+    // orange : charge monte quand KPI monte
+    var i=Math.round(a*180);
+    return{bg:'rgb(255,'+(255-Math.round(a*130))+','+(255-Math.round(a*200))+')',fg:a>0.6?'#7c2d12':'#334155'};
+  }
+}
+
+function bestKpi(corrObj){
+  var best=null,bestR=0;
+  Object.keys(corrObj).forEach(function(k){
+    var r=corrObj[k];
+    if(r!==null&&Math.abs(r)>Math.abs(bestR)){bestR=r;best=k;}
+  });
+  return {k:best,r:bestR};
+}
+
+function renderTkCorr(){
+  var sites=TK_CORR_SITES;
+  var kpis=TK_CORR_KPIS;
+
+  // Tendance réelle 2023→2025 par site et KPI (pour afficher le sens observé)
+  var tkTrend={};
+  getTkMerged().forEach(function(d){
+    if(!tkTrend[d.site]) tkTrend[d.site]={};
+    ['dispo','debit','heures','refus','tonnage','productivite'].forEach(function(k){
+      if(d.annee===2023&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v23=d[k]; }
+      if(d.annee===2025&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v25=d[k]; }
+    });
+  });
+  function kpiWentUp(site, kpiKey){
+    var t=(tkTrend[site]||{})[kpiKey]||{};
+    if(t.v23==null||t.v25==null) return null; // inconnu
+    return t.v25>t.v23; // true=hausse, false=baisse
+  }
+
+  // ── 1. Tableau synthèse ──────────────────────────────────────────────────
+  var s='<div class="hm-wrap"><table style="font-size:.8rem;border-collapse:collapse;width:100%">';
+  s+='<thead><tr style="background:#f8fafc">';
+  s+='<th style="padding:8px 12px;text-align:left">Site</th>';
+  s+='<th style="padding:8px 12px;text-align:center;color:#d97706" colspan="2">Personnel \u20ac/t &mdash; KPI dominant</th>';
+  s+='<th style="padding:8px 12px;text-align:center;color:#dc2626" colspan="2">Maintenance \u20ac/t &mdash; KPI dominant</th>';
+  s+='</tr><tr style="background:#fafafa;font-size:.72rem;color:#64748b">';
+  s+='<th></th><th style="padding:4px 12px">KPI</th><th style="padding:4px 12px">r &nbsp;&nbsp; ce qui s\u2019est pass\u00e9</th>';
+  s+='<th style="padding:4px 12px">KPI</th><th style="padding:4px 12px">r &nbsp;&nbsp; ce qui s\u2019est pass\u00e9</th></tr></thead><tbody>';
+  sites.forEach(function(site,i){
+    var c=TK_CORR[site]||{};
+    var bp=bestKpi(c.pers||{}), bm=bestKpi(c.maint||{});
+    var bg=i%2?'#fafbff':'#fff';
+    var note=site==='Sevran'?' <span style="font-size:.65rem;color:#94a3b8">(2 ans)</span>':'';
+    function cell(b){
+      if(!b.k)return '<td colspan="2" style="text-align:center;color:#94a3b8;padding:7px 12px">\u2014</td>';
+      var cl=corrColor(b.r);
+      // Sens observé : KPI a-t-il monté ou baissé entre 2023 et 2025 ?
+      var up=kpiWentUp(site, b.k);
+      var kpiDir=up===null?null:(up?'\u2191':'\u2193');
+      var chargeDir; // charge a évolué dans le sens donné par le signe de r × direction KPI
+      if(kpiDir!==null){
+        var chargeUp=(up&&b.r>0)||(!up&&b.r<0);
+        chargeDir=chargeUp?'\u2191':'\u2193';
+      }
+      var sens;
+      if(kpiDir===null){
+        sens=b.r>0?'\u2191 KPI \u2192 \u2191 charge':'\u2191 KPI \u2192 \u2193 charge';
+      } else {
+        // Direction observée en premier (gras), direction inverse en gris
+        sens='<strong>'+kpiDir+' KPI \u2192 '+chargeDir+' charge</strong>';
+      }
+      return '<td style="padding:7px 12px;text-align:center;font-weight:600">'+TK_CORR_KPI_LBL[b.k]+'</td>'
+        +'<td style="padding:7px 12px;text-align:center"><span style="background:'+cl.bg+';color:'+cl.fg+';padding:2px 8px;border-radius:10px;font-weight:600;font-size:.75rem">'+b.r.toFixed(2)+'</span>'
+        +' <span style="font-size:.68rem;color:#475569">'+sens+'</span></td>';
+    }
+    s+='<tr style="border-bottom:1px solid #f1f5f9;background:'+bg+'">';
+    s+='<td style="padding:7px 12px;font-weight:600">'+site+note+'</td>';
+    s+=cell(bp)+cell(bm);
+    s+='</tr>';
+  });
+  s+='</tbody></table></div>';
+  var el=document.getElementById('tk-corr-summary');
+  if(el) el.innerHTML=s;
+
 }
 
 function renderTkScatter(){
@@ -2134,67 +2483,6 @@ function renderTkSiteDetail(){
   renderTkCaChart();
 
   // Note analytique
-  var TK_NOTES={
-    'Amiens':{
-      ca:'Le CA suit la progression des tonnages. Une baisse du taux de refus s\u2019accompagne d\u2019une hausse du CA, sugg\u00e9rant un effet positif sur la qualit\u00e9 de service.',
-      pers:'Les co\u00fbts progressent malgr\u00e9 l\u2019am\u00e9lioration du d\u00e9bit \u2014 le lien attendu ne se confirme pas. La baisse du taux de refus mobilise paradoxalement davantage de ressources. Une dispo en recul corr\u00e8le logiquement avec une hausse des co\u00fbts.',
-      maint:'Pas de corr\u00e9lation claire avec les KPIs disponibles \u2014 l\u2019origine des variations reste \u00e0 identifier.'
-    },
-    'Ch\u00e9zy':{
-      ca:'Pas de progression marqu\u00e9e du CA en lien avec le tonnage entrant.',
-      pers:'Les co\u00fbts n\u2019\u00e9voluent pas proportionnellement au tonnage trait\u00e9 ni au taux de refus \u2014 comportement atypique qui m\u00e9rite analyse.',
-      maint:'Les corr\u00e9lations avec le d\u00e9bit, la disponibilit\u00e9 et le taux de refus restent \u00e0 affiner avec davantage de recul.'
-    },
-    'Le Havre':{
-      ca:'Le CA progresse avec les tonnages. La baisse du taux de refus contribue positivement au CA.',
-      pers:'La disponibilit\u00e9 est le principal levier : une meilleure dispo se traduit directement par un co\u00fbt unitaire plus faible. L\u2019organisation en 3 postes ou le samedi g\u00e9n\u00e8re des heures major\u00e9es dont l\u2019impact \u00e9conomique m\u00e9rite une \u00e9valuation.',
-      maint:'Paradoxe : une meilleure disponibilit\u00e9 s\u2019accompagne de co\u00fbts de maintenance plus \u00e9lev\u00e9s, ce qui sugg\u00e8re un investissement pr\u00e9ventif actif pour maintenir la performance.'
-    },
-    'Millau':{
-      ca:'Le CA suit la progression des tonnages de mani\u00e8re coh\u00e9rente.',
-      pers:'La disponibilit\u00e9 joue un r\u00f4le clair : une meilleure dispo corr\u00e8le avec des co\u00fbts de personnel plus faibles.',
-      maint:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, de m\u00eame que les heures de fonctionnement. Paradoxe identique \u00e0 d\u2019autres sites : une meilleure disponibilit\u00e9 s\u2019accompagne de co\u00fbts de maintenance plus \u00e9lev\u00e9s.'
-    },
-    'Montpellier':{
-      ca:'Le CA progresse g\u00e9n\u00e9ralement avec les tonnages, sauf en 2024 o\u00f9 une anomalie est \u00e0 investiguer.',
-      pers:'La disponibilit\u00e9 n\u2019a pas d\u2019impact visible sur les co\u00fbts. La r\u00e9mun\u00e9ration tend \u00e0 progresser avec le taux de refus \u2014 \u00e0 recroiser avec la formule contractuelle.',
-      maint:'Un taux de refus \u00e9lev\u00e9 entra\u00eene une hausse des co\u00fbts. Paradoxe : les meilleures performances (d\u00e9bit, dispo) s\u2019accompagnent de co\u00fbts de maintenance plus \u00e9lev\u00e9s.'
-    },
-    'Nantes':{
-      ca:'Le CA suit le tonnage trait\u00e9 de mani\u00e8re coh\u00e9rente et marqu\u00e9e.',
-      pers:'La disponibilit\u00e9 et le taux de refus sont les deux leviers principaux. \u00c0 l\u2019inverse, davantage d\u2019heures de fonctionnement s\u2019accompagne d\u2019un co\u00fbt unitaire plus faible.',
-      maint:'Le d\u00e9bit \u00e9lev\u00e9 et les heures de fonctionnement font progresser les co\u00fbts. Une baisse de dispo ou une hausse du taux de refus ont le m\u00eame effet.'
-    },
-    'Paris 15':{
-      ca:'Le CA progresse logiquement avec les tonnages. La formule de r\u00e9vision contractuelle pr\u00e9sente un int\u00e9r\u00eat \u00e0 analyser.',
-      pers:'Un d\u00e9bit \u00e9lev\u00e9 et un taux de refus important font monter les co\u00fbts. Des heures de fonctionnement plus \u00e9lev\u00e9es s\u2019accompagnent d\u2019un co\u00fbt unitaire plus faible \u2014 effet de dilution.',
-      maint:'Peu sensible au d\u00e9bit, mais augmente avec la baisse de disponibilit\u00e9 et la hausse du taux de refus.'
-    },
-    'Saran':{
-      ca:'Le CA suit les tonnages avec une l\u00e9g\u00e8re inflexion 2024\u21922025 \u00e0 analyser. Progresse \u00e9galement avec le taux de refus.',
-      pers:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, tandis qu\u2019une meilleure disponibilit\u00e9 les r\u00e9duit. La hausse du taux de refus s\u2019accompagne d\u2019une hausse des co\u00fbts.',
-      maint:'La maintenance diminue quand le d\u00e9bit et les heures augmentent. Contexte : fort correctif en 2024, optimisation en 2025 \u2014 trajectoire \u00e0 confirmer pour le B2026.'
-    },
-    'Sevran':{
-      ca:'Le CA progresse avec les tonnages et avec le taux de refus. Donn\u00e9es disponibles sur 2 ans seulement.',
-      pers:'Malgr\u00e9 un d\u00e9bit stable, les co\u00fbts progressent \u2014 facteurs structurels ind\u00e9pendants de la performance technique. La dispo \u00e9lev\u00e9e corr\u00e8le avec des co\u00fbts plus importants, comportement inverse des autres sites.',
-      maint:'D\u00e9bit stable mais co\u00fbts en hausse. La disponibilit\u00e9 ne joue pas le r\u00f4le attendu.'
-    },
-    'Portes les Valences':{
-      ca:'Le CA suit les tonnages, mais une forte hausse entre 2024 et 2025 reste \u00e0 expliquer (r\u00e9vision tarifaire\u00a0?).',
-      pers:'Un d\u00e9bit \u00e9lev\u00e9 tend \u00e0 faire progresser les co\u00fbts, mais une meilleure disponibilit\u00e9 les r\u00e9duit. Le taux de refus a un effet mod\u00e9r\u00e9ment favorable.',
-      maint:'Le d\u00e9bit et les heures de fonctionnement \u00e9lev\u00e9s font baisser les co\u00fbts. Une meilleure disponibilit\u00e9 a le m\u00eame effet favorable.'
-    }
-  };
-  function tkSetNote(elId, txt){
-    var el=document.getElementById(elId); if(!el) return;
-    el.innerHTML=txt?'<div style="font-size:.77rem;line-height:1.55;color:#4b5563;font-style:italic;padding:0 2px 6px">'+txt+'</div>':'';
-  }
-  var sn=TK_NOTES[site]||{};
-  tkSetNote('tk-note-ca',   sn.ca||null);
-  tkSetNote('tk-note-pers', sn.pers||null);
-  tkSetNote('tk-note-maint',sn.maint||null);
-
   renderTkSiteCharts();
 }
 
@@ -2402,11 +2690,186 @@ function renderTk(){
   if(!tkSite) tkSite=sites[0];
   sel.value=tkSite;
   renderTkSiteDetail();
+  renderTkCorr();
   renderTkScatter();
   renderTkTable();
 }
 
-// INIT
+// ══════════════════════════════════════════════════════
+// ONGLET Q1 2026 — renderQ1() / renderQ1Site()
+// Affiche les comptes réels cumulés jan→mars 2026 (vs R2025 et Budget 2026).
+// Vue globale : 4 KPI cards parc + 2 graphes horizontaux (CA et Personnel).
+// Vue par site : 2 graphes verticaux (synthèse financière + charges détaillées).
+// Données : constante Q1_DATA (format [{Site, Metrique, R2025, R2026, B2026}]).
+// Valeurs affichées en M€ pour les graphes globaux, k€ pour les graphes par site.
+// ══════════════════════════════════════════════════════
+var q1Site = null; // site actuellement sélectionné dans la vue par site
+
+function renderQ1(){
+  var sites = [...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+
+  // ── Somme d'une métrique sur tous les sites ──────────────────────────────
+  function getSum(met, col){
+    return Q1_DATA.filter(function(d){return d.Metrique===met;})
+      .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);}, 0);
+  }
+  var caR26  = getSum('CA','R2026');
+  var caB26  = getSum('CA','B2026');
+  var caR25  = getSum('CA','R2025');
+  var persR26 = getSum('Personnel','R2026');
+
+  // ── KPI cards ────────────────────────────────────────────────────────────
+  function fmtMSign(v){
+    if(v==null||isNaN(v)) return '\u2014';
+    var s=v<0?'\u2212':'+'+(v===0?'':' ');
+    return s+(Math.abs(v)/1e6).toFixed(2)+'\u00a0M\u20ac';
+  }
+  document.getElementById('q1-ca-r26').textContent      = fmtM(caR26);
+  document.getElementById('q1-ca-ecart-b').textContent  = fmtMSign(caR26-caB26);
+  document.getElementById('q1-ca-ecart-r25').textContent= fmtMSign(caR26-caR25);
+  document.getElementById('q1-pers-r26').textContent    = fmtM(Math.abs(persR26));
+
+  // Colorer l'écart budget (vert si positif, rouge si négatif)
+  var ecartB = caR26 - caB26;
+  var ecartEl = document.getElementById('q1-ca-ecart-b');
+  ecartEl.style.color = ecartB >= 0 ? '#059669' : '#dc2626';
+  var ecartR25El = document.getElementById('q1-ca-ecart-r25');
+  ecartR25El.style.color = (caR26-caR25) >= 0 ? '#059669' : '#dc2626';
+
+  // ── Helper : dataset pour graphes globaux ────────────────────────────────
+  function makeDs(met, colKey, label, color){
+    return {
+      label: label,
+      borderRadius: 3,
+      backgroundColor: color,
+      data: sites.map(function(s){
+        var r = Q1_DATA.find(function(d){return d.Site===s && d.Metrique===met;});
+        return (r && r[colKey]!=null) ? Math.abs(+r[colKey])/1e6 : 0;
+      })
+    };
+  }
+
+  // ── Graphe CA global (barres horizontales groupées) ──────────────────────
+  mkChart('c-q1-ca', {
+    type:'bar',
+    data:{labels:sites, datasets:[
+      makeDs('CA','R2025','Q1 R2025','rgba(99,102,241,.7)'),
+      makeDs('CA','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
+      makeDs('CA','R2026','Q1 R2026','rgba(16,185,129,.85)'),
+    ]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M\u20ac';}}}},
+      scales:{x:{title:{display:true,text:'M\u20ac'}}}
+    }
+  });
+
+  // ── Graphe Personnel global (barres horizontales groupées) ───────────────
+  mkChart('c-q1-pers', {
+    type:'bar',
+    data:{labels:sites, datasets:[
+      makeDs('Personnel','R2025','Q1 R2025','rgba(99,102,241,.7)'),
+      makeDs('Personnel','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
+      makeDs('Personnel','R2026','Q1 R2026','rgba(239,68,68,.8)'),
+    ]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M\u20ac';}}}},
+      scales:{x:{title:{display:true,text:'M\u20ac'}}}
+    }
+  });
+
+  // ── Initialisation vue par site ──────────────────────────────────────────
+  if(!q1Site) q1Site = sites[0];
+  var sel = document.getElementById('q1-site-sel');
+  if(!sel.options.length){
+    sites.forEach(function(s){
+      var o = document.createElement('option');
+      o.value = s; o.text = s;
+      sel.appendChild(o);
+    });
+  }
+  sel.value = q1Site;
+  renderQ1Site();
+}
+
+// ── Vue par site Q1 — deux graphes : synthèse financière + charges ────────────
+function renderQ1Site(){
+  var site = q1Site;
+  document.getElementById('q1-site-title-fin').textContent =
+    site + ' \u2014 Synth\u00e8se financi\u00e8re Q1 jan\u2192mars 2026 (k\u20ac)';
+  document.getElementById('q1-site-title-chg').textContent =
+    site + ' \u2014 Charges d\u00e9taill\u00e9es Q1 jan\u2192mars 2026 (k\u20ac, valeurs absolues)';
+
+  // Métriques synthèse financière (signées, en k€)
+  var finMetrics = [
+    ['CA','CA'], ['PNE','PNE'], ['Marge_brute','Marge brute'], ['EBITDA','EBITDA'], ['EBIT','EBIT']
+  ];
+  function mkDsSigned(colKey, label, color){
+    return {
+      label: label, backgroundColor: color, borderRadius: 4,
+      data: finMetrics.map(function(m){
+        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
+        return (r && r[colKey]!=null) ? Math.round(+r[colKey]/1e3) : 0;
+      })
+    };
+  }
+  mkChart('c-q1-site-fin', {
+    type:'bar',
+    data:{labels: finMetrics.map(function(m){return m[1];}), datasets:[
+      mkDsSigned('R2025','Q1 R2025','rgba(99,102,241,.75)'),
+      mkDsSigned('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
+      mkDsSigned('R2026','Q1 R2026','rgba(16,185,129,.88)'),
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k\u20ac';}}}},
+      scales:{y:{title:{display:true,text:'k\u20ac'}}}
+    }
+  });
+
+  // Métriques charges (valeurs absolues, en k€)
+  var chgMetrics = [
+    ['Personnel','Personnel'], ['Energie','\u00c9nergie'],
+    ['Maint_courante','Maint. courante'], ['Maint_oblig','Maint. oblig.'],
+    ['Traitement_sp','Traitement s.-p.'], ['Autres_couts','Autres co\u00fbts']
+  ];
+  function mkDsAbs(colKey, label, color){
+    return {
+      label: label, backgroundColor: color, borderRadius: 4,
+      data: chgMetrics.map(function(m){
+        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
+        return (r && r[colKey]!=null) ? Math.round(Math.abs(+r[colKey])/1e3) : 0;
+      })
+    };
+  }
+  mkChart('c-q1-site-chg', {
+    type:'bar',
+    data:{labels: chgMetrics.map(function(m){return m[1];}), datasets:[
+      mkDsAbs('R2025','Q1 R2025','rgba(99,102,241,.75)'),
+      mkDsAbs('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
+      mkDsAbs('R2026','Q1 R2026','rgba(239,68,68,.82)'),
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k\u20ac';}}}},
+      scales:{y:{title:{display:true,text:'k\u20ac (valeur absolue)'}}}
+    }
+  });
+}
+
+function q1SetSite(s){ q1Site=s; renderQ1Site(); }
+
+// ══════════════════════════════════════════════════════
+// INITIALISATION — exécutée une seule fois au chargement de la page
+// Peuple dynamiquement les listes déroulantes et boutons-sites de chaque onglet
+// à partir de la constante SITES (déduite des données).
+// Lance renderHome() après deux frames pour laisser le DOM se stabiliser.
+// Configure aussi les événements beforeprint/afterprint pour le PDF.
 // ══════════════════════════════════════════════════════
 (function init(){
   SITES.forEach(s=>{
@@ -2463,6 +2926,7 @@ function renderTk(){
       else if(id==='et') renderEt();
       else if(id==='rg') renderRg();
       else if(id==='tk') renderTk();
+      else if(id==='q1') renderQ1();
     }); });
   });
 })();
@@ -2471,16 +2935,21 @@ function renderTk(){
 </html>
 """
 
-# ── Injection ────────────────────────────────────────────────────────────────
+# ── Injection des placeholders ───────────────────────────────────────────────
+# Chaque %%PLACEHOLDER%% dans le template HTML est remplacé par la valeur
+# Python correspondante. L'ordre n'a pas d'importance.
 html_out = (HTML
-    .replace("%%CHARTJS%%", CHARTJS)
-    .replace("%%DATE%%",    GENERATED)
-    .replace("%%LOGO%%",    LOGO_B64)
-    .replace("%%DATA%%",    DATA_JSON)
-    .replace("%%EURT%%",    EUR_T_JSON)
-    .replace("%%KPI%%",     KPI_JSON)
+    .replace("%%CHARTJS%%", CHARTJS)   # librairie Chart.js (inline ou CDN)
+    .replace("%%DATE%%",    GENERATED) # date/heure de génération
+    .replace("%%LOGO%%",    LOGO_B64)  # logo base64
+    .replace("%%DATA%%",    DATA_JSON) # données P&L (data_synthese.csv)
+    .replace("%%EURT%%",    EUR_T_JSON)# charges €/t détaillées (data_synthese_eur_t.csv)
+    .replace("%%KPI%%",     KPI_JSON)  # KPIs techniques (data_kpi_techniques.csv)
+    .replace("%%Q1_DATA%%", Q1_JSON)   # comptes réels Q1 2026 (data_q1_2026.csv)
 )
 
+# ── Écriture du fichier final ─────────────────────────────────────────────────
+# UTF-8 sans BOM — compatible avec tous les navigateurs modernes.
 out_path = os.path.join(BASE, "dashboard.html")
 with open(out_path, "w", encoding="utf-8") as f:
     f.write(html_out)
