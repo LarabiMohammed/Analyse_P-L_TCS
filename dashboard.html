@@ -189,6 +189,63 @@ select.sel:focus{border-color:#00a3e0}
 .cmp-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:.82rem}
 .cmp-row:last-child{border-bottom:none}
 .cmp-delta{font-size:.72rem;font-weight:600;margin-left:8px}
+/* ── Q1 2026 ────────────────────────────────────────────── */
+.q1-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.q1-period{font-size:.78rem;font-weight:600;color:#6b7280;background:#f3f4f6;padding:4px 12px;border-radius:20px}
+.q1-sc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.q1-sc{background:#fff;border-radius:14px;padding:18px 20px 14px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:5px solid #e5e7eb;position:relative;overflow:hidden}
+.q1-sc::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 14px 0 60px;opacity:.07}
+.q1-sc.green{border-top-color:#10b981}.q1-sc.green::after{background:#10b981}
+.q1-sc.red{border-top-color:#ef4444}.q1-sc.red::after{background:#ef4444}
+.q1-sc.neutral{border-top-color:#94a3b8}
+.q1-sc-label{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:10px}
+.q1-sc-val{font-size:1.45rem;font-weight:800;color:#111827;line-height:1;margin-bottom:3px;white-space:nowrap}
+.q1-sc-bud{font-size:.72rem;color:#b0b8c4;margin-bottom:10px}
+.q1-sc-ecart{font-size:.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.q1-sc-ecart .e-amt{font-size:.88rem}
+.q1-sc-ecart .e-pct{font-size:.72rem;background:rgba(0,0,0,.06);padding:1px 6px;border-radius:10px}
+.q1-sc-ecart.pos{color:#10b981}.q1-sc-ecart.neg{color:#ef4444}
+.q1-prog{height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.q1-prog-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.q1-prog-fill.green{background:linear-gradient(90deg,#34d399,#10b981)}
+.q1-prog-fill.red{background:linear-gradient(90deg,#f87171,#ef4444)}
+.q1-chart-card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:22px}
+.q1-chart-title{font-size:.85rem;font-weight:700;color:#003a63;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.q1-legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.q1-site-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.8rem}
+.q1-site-bar-lbl{width:140px;font-weight:600;color:#374151;text-align:right;flex-shrink:0}
+.q1-site-bar-track{flex:1;height:22px;background:#f1f5f9;border-radius:4px;position:relative;overflow:visible}
+.q1-site-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:.72rem;font-weight:700;color:#fff;min-width:30px;white-space:nowrap;transition:width .5s ease}
+.q1-site-bar-val{margin-left:8px;font-size:.75rem;font-weight:700;white-space:nowrap}
+.q1-sel-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.q1-sel-lbl{font-size:.82rem;font-weight:700;color:#003a63}
+/* ── Accordion P&L ── */
+.q1-acc-item{border-bottom:1px solid #f1f5f9}
+.q1-acc-item:last-child{border-bottom:none}
+.q1-acc-hdr{display:flex;align-items:center;gap:16px;padding:13px 10px;cursor:pointer;user-select:none;border-radius:8px;transition:background .15s}
+.q1-acc-hdr:hover{background:#f8fafc}
+.q1-acc-met{font-size:.85rem;font-weight:800;color:#003a63;width:110px;flex-shrink:0}
+.q1-acc-r26{font-size:.92rem;font-weight:700;color:#111827;width:90px}
+.q1-acc-bud{font-size:.73rem;color:#9ca3af;width:110px}
+.q1-acc-bar{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+.q1-acc-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.q1-acc-ecart{font-size:.82rem;font-weight:700;width:140px;text-align:right;flex-shrink:0}
+.q1-acc-ecart.pos{color:#10b981}.q1-acc-ecart.neg{color:#ef4444}
+.q1-acc-chev{font-size:.65rem;color:#9ca3af;transition:transform .22s;flex-shrink:0;width:14px;text-align:center}
+.q1-acc-chev.open{transform:rotate(180deg)}
+.q1-acc-body{display:none;padding:10px 0 18px 120px}
+.q1-acc-body.open{display:block}
+/* ── Bullet chart (vue par site) ── */
+.q1-section-lbl{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:20px 0 10px;padding-left:4px}
+.q1-bl-row{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.q1-bl-lbl{font-size:.79rem;font-weight:700;color:#374151;width:130px;text-align:right;flex-shrink:0}
+.q1-bl-wrap{flex:1;position:relative;height:28px}
+.q1-bl-bud{position:absolute;top:2px;left:0;height:24px;background:#e9eef5;border-radius:5px}
+.q1-bl-real{position:absolute;top:6px;left:0;height:16px;border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;min-width:4px;transition:width .5s ease;z-index:1}
+.q1-bl-mark{position:absolute;top:0;width:2px;height:28px;background:#94a3b8;border-radius:1px;z-index:2}
+.q1-bl-valcol{font-size:.74rem;font-weight:700;width:82px;flex-shrink:0;white-space:nowrap;color:#111827}
+.q1-bl-ecart{font-size:.71rem;font-weight:700;width:88px;flex-shrink:0;text-align:right;white-space:nowrap}
+.q1-bl-ecart.pos{color:#10b981}.q1-bl-ecart.neg{color:#ef4444}
 </style>
 </head>
 <body>
@@ -199,7 +256,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="header-right">
     <div>R2023 &middot; R2024 &middot; R2025 &middot; <span style="background:rgba(245,158,11,.35);border:1px solid rgba(245,158,11,.6);padding:1px 7px;border-radius:4px;font-size:.75rem;font-weight:700">B2026</span></div>
-    <div>Mis &agrave; jour le 10/04/2026 10:30</div>
+    <div>Mis &agrave; jour le 10/04/2026 15:01</div>
   </div>
 </header>
 
@@ -227,7 +284,7 @@ select.sel:focus{border-color:#00a3e0}
       <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
       <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
     </div>
-    <div class="home-date">Mis &agrave; jour le 10/04/2026 10:30</div>
+    <div class="home-date">Mis &agrave; jour le 10/04/2026 15:01</div>
   </div>
 </div>
 
@@ -556,59 +613,52 @@ select.sel:focus{border-color:#00a3e0}
 
 <!-- ═══ ONGLET Q1 2026 ══════════════════════════════════════════════════════ -->
 <div class="page" id="tab-q1">
-  <div class="toolbar">
-    <span style="font-size:.82rem;color:#555">Cumul jan&rarr;mars 2026 &mdash; valeurs en M&euro; bruts</span>
-    <div class="spacer"></div>
+
+  <!-- ── En-tête ── -->
+  <div class="q1-header" style="margin-top:4px">
+    <div>
+      <div style="font-size:1.05rem;font-weight:800;color:#003a63;margin-bottom:2px">Suivi T1 2026 &mdash; R&eacute;el vs Budget</div>
+      <div class="q1-period">Cumul jan &rarr; mars 2026</div>
+    </div>
     <button class="btn-print" onclick="window.print()">&#128438; Exporter PDF</button>
   </div>
 
-  <!-- A — KPI globaux parc -->
-  <div class="section-sep" style="margin-top:18px">Vue globale parc</div>
-  <div class="kpi-grid" style="margin-bottom:18px">
-    <div class="kpi-card g"><div class="kpi-label">CA total Q1 R2026</div>
-      <div class="kpi-value" id="q1-ca-r26">&mdash;</div></div>
-    <div class="kpi-card"><div class="kpi-label">Ecart vs Budget Q1</div>
-      <div class="kpi-value" id="q1-ca-ecart-b">&mdash;</div></div>
-    <div class="kpi-card"><div class="kpi-label">Evolution vs Q1 2025</div>
-      <div class="kpi-value" id="q1-ca-ecart-r25">&mdash;</div></div>
-    <div class="kpi-card r"><div class="kpi-label">Personnel total Q1 R2026</div>
-      <div class="kpi-value" id="q1-pers-r26">&mdash;</div></div>
-  </div>
+  <!-- ── A — Vue globale parc ── -->
+  <div class="section-sep" style="margin-top:22px">Vue globale parc &mdash; 11 sites</div>
 
-  <!-- Graphe global CA -->
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card full">
-      <div class="card-title">CA Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
-      <div class="ch tall"><canvas id="c-q1-ca"></canvas></div>
+  <!-- Scorecards 5 métriques -->
+  <div class="q1-sc-grid" id="q1-global-cards"></div>
+
+  <!-- Accordion P&L par composante -->
+  <div class="q1-chart-card">
+    <div class="q1-chart-title">
+      Composantes P&amp;L &mdash; cliquer pour voir le d&eacute;tail par site
+      <span style="font-size:.7rem;font-weight:400;color:#9ca3af;margin-left:6px">&#9660; vert = au-dessus du budget</span>
     </div>
+    <div id="q1-accordion"></div>
   </div>
 
-  <!-- Graphe global Personnel -->
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card full">
-      <div class="card-title">Co&ucirc;ts de Personnel Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
-      <div class="ch tall"><canvas id="c-q1-pers"></canvas></div>
-    </div>
-  </div>
-
-  <!-- B — Vue par site -->
+  <!-- ── B — Vue par site ── -->
   <div class="section-sep">D&eacute;tail par site</div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <label style="font-size:.82rem;font-weight:700;color:#003a63">Site :</label>
+  <div class="q1-sel-row">
+    <span class="q1-sel-lbl">Site :</span>
     <select class="sel" id="q1-site-sel" onchange="q1SetSite(this.value)"></select>
   </div>
 
-  <!-- Graphes site : synthèse financière -->
-  <div class="card full" style="margin-bottom:18px">
-    <div class="card-title" id="q1-site-title-fin">&mdash;</div>
-    <div class="ch tall"><canvas id="c-q1-site-fin"></canvas></div>
+  <!-- Scorecards site -->
+  <div class="q1-sc-grid" id="q1-site-cards"></div>
+
+  <!-- Barres site — synthèse financière -->
+  <div class="q1-chart-card">
+    <div class="q1-chart-title" id="q1-site-fin-title">&mdash;</div>
+    <div id="q1-site-fin-rows"></div>
+  </div>
+  <!-- Barres site — charges -->
+  <div class="q1-chart-card" style="margin-bottom:32px">
+    <div class="q1-chart-title" id="q1-site-chg-title">&mdash;</div>
+    <div id="q1-site-chg-rows"></div>
   </div>
 
-  <!-- Graphes site : charges détaillées -->
-  <div class="card full" style="margin-bottom:18px">
-    <div class="card-title" id="q1-site-title-chg">&mdash;</div>
-    <div class="ch tall"><canvas id="c-q1-site-chg"></canvas></div>
-  </div>
 </div>
 
 <script>
@@ -2035,7 +2085,7 @@ function renderRg(){
 //   visuelle dans les scatter plots.
 // ══════════════════════════════════════════════════════
 const KPI_RAW = [{"Site": "Le Havre", "Annee": 2023.0, "Tonnage": 37066.0, "Dispo_globale": 0.87, "Heures_fonctionnement": 4685.0, "Debit": 7.702896411, "Taux_refus": 33.5, "Nb_trieurs_poste": 14.0}, {"Site": "Le Havre", "Annee": 2024.0, "Tonnage": 41554.0, "Dispo_globale": 0.839, "Heures_fonctionnement": 4497.0, "Debit": 9.151313629, "Taux_refus": 32.9, "Nb_trieurs_poste": 14.0}, {"Site": "Le Havre", "Annee": 2025.0, "Tonnage": 42413.0, "Dispo_globale": 0.85, "Heures_fonctionnement": 4372.0, "Debit": 9.720248827, "Taux_refus": 31.0, "Nb_trieurs_poste": 14.0}, {"Site": "Nantes", "Annee": 2023.0, "Tonnage": 41462.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 3577.0, "Debit": 11.550265319, "Taux_refus": 22.6, "Nb_trieurs_poste": 20.0}, {"Site": "Nantes", "Annee": 2024.0, "Tonnage": 51127.0, "Dispo_globale": 0.748, "Heures_fonctionnement": 4090.0, "Debit": 12.458673745, "Taux_refus": 24.7, "Nb_trieurs_poste": 20.0}, {"Site": "Nantes", "Annee": 2025.0, "Tonnage": 53818.0, "Dispo_globale": 0.732, "Heures_fonctionnement": 3995.0, "Debit": 13.244824764, "Taux_refus": 25.2, "Nb_trieurs_poste": 20.0}, {"Site": "Amiens", "Annee": 2023.0, "Tonnage": 32431.0, "Dispo_globale": 0.892, "Heures_fonctionnement": 5978.0, "Debit": 4.680296583, "Taux_refus": 29.1, "Nb_trieurs_poste": 13.0}, {"Site": "Amiens", "Annee": 2024.0, "Tonnage": 33534.0, "Dispo_globale": 0.881, "Heures_fonctionnement": 6445.0, "Debit": 4.812068551, "Taux_refus": 33.1, "Nb_trieurs_poste": 13.0}, {"Site": "Amiens", "Annee": 2025.0, "Tonnage": 34732.0, "Dispo_globale": 0.869, "Heures_fonctionnement": 6046.0, "Debit": 5.482693723, "Taux_refus": 27.0, "Nb_trieurs_poste": 13.0}, {"Site": "B\u00e8gles", "Annee": 2023.0, "Tonnage": 51897.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 2954.0, "Debit": 17.881933747, "Taux_refus": 21.7, "Nb_trieurs_poste": 18.0}, {"Site": "B\u00e8gles", "Annee": 2024.0, "Tonnage": 49016.0, "Dispo_globale": 0.814, "Heures_fonctionnement": 2995.0, "Debit": 15.947938239, "Taux_refus": 24.0, "Nb_trieurs_poste": 18.0}, {"Site": "B\u00e8gles", "Annee": 2025.0, "Tonnage": 58910.0, "Dispo_globale": 0.813, "Heures_fonctionnement": 3019.0, "Debit": 18.947475985, "Taux_refus": 26.8, "Nb_trieurs_poste": 18.0}, {"Site": "Millau", "Annee": 2023.0, "Tonnage": 20961.0, "Dispo_globale": 0.693, "Heures_fonctionnement": 2134.0, "Debit": 8.267857143, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Millau", "Annee": 2024.0, "Tonnage": 21635.0, "Dispo_globale": 0.753, "Heures_fonctionnement": 2210.0, "Debit": 9.004854369, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Millau", "Annee": 2025.0, "Tonnage": 22654.0, "Dispo_globale": 0.809, "Heures_fonctionnement": 2358.0, "Debit": 9.0, "Taux_refus": 0.0, "Nb_trieurs_poste": 16.0}, {"Site": "Paris 15", "Annee": 2023.0, "Tonnage": 33062.0, "Dispo_globale": 0.921, "Heures_fonctionnement": 3288.0, "Debit": 9.987785517, "Taux_refus": 23.5, "Nb_trieurs_poste": 20.0}, {"Site": "Paris 15", "Annee": 2024.0, "Tonnage": 31983.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3120.0, "Debit": 10.140240443, "Taux_refus": 23.8, "Nb_trieurs_poste": 20.0}, {"Site": "Paris 15", "Annee": 2025.0, "Tonnage": 33691.0, "Dispo_globale": 0.886, "Heures_fonctionnement": 3201.0, "Debit": 10.037304133, "Taux_refus": 25.3, "Nb_trieurs_poste": 20.0}, {"Site": "Saran", "Annee": 2023.0, "Tonnage": 37939.0, "Dispo_globale": 0.822, "Heures_fonctionnement": 4181.0, "Debit": 8.581269059, "Taux_refus": 24.7, "Nb_trieurs_poste": 13.67}, {"Site": "Saran", "Annee": 2024.0, "Tonnage": 39574.0, "Dispo_globale": 0.853, "Heures_fonctionnement": 4317.0, "Debit": 8.612784611, "Taux_refus": 27.1, "Nb_trieurs_poste": 13.67}, {"Site": "Saran", "Annee": 2025.0, "Tonnage": 40446.0, "Dispo_globale": 0.843, "Heures_fonctionnement": 4273.0, "Debit": 8.796702257, "Taux_refus": 27.9, "Nb_trieurs_poste": 13.67}, {"Site": "Sevran", "Annee": 2023.0, "Tonnage": 18585.0, "Dispo_globale": 0.91, "Heures_fonctionnement": 3453.0, "Debit": 5.062199117, "Taux_refus": 33.5, "Nb_trieurs_poste": 12.0}, {"Site": "Sevran", "Annee": 2024.0, "Tonnage": 18382.0, "Dispo_globale": 0.865, "Heures_fonctionnement": 3378.0, "Debit": 5.158127899, "Taux_refus": 36.7, "Nb_trieurs_poste": 12.0}, {"Site": "Sevran", "Annee": 2025.0, "Tonnage": 19361.0, "Dispo_globale": 0.894, "Heures_fonctionnement": 3608.0, "Debit": 5.098435136, "Taux_refus": 38.9, "Nb_trieurs_poste": 12.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2023.0, "Tonnage": 23747.0, "Dispo_globale": 0.861, "Heures_fonctionnement": 2944.0, "Debit": 6.085409023, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2024.0, "Tonnage": 24626.0, "Dispo_globale": 0.819, "Heures_fonctionnement": 3180.0, "Debit": 6.277978263, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Vaux le P\u00e9nil", "Annee": 2025.0, "Tonnage": 22715.0, "Dispo_globale": 0.893, "Heures_fonctionnement": 4022.0, "Debit": 5.940680602, "Taux_refus": null, "Nb_trieurs_poste": 21.0}, {"Site": "Portes les Valences", "Annee": 2023.0, "Tonnage": 36587.0, "Dispo_globale": 0.79, "Heures_fonctionnement": 3000.0, "Debit": 11.55735492, "Taux_refus": 21.1, "Nb_trieurs_poste": 13.0}, {"Site": "Portes les Valences", "Annee": 2024.0, "Tonnage": 36911.0, "Dispo_globale": 0.817, "Heures_fonctionnement": 3050.0, "Debit": 12.095336843, "Taux_refus": 24.5, "Nb_trieurs_poste": 13.0}, {"Site": "Portes les Valences", "Annee": 2025.0, "Tonnage": 38149.0, "Dispo_globale": 0.831, "Heures_fonctionnement": 3100.0, "Debit": 12.37013425, "Taux_refus": 25.7, "Nb_trieurs_poste": 13.0}, {"Site": "Ch\u00e9zy", "Annee": 2023.0, "Tonnage": 22505.0, "Dispo_globale": 0.752, "Heures_fonctionnement": 3236.0, "Debit": 6.418538241, "Taux_refus": 13.2, "Nb_trieurs_poste": 4.0}, {"Site": "Ch\u00e9zy", "Annee": 2024.0, "Tonnage": 22913.0, "Dispo_globale": 0.759, "Heures_fonctionnement": 3298.0, "Debit": 6.424347352, "Taux_refus": 14.6, "Nb_trieurs_poste": 4.0}, {"Site": "Ch\u00e9zy", "Annee": 2025.0, "Tonnage": 23643.0, "Dispo_globale": 0.781, "Heures_fonctionnement": 3157.0, "Debit": 6.941851922, "Taux_refus": 14.6, "Nb_trieurs_poste": 4.0}, {"Site": "Montpellier", "Annee": 2023.0, "Tonnage": 31244.0, "Dispo_globale": 0.713, "Heures_fonctionnement": 2498.0, "Debit": 11.00032231, "Taux_refus": 28.9, "Nb_trieurs_poste": 19.0}, {"Site": "Montpellier", "Annee": 2024.0, "Tonnage": 28777.0, "Dispo_globale": 0.71, "Heures_fonctionnement": 2478.0, "Debit": 10.918198537, "Taux_refus": 33.4, "Nb_trieurs_poste": 19.0}, {"Site": "Montpellier", "Annee": 2025.0, "Tonnage": 30948.0, "Dispo_globale": 0.717, "Heures_fonctionnement": 2514.0, "Debit": 11.602314575, "Taux_refus": 39.3, "Nb_trieurs_poste": 19.0}];
-const Q1_DATA = [{"Site": "Nantes", "Metrique": "CA", "R2025": 2280735.26, "R2026": 2819379.74, "B2026": 2770915.87}, {"Site": "Nantes", "Metrique": "PNE", "R2025": 1729349.2, "R2026": 2263552.26, "B2026": 2276907.18}, {"Site": "Nantes", "Metrique": "Marge_brute", "R2025": 286092.66, "R2026": 485677.92, "B2026": 514920.64}, {"Site": "Nantes", "Metrique": "EBITDA", "R2025": 92450.95, "R2026": 177679.14, "B2026": 202644.64}, {"Site": "Nantes", "Metrique": "EBIT", "R2025": -3573.36, "R2026": 78529.5, "B2026": 117797.73}, {"Site": "Nantes", "Metrique": "Personnel", "R2025": -996807.72, "R2026": -989915.76, "B2026": -1073756.65}, {"Site": "Nantes", "Metrique": "Energie", "R2025": 0.0, "R2026": -16853.28, "B2026": -13932.0}, {"Site": "Nantes", "Metrique": "Maint_courante", "R2025": -60278.5, "R2026": -45541.81, "B2026": -26163.0}, {"Site": "Nantes", "Metrique": "Maint_oblig", "R2025": -175000.0, "R2026": -182499.86, "B2026": -182499.0}, {"Site": "Nantes", "Metrique": "Traitement_sp", "R2025": -10926.0, "R2026": -18166.27, "B2026": -19950.0}, {"Site": "Nantes", "Metrique": "Autres_couts", "R2025": -200244.32, "R2026": -524897.36, "B2026": -445685.9}, {"Site": "Saran", "Metrique": "CA", "R2025": 2137626.11, "R2026": 2026157.09, "B2026": 1816092.72}, {"Site": "Saran", "Metrique": "PNE", "R2025": 1764362.44, "R2026": 1336698.79, "B2026": 1549439.55}, {"Site": "Saran", "Metrique": "Marge_brute", "R2025": 413422.59, "R2026": 27114.98, "B2026": 115520.74}, {"Site": "Saran", "Metrique": "EBITDA", "R2025": 248875.23, "R2026": -167181.83, "B2026": -82278.26}, {"Site": "Saran", "Metrique": "EBIT", "R2025": -20607.66, "R2026": -297833.16, "B2026": -265589.56}, {"Site": "Saran", "Metrique": "Personnel", "R2025": -903918.66, "R2026": -864489.39, "B2026": -914851.75}, {"Site": "Saran", "Metrique": "Energie", "R2025": -11635.0, "R2026": -5104.96, "B2026": -7299.0}, {"Site": "Saran", "Metrique": "Maint_courante", "R2025": -56213.66, "R2026": -44298.8, "B2026": -57342.65}, {"Site": "Saran", "Metrique": "Maint_oblig", "R2025": -112484.77, "R2026": -87508.92, "B2026": -87435.0}, {"Site": "Saran", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Saran", "Metrique": "Autres_couts", "R2025": -266274.98, "R2026": -308003.19, "B2026": -366576.4}, {"Site": "Amiens", "Metrique": "CA", "R2025": 2242969.54, "R2026": 2514257.39, "B2026": 2537000.0}, {"Site": "Amiens", "Metrique": "PNE", "R2025": 1819282.14, "R2026": 1561660.95, "B2026": 1527500.0}, {"Site": "Amiens", "Metrique": "Marge_brute", "R2025": 271369.73, "R2026": 792290.09, "B2026": 720530.9}, {"Site": "Amiens", "Metrique": "EBITDA", "R2025": -79248.39, "R2026": 701148.54, "B2026": 515768.9}, {"Site": "Amiens", "Metrique": "EBIT", "R2025": -189776.69, "R2026": 633362.66, "B2026": 349863.37}, {"Site": "Amiens", "Metrique": "Personnel", "R2025": -964968.94, "R2026": -516772.08, "B2026": -333469.1}, {"Site": "Amiens", "Metrique": "Energie", "R2025": -198348.44, "R2026": -59887.86, "B2026": -88500.0}, {"Site": "Amiens", "Metrique": "Maint_courante", "R2025": -67019.82, "R2026": -96510.54, "B2026": -65500.0}, {"Site": "Amiens", "Metrique": "Maint_oblig", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Amiens", "Metrique": "Traitement_sp", "R2025": -1876.0, "R2026": -10000.0, "B2026": 0.0}, {"Site": "Amiens", "Metrique": "Autres_couts", "R2025": -314413.93, "R2026": -79114.32, "B2026": -319500.0}, {"Site": "Paris 15", "Metrique": "CA", "R2025": 1470889.11, "R2026": 1616912.65, "B2026": 1728427.99}, {"Site": "Paris 15", "Metrique": "PNE", "R2025": 1433485.91, "R2026": 1571831.45, "B2026": 1689667.99}, {"Site": "Paris 15", "Metrique": "Marge_brute", "R2025": -129948.19, "R2026": 127776.26, "B2026": 274413.81}, {"Site": "Paris 15", "Metrique": "EBITDA", "R2025": -310089.41, "R2026": -95651.9, "B2026": 44409.81}, {"Site": "Paris 15", "Metrique": "EBIT", "R2025": -314844.41, "R2026": -101183.9, "B2026": 39194.15}, {"Site": "Paris 15", "Metrique": "Personnel", "R2025": -851904.75, "R2026": -886770.95, "B2026": -854016.18}, {"Site": "Paris 15", "Metrique": "Energie", "R2025": -172525.44, "R2026": -101379.26, "B2026": -84050.0}, {"Site": "Paris 15", "Metrique": "Maint_courante", "R2025": -56913.15, "R2026": -37169.8, "B2026": -68793.87}, {"Site": "Paris 15", "Metrique": "Maint_oblig", "R2025": -101319.57, "R2026": -25315.35, "B2026": -60000.0}, {"Site": "Paris 15", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Paris 15", "Metrique": "Autres_couts", "R2025": -377671.19, "R2026": -390104.88, "B2026": -344194.12}, {"Site": "Le Havre", "Metrique": "CA", "R2025": 2701113.97, "R2026": 2570256.34, "B2026": 2355792.61}, {"Site": "Le Havre", "Metrique": "PNE", "R2025": 2176969.8, "R2026": 2306837.4, "B2026": 2175784.94}, {"Site": "Le Havre", "Metrique": "Marge_brute", "R2025": 654104.47, "R2026": 733313.93, "B2026": 687580.05}, {"Site": "Le Havre", "Metrique": "EBITDA", "R2025": 407572.94, "R2026": 583876.32, "B2026": 519613.05}, {"Site": "Le Havre", "Metrique": "EBIT", "R2025": 280136.0, "R2026": 479099.07, "B2026": 414870.64}, {"Site": "Le Havre", "Metrique": "Personnel", "R2025": -944242.0, "R2026": -1110054.86, "B2026": -965735.43}, {"Site": "Le Havre", "Metrique": "Energie", "R2025": -164074.41, "R2026": -107821.0, "B2026": -103162.45}, {"Site": "Le Havre", "Metrique": "Maint_courante", "R2025": -105141.43, "R2026": -50594.78, "B2026": -100398.71}, {"Site": "Le Havre", "Metrique": "Maint_oblig", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Le Havre", "Metrique": "Traitement_sp", "R2025": -19069.54, "R2026": -12610.52, "B2026": -16788.3}, {"Site": "Le Havre", "Metrique": "Autres_couts", "R2025": -264360.12, "R2026": -290047.21, "B2026": -293864.69}, {"Site": "Sevran", "Metrique": "CA", "R2025": 1866034.55, "R2026": 1995576.85, "B2026": 3017231.12}, {"Site": "Sevran", "Metrique": "PNE", "R2025": 1281343.67, "R2026": 1922956.05, "B2026": 1272233.12}, {"Site": "Sevran", "Metrique": "Marge_brute", "R2025": -44161.09, "R2026": -128452.24, "B2026": 205686.24}, {"Site": "Sevran", "Metrique": "EBITDA", "R2025": -268972.09, "R2026": -327739.9, "B2026": 6399.24}, {"Site": "Sevran", "Metrique": "EBIT", "R2025": -258215.59, "R2026": -334232.9, "B2026": 1957.38}, {"Site": "Sevran", "Metrique": "Personnel", "R2025": -707354.05, "R2026": -539650.73, "B2026": -685690.13}, {"Site": "Sevran", "Metrique": "Energie", "R2025": -263730.04, "R2026": -163677.33, "B2026": -60552.99}, {"Site": "Sevran", "Metrique": "Maint_courante", "R2025": -90479.3, "R2026": -415653.01, "B2026": -44575.34}, {"Site": "Sevran", "Metrique": "Maint_oblig", "R2025": -162935.52, "R2026": -244005.26, "B2026": -78834.0}, {"Site": "Sevran", "Metrique": "Traitement_sp", "R2025": 0.0, "R2026": 1.5, "B2026": 0.0}, {"Site": "Sevran", "Metrique": "Autres_couts", "R2025": -95299.66, "R2026": -195331.96, "B2026": -194594.45}, {"Site": "Ch\u00e9zy", "Metrique": "CA", "R2025": 682303.8, "R2026": 689187.86, "B2026": 363970.46}, {"Site": "Ch\u00e9zy", "Metrique": "PNE", "R2025": 657667.72, "R2026": 655941.96, "B2026": 358504.39}, {"Site": "Ch\u00e9zy", "Metrique": "Marge_brute", "R2025": 78802.7, "R2026": 121972.53, "B2026": -65618.03}, {"Site": "Ch\u00e9zy", "Metrique": "EBITDA", "R2025": 5150.94, "R2026": 114867.67, "B2026": -73598.03}, {"Site": "Ch\u00e9zy", "Metrique": "EBIT", "R2025": -7194.92, "R2026": 109171.23, "B2026": -79931.31}, {"Site": "Ch\u00e9zy", "Metrique": "Personnel", "R2025": -261560.61, "R2026": -317246.48, "B2026": -237855.38}, {"Site": "Ch\u00e9zy", "Metrique": "Energie", "R2025": -128906.94, "R2026": -54716.15, "B2026": -49043.73}, {"Site": "Ch\u00e9zy", "Metrique": "Maint_courante", "R2025": -56150.97, "R2026": -28644.28, "B2026": -23429.92}, {"Site": "Ch\u00e9zy", "Metrique": "Maint_oblig", "R2025": -53172.72, "R2026": -73614.94, "B2026": -36404.48}, {"Site": "Ch\u00e9zy", "Metrique": "Traitement_sp", "R2025": -102.0, "R2026": 0.0, "B2026": -138.18}, {"Site": "Ch\u00e9zy", "Metrique": "Autres_couts", "R2025": -77271.26, "R2026": -56760.97, "B2026": -76692.39}, {"Site": "Portes les Valences", "Metrique": "CA", "R2025": 1645570.93, "R2026": 1466807.18, "B2026": 1491528.22}, {"Site": "Portes les Valences", "Metrique": "PNE", "R2025": 1254470.52, "R2026": 1081496.24, "B2026": 1036075.25}, {"Site": "Portes les Valences", "Metrique": "Marge_brute", "R2025": 252004.28, "R2026": 100941.77, "B2026": 14819.62}, {"Site": "Portes les Valences", "Metrique": "EBITDA", "R2025": 110432.47, "R2026": -22424.48, "B2026": -121962.38}, {"Site": "Portes les Valences", "Metrique": "EBIT", "R2025": 101487.7, "R2026": -34777.52, "B2026": -134293.55}, {"Site": "Portes les Valences", "Metrique": "Personnel", "R2025": -483552.45, "R2026": -520267.28, "B2026": -539190.01}, {"Site": "Portes les Valences", "Metrique": "Energie", "R2025": -199633.82, "R2026": -102736.64, "B2026": -107691.84}, {"Site": "Portes les Valences", "Metrique": "Maint_courante", "R2025": -15923.45, "R2026": 682.14, "B2026": -51675.07}, {"Site": "Portes les Valences", "Metrique": "Maint_oblig", "R2025": -97790.23, "R2026": -105578.21, "B2026": -74250.0}, {"Site": "Portes les Valences", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Portes les Valences", "Metrique": "Autres_couts", "R2025": -202747.46, "R2026": -251373.83, "B2026": -246705.88}, {"Site": "Montpellier", "Metrique": "CA", "R2025": 2594752.02, "R2026": 3343573.25, "B2026": 2515490.19}, {"Site": "Montpellier", "Metrique": "PNE", "R2025": 1200485.16, "R2026": 1673846.16, "B2026": 1311225.18}, {"Site": "Montpellier", "Metrique": "Marge_brute", "R2025": -224288.65, "R2026": 71891.46, "B2026": -33964.93}, {"Site": "Montpellier", "Metrique": "EBITDA", "R2025": -343957.03, "R2026": -93376.77, "B2026": -199231.93}, {"Site": "Montpellier", "Metrique": "EBIT", "R2025": -398028.52, "R2026": -127932.53, "B2026": -233636.45}, {"Site": "Montpellier", "Metrique": "Personnel", "R2025": -860964.85, "R2026": -804310.1, "B2026": -841762.8}, {"Site": "Montpellier", "Metrique": "Energie", "R2025": -174313.3, "R2026": -116862.06, "B2026": -79706.79}, {"Site": "Montpellier", "Metrique": "Maint_courante", "R2025": -96100.41, "R2026": -132617.35, "B2026": -109176.04}, {"Site": "Montpellier", "Metrique": "Maint_oblig", "R2025": -53609.26, "R2026": -62942.1, "B2026": -56363.7}, {"Site": "Montpellier", "Metrique": "Traitement_sp", "R2025": -19521.54, "R2026": 0.0, "B2026": -2291.64}, {"Site": "Montpellier", "Metrique": "Autres_couts", "R2025": -217694.65, "R2026": -248086.08, "B2026": -253755.55}, {"Site": "Millau", "Metrique": "CA", "R2025": 1159017.94, "R2026": 1357354.13, "B2026": 1388792.15}, {"Site": "Millau", "Metrique": "PNE", "R2025": 1139952.97, "R2026": 1344666.71, "B2026": 1346892.67}, {"Site": "Millau", "Metrique": "Marge_brute", "R2025": 56044.71, "R2026": 136343.14, "B2026": 112591.05}, {"Site": "Millau", "Metrique": "EBITDA", "R2025": 22292.1, "R2026": 86418.37, "B2026": 62665.05}, {"Site": "Millau", "Metrique": "EBIT", "R2025": -2030.85, "R2026": 57229.26, "B2026": 35399.09}, {"Site": "Millau", "Metrique": "Personnel", "R2025": -569902.45, "R2026": -628831.23, "B2026": -670902.08}, {"Site": "Millau", "Metrique": "Energie", "R2025": -150381.3, "R2026": -96532.96, "B2026": -133113.21}, {"Site": "Millau", "Metrique": "Maint_courante", "R2025": -91429.72, "R2026": -72872.0, "B2026": -42644.0}, {"Site": "Millau", "Metrique": "Maint_oblig", "R2025": -38002.86, "R2026": -86467.36, "B2026": -87335.21}, {"Site": "Millau", "Metrique": "Traitement_sp", "R2025": -1198.25, "R2026": 0.0, "B2026": 0.0}, {"Site": "Millau", "Metrique": "Autres_couts", "R2025": -232487.59, "R2026": -323620.02, "B2026": -298487.33}, {"Site": "B\u00e8gles", "Metrique": "CA", "R2025": 1718845.78, "R2026": 1723674.75, "B2026": 1656701.85}, {"Site": "B\u00e8gles", "Metrique": "PNE", "R2025": 1108895.5, "R2026": 929062.19, "B2026": 951484.87}, {"Site": "B\u00e8gles", "Metrique": "Marge_brute", "R2025": -567025.55, "R2026": -790698.39, "B2026": -679505.97}, {"Site": "B\u00e8gles", "Metrique": "EBITDA", "R2025": -604017.14, "R2026": -828082.44, "B2026": -716888.97}, {"Site": "B\u00e8gles", "Metrique": "EBIT", "R2025": -1359161.98, "R2026": -1597318.78, "B2026": -1491725.07}, {"Site": "B\u00e8gles", "Metrique": "Personnel", "R2025": -1060516.36, "R2026": -1089433.12, "B2026": -1069398.81}, {"Site": "B\u00e8gles", "Metrique": "Energie", "R2025": -36.97, "R2026": -436.54, "B2026": 0.0}, {"Site": "B\u00e8gles", "Metrique": "Maint_courante", "R2025": -145535.0, "R2026": -95956.11, "B2026": -95981.96}, {"Site": "B\u00e8gles", "Metrique": "Maint_oblig", "R2025": -170936.38, "R2026": -208453.82, "B2026": -168000.0}, {"Site": "B\u00e8gles", "Metrique": "Traitement_sp", "R2025": 0.0, "R2026": -2618.43, "B2026": 0.0}, {"Site": "B\u00e8gles", "Metrique": "Autres_couts", "R2025": -297514.66, "R2026": -322279.96, "B2026": -293860.08}];
+const Q1_DATA = [{"Site": "Nantes", "Metrique": "CA", "R2025": 2280735.26, "R2026": 2819379.74, "B2026": 2770915.87}, {"Site": "Nantes", "Metrique": "PNE", "R2025": 1729349.2, "R2026": 2263552.26, "B2026": 2276907.18}, {"Site": "Nantes", "Metrique": "Marge_brute", "R2025": 286092.66, "R2026": 485677.92, "B2026": 514920.64}, {"Site": "Nantes", "Metrique": "EBITDA", "R2025": 92450.95, "R2026": 177679.14, "B2026": 202644.64}, {"Site": "Nantes", "Metrique": "EBIT", "R2025": -3573.36, "R2026": 78529.5, "B2026": 117797.73}, {"Site": "Nantes", "Metrique": "Personnel", "R2025": -996807.72, "R2026": -989915.76, "B2026": -1073756.65}, {"Site": "Nantes", "Metrique": "Energie", "R2025": 0.0, "R2026": -16853.28, "B2026": -13932.0}, {"Site": "Nantes", "Metrique": "Maint_courante", "R2025": -60278.5, "R2026": -45541.81, "B2026": -26163.0}, {"Site": "Nantes", "Metrique": "Maint_oblig", "R2025": -175000.0, "R2026": -182499.86, "B2026": -182499.0}, {"Site": "Nantes", "Metrique": "Traitement_sp", "R2025": -10926.0, "R2026": -18166.27, "B2026": -19950.0}, {"Site": "Nantes", "Metrique": "Autres_couts", "R2025": -200244.32, "R2026": -524897.36, "B2026": -445685.9}, {"Site": "Saran", "Metrique": "CA", "R2025": 2137626.11, "R2026": 2026157.09, "B2026": 1816092.72}, {"Site": "Saran", "Metrique": "PNE", "R2025": 1764362.44, "R2026": 1336698.79, "B2026": 1549439.55}, {"Site": "Saran", "Metrique": "Marge_brute", "R2025": 413422.59, "R2026": 27114.98, "B2026": 115520.74}, {"Site": "Saran", "Metrique": "EBITDA", "R2025": 248875.23, "R2026": -167181.83, "B2026": -82278.26}, {"Site": "Saran", "Metrique": "EBIT", "R2025": -20607.66, "R2026": -297833.16, "B2026": -265589.56}, {"Site": "Saran", "Metrique": "Personnel", "R2025": -903918.66, "R2026": -864489.39, "B2026": -914851.75}, {"Site": "Saran", "Metrique": "Energie", "R2025": -11635.0, "R2026": -5104.96, "B2026": -7299.0}, {"Site": "Saran", "Metrique": "Maint_courante", "R2025": -56213.66, "R2026": -44298.8, "B2026": -57342.65}, {"Site": "Saran", "Metrique": "Maint_oblig", "R2025": -112484.77, "R2026": -87508.92, "B2026": -87435.0}, {"Site": "Saran", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Saran", "Metrique": "Autres_couts", "R2025": -266274.98, "R2026": -308003.19, "B2026": -366576.4}, {"Site": "Amiens", "Metrique": "CA", "R2025": 2242969.54, "R2026": 2514257.39, "B2026": 2537000.0}, {"Site": "Amiens", "Metrique": "PNE", "R2025": 1819282.14, "R2026": 1561660.95, "B2026": 1527500.0}, {"Site": "Amiens", "Metrique": "Marge_brute", "R2025": 271369.73, "R2026": 792290.09, "B2026": 720530.9}, {"Site": "Amiens", "Metrique": "EBITDA", "R2025": -79248.39, "R2026": 701148.54, "B2026": 515768.9}, {"Site": "Amiens", "Metrique": "EBIT", "R2025": -189776.69, "R2026": 633362.66, "B2026": 349863.37}, {"Site": "Amiens", "Metrique": "Personnel", "R2025": -964968.94, "R2026": -516772.08, "B2026": -333469.1}, {"Site": "Amiens", "Metrique": "Energie", "R2025": -198348.44, "R2026": -59887.86, "B2026": -88500.0}, {"Site": "Amiens", "Metrique": "Maint_courante", "R2025": -67019.82, "R2026": -96510.54, "B2026": -65500.0}, {"Site": "Amiens", "Metrique": "Maint_oblig", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Amiens", "Metrique": "Traitement_sp", "R2025": -1876.0, "R2026": -10000.0, "B2026": 0.0}, {"Site": "Amiens", "Metrique": "Autres_couts", "R2025": -314413.93, "R2026": -79114.32, "B2026": -319500.0}, {"Site": "Paris 15", "Metrique": "CA", "R2025": 1470889.11, "R2026": 1616912.65, "B2026": 1728427.99}, {"Site": "Paris 15", "Metrique": "PNE", "R2025": 1433485.91, "R2026": 1571831.45, "B2026": 1689667.99}, {"Site": "Paris 15", "Metrique": "Marge_brute", "R2025": -129948.19, "R2026": 127776.26, "B2026": 274413.81}, {"Site": "Paris 15", "Metrique": "EBITDA", "R2025": -310089.41, "R2026": -95651.9, "B2026": 44409.81}, {"Site": "Paris 15", "Metrique": "EBIT", "R2025": -314844.41, "R2026": -101183.9, "B2026": 39194.15}, {"Site": "Paris 15", "Metrique": "Personnel", "R2025": -851904.75, "R2026": -886770.95, "B2026": -854016.18}, {"Site": "Paris 15", "Metrique": "Energie", "R2025": -172525.44, "R2026": -101379.26, "B2026": -84050.0}, {"Site": "Paris 15", "Metrique": "Maint_courante", "R2025": -56913.15, "R2026": -37169.8, "B2026": -68793.87}, {"Site": "Paris 15", "Metrique": "Maint_oblig", "R2025": -101319.57, "R2026": -25315.35, "B2026": -60000.0}, {"Site": "Paris 15", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Paris 15", "Metrique": "Autres_couts", "R2025": -377671.19, "R2026": -390104.88, "B2026": -344194.12}, {"Site": "Le Havre", "Metrique": "CA", "R2025": 2701113.97, "R2026": 2570256.34, "B2026": 2355792.61}, {"Site": "Le Havre", "Metrique": "PNE", "R2025": 2176969.8, "R2026": 2306837.4, "B2026": 2175784.94}, {"Site": "Le Havre", "Metrique": "Marge_brute", "R2025": 654104.47, "R2026": 733313.93, "B2026": 687580.05}, {"Site": "Le Havre", "Metrique": "EBITDA", "R2025": 407572.94, "R2026": 583876.32, "B2026": 519613.05}, {"Site": "Le Havre", "Metrique": "EBIT", "R2025": 280136.0, "R2026": 479099.07, "B2026": 414870.64}, {"Site": "Le Havre", "Metrique": "Personnel", "R2025": -944242.0, "R2026": -1110054.86, "B2026": -965735.43}, {"Site": "Le Havre", "Metrique": "Energie", "R2025": -164074.41, "R2026": -107821.0, "B2026": -103162.45}, {"Site": "Le Havre", "Metrique": "Maint_courante", "R2025": -105141.43, "R2026": -50594.78, "B2026": -100398.71}, {"Site": "Le Havre", "Metrique": "Maint_oblig", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Le Havre", "Metrique": "Traitement_sp", "R2025": -19069.54, "R2026": -12610.52, "B2026": -16788.3}, {"Site": "Le Havre", "Metrique": "Autres_couts", "R2025": -264360.12, "R2026": -290047.21, "B2026": -293864.69}, {"Site": "Sevran", "Metrique": "CA", "R2025": 1310563.55, "R2026": 1026515.49, "B2026": 1223786.12}, {"Site": "Sevran", "Metrique": "PNE", "R2025": 1226455.67, "R2026": 953894.69, "B2026": 1162457.12}, {"Site": "Sevran", "Metrique": "Marge_brute", "R2025": -92140.45, "R2026": -143926.34, "B2026": 95910.24}, {"Site": "Sevran", "Metrique": "EBITDA", "R2025": -262063.45, "R2026": -317212.34, "B2026": -77375.76}, {"Site": "Sevran", "Metrique": "EBIT", "R2025": -266306.95, "R2026": -323705.34, "B2026": -81817.62}, {"Site": "Sevran", "Metrique": "Personnel", "R2025": -709129.55, "R2026": -539650.73, "B2026": -685690.13}, {"Site": "Sevran", "Metrique": "Energie", "R2025": -160684.14, "R2026": -80375.24, "B2026": -60552.99}, {"Site": "Sevran", "Metrique": "Maint_courante", "R2025": -90479.3, "R2026": -74612.73, "B2026": -44575.34}, {"Site": "Sevran", "Metrique": "Maint_oblig", "R2025": -162935.52, "R2026": -244974.06, "B2026": -78834.0}, {"Site": "Sevran", "Metrique": "Traitement_sp", "R2025": 0.0, "R2026": 1.5, "B2026": 0.0}, {"Site": "Sevran", "Metrique": "Autres_couts", "R2025": -189661.42, "R2026": -149784.21, "B2026": -194594.45}, {"Site": "Ch\u00e9zy", "Metrique": "CA", "R2025": 682303.8, "R2026": 689187.86, "B2026": 363970.46}, {"Site": "Ch\u00e9zy", "Metrique": "PNE", "R2025": 657667.72, "R2026": 655941.96, "B2026": 358504.39}, {"Site": "Ch\u00e9zy", "Metrique": "Marge_brute", "R2025": 78802.7, "R2026": 121972.53, "B2026": -65618.03}, {"Site": "Ch\u00e9zy", "Metrique": "EBITDA", "R2025": 5150.94, "R2026": 114867.67, "B2026": -73598.03}, {"Site": "Ch\u00e9zy", "Metrique": "EBIT", "R2025": -7194.92, "R2026": 109171.23, "B2026": -79931.31}, {"Site": "Ch\u00e9zy", "Metrique": "Personnel", "R2025": -261560.61, "R2026": -317246.48, "B2026": -237855.38}, {"Site": "Ch\u00e9zy", "Metrique": "Energie", "R2025": -128906.94, "R2026": -54716.15, "B2026": -49043.73}, {"Site": "Ch\u00e9zy", "Metrique": "Maint_courante", "R2025": -56150.97, "R2026": -28644.28, "B2026": -23429.92}, {"Site": "Ch\u00e9zy", "Metrique": "Maint_oblig", "R2025": -53172.72, "R2026": -73614.94, "B2026": -36404.48}, {"Site": "Ch\u00e9zy", "Metrique": "Traitement_sp", "R2025": -102.0, "R2026": 0.0, "B2026": -138.18}, {"Site": "Ch\u00e9zy", "Metrique": "Autres_couts", "R2025": -77271.26, "R2026": -56760.97, "B2026": -76692.39}, {"Site": "Portes les Valences", "Metrique": "CA", "R2025": 1645570.93, "R2026": 1466807.18, "B2026": 1491528.22}, {"Site": "Portes les Valences", "Metrique": "PNE", "R2025": 1254470.52, "R2026": 1081496.24, "B2026": 1036075.25}, {"Site": "Portes les Valences", "Metrique": "Marge_brute", "R2025": 252004.28, "R2026": 100941.77, "B2026": 14819.62}, {"Site": "Portes les Valences", "Metrique": "EBITDA", "R2025": 110432.47, "R2026": -22424.48, "B2026": -121962.38}, {"Site": "Portes les Valences", "Metrique": "EBIT", "R2025": 101487.7, "R2026": -34777.52, "B2026": -134293.55}, {"Site": "Portes les Valences", "Metrique": "Personnel", "R2025": -483552.45, "R2026": -520267.28, "B2026": -539190.01}, {"Site": "Portes les Valences", "Metrique": "Energie", "R2025": -199633.82, "R2026": -102736.64, "B2026": -107691.84}, {"Site": "Portes les Valences", "Metrique": "Maint_courante", "R2025": -15923.45, "R2026": 682.14, "B2026": -51675.07}, {"Site": "Portes les Valences", "Metrique": "Maint_oblig", "R2025": -97790.23, "R2026": -105578.21, "B2026": -74250.0}, {"Site": "Portes les Valences", "Metrique": "Traitement_sp", "R2025": null, "R2026": null, "B2026": null}, {"Site": "Portes les Valences", "Metrique": "Autres_couts", "R2025": -202747.46, "R2026": -251373.83, "B2026": -246705.88}, {"Site": "Montpellier", "Metrique": "CA", "R2025": 1359132.27, "R2026": 1554250.83, "B2026": 1388046.71}, {"Site": "Montpellier", "Metrique": "PNE", "R2025": 1234805.41, "R2026": 1455234.01, "B2026": 1319267.63}, {"Site": "Montpellier", "Metrique": "Marge_brute", "R2025": -157558.49, "R2026": 120034.89, "B2026": 9611.62}, {"Site": "Montpellier", "Metrique": "EBITDA", "R2025": -277226.87, "R2026": -45233.34, "B2026": -155655.38}, {"Site": "Montpellier", "Metrique": "EBIT", "R2025": -331298.36, "R2026": -79789.1, "B2026": -190059.89}, {"Site": "Montpellier", "Metrique": "Personnel", "R2025": -828556.45, "R2026": -767243.67, "B2026": -806228.69}, {"Site": "Montpellier", "Metrique": "Energie", "R2025": -174313.3, "R2026": -116862.06, "B2026": -79706.79}, {"Site": "Montpellier", "Metrique": "Maint_courante", "R2025": -114433.19, "R2026": -137568.35, "B2026": -109176.04}, {"Site": "Montpellier", "Metrique": "Maint_oblig", "R2025": -53609.26, "R2026": -62942.1, "B2026": -56363.7}, {"Site": "Montpellier", "Metrique": "Traitement_sp", "R2025": -3744.5, "R2026": 0.0, "B2026": -2291.64}, {"Site": "Montpellier", "Metrique": "Autres_couts", "R2025": -215965.4, "R2026": -248086.08, "B2026": -253755.55}, {"Site": "Millau", "Metrique": "CA", "R2025": 1159017.94, "R2026": 1357354.13, "B2026": 1388792.15}, {"Site": "Millau", "Metrique": "PNE", "R2025": 1139952.97, "R2026": 1344666.71, "B2026": 1346892.67}, {"Site": "Millau", "Metrique": "Marge_brute", "R2025": 56044.71, "R2026": 136343.14, "B2026": 112591.05}, {"Site": "Millau", "Metrique": "EBITDA", "R2025": 22292.1, "R2026": 86418.37, "B2026": 62665.05}, {"Site": "Millau", "Metrique": "EBIT", "R2025": -2030.85, "R2026": 57229.26, "B2026": 35399.09}, {"Site": "Millau", "Metrique": "Personnel", "R2025": -569902.45, "R2026": -628831.23, "B2026": -670902.08}, {"Site": "Millau", "Metrique": "Energie", "R2025": -150381.3, "R2026": -96532.96, "B2026": -133113.21}, {"Site": "Millau", "Metrique": "Maint_courante", "R2025": -91429.72, "R2026": -72872.0, "B2026": -42644.0}, {"Site": "Millau", "Metrique": "Maint_oblig", "R2025": -38002.86, "R2026": -86467.36, "B2026": -87335.21}, {"Site": "Millau", "Metrique": "Traitement_sp", "R2025": -1198.25, "R2026": 0.0, "B2026": 0.0}, {"Site": "Millau", "Metrique": "Autres_couts", "R2025": -232487.59, "R2026": -323620.02, "B2026": -298487.33}, {"Site": "B\u00e8gles", "Metrique": "CA", "R2025": 1718845.78, "R2026": 1723674.75, "B2026": 1656701.85}, {"Site": "B\u00e8gles", "Metrique": "PNE", "R2025": 1108895.5, "R2026": 929062.19, "B2026": 951484.87}, {"Site": "B\u00e8gles", "Metrique": "Marge_brute", "R2025": -567025.55, "R2026": -790698.39, "B2026": -679505.97}, {"Site": "B\u00e8gles", "Metrique": "EBITDA", "R2025": -604017.14, "R2026": -828082.44, "B2026": -716888.97}, {"Site": "B\u00e8gles", "Metrique": "EBIT", "R2025": -1359161.98, "R2026": -1597318.78, "B2026": -1491725.07}, {"Site": "B\u00e8gles", "Metrique": "Personnel", "R2025": -1060516.36, "R2026": -1089433.12, "B2026": -1069398.81}, {"Site": "B\u00e8gles", "Metrique": "Energie", "R2025": -36.97, "R2026": -436.54, "B2026": 0.0}, {"Site": "B\u00e8gles", "Metrique": "Maint_courante", "R2025": -145535.0, "R2026": -95956.11, "B2026": -95981.96}, {"Site": "B\u00e8gles", "Metrique": "Maint_oblig", "R2025": -170936.38, "R2026": -208453.82, "B2026": -168000.0}, {"Site": "B\u00e8gles", "Metrique": "Traitement_sp", "R2025": 0.0, "R2026": -2618.43, "B2026": 0.0}, {"Site": "B\u00e8gles", "Metrique": "Autres_couts", "R2025": -297514.66, "R2026": -322279.96, "B2026": -293860.08}];
 const TK_ANCIENS = new Set(['Le Havre','Amiens','Sevran','Paris 15','Chézy']); // sites à contrats anciens
 const TK_YRS = [2023,2024,2025];
 const TK_YR_COL   = {2023:'rgba(99,102,241,.8)', 2024:'rgba(0,163,224,.8)',  2025:'rgba(16,185,129,.8)'};
@@ -2625,172 +2675,207 @@ function renderTk(){
 
 // ══════════════════════════════════════════════════════
 // ONGLET Q1 2026 — renderQ1() / renderQ1Site()
-// Affiche les comptes réels cumulés jan→mars 2026 (vs R2025 et Budget 2026).
-// Vue globale : 4 KPI cards parc + 2 graphes horizontaux (CA et Personnel).
-// Vue par site : 2 graphes verticaux (synthèse financière + charges détaillées).
-// Données : constante Q1_DATA (format [{Site, Metrique, R2025, R2026, B2026}]).
-// Valeurs affichées en M€ pour les graphes globaux, k€ pour les graphes par site.
+// Comparaison Réel Q1 2026 vs Budget Q1 2026.
+// Vue globale : 5 scorecards parc (CA, PNE, Marge, EBITDA, EBIT) + 2 graphes
+//   barres horizontales par site (EBITDA écart, CA écart) colorés vert/rouge.
+// Vue par site : 5 scorecards + 2 graphes (synthèse financière + charges).
+// Convention couleur : vert = au-dessus du budget, rouge = en dessous.
 // ══════════════════════════════════════════════════════
-var q1Site = null; // site actuellement sélectionné dans la vue par site
+var q1Site = null;
 
-function renderQ1(){
-  var sites = [...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+// ── Helpers Q1 ────────────────────────────────────────────────────────────────
+function q1Get(site, met, col){
+  var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===met;});
+  return (r && r[col]!=null) ? +r[col] : null;
+}
+function q1Sum(met, col){
+  return Q1_DATA.filter(function(d){return d.Metrique===met;})
+    .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);},0);
+}
 
-  // ── Somme d'une métrique sur tous les sites ──────────────────────────────
-  function getSum(met, col){
-    return Q1_DATA.filter(function(d){return d.Metrique===met;})
-      .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);}, 0);
-  }
-  var caR26  = getSum('CA','R2026');
-  var caB26  = getSum('CA','B2026');
-  var caR25  = getSum('CA','R2025');
-  var persR26 = getSum('Personnel','R2026');
-
-  // ── KPI cards ────────────────────────────────────────────────────────────
-  function fmtMSign(v){
-    if(v==null||isNaN(v)) return '—';
-    var s=v<0?'−':'+'+(v===0?'':' ');
-    return s+(Math.abs(v)/1e6).toFixed(2)+' M€';
-  }
-  document.getElementById('q1-ca-r26').textContent      = fmtM(caR26);
-  document.getElementById('q1-ca-ecart-b').textContent  = fmtMSign(caR26-caB26);
-  document.getElementById('q1-ca-ecart-r25').textContent= fmtMSign(caR26-caR25);
-  document.getElementById('q1-pers-r26').textContent    = fmtM(Math.abs(persR26));
-
-  // Colorer l'écart budget (vert si positif, rouge si négatif)
-  var ecartB = caR26 - caB26;
-  var ecartEl = document.getElementById('q1-ca-ecart-b');
-  ecartEl.style.color = ecartB >= 0 ? '#059669' : '#dc2626';
-  var ecartR25El = document.getElementById('q1-ca-ecart-r25');
-  ecartR25El.style.color = (caR26-caR25) >= 0 ? '#059669' : '#dc2626';
-
-  // ── Helper : dataset pour graphes globaux ────────────────────────────────
-  function makeDs(met, colKey, label, color){
-    return {
-      label: label,
-      borderRadius: 3,
-      backgroundColor: color,
-      data: sites.map(function(s){
-        var r = Q1_DATA.find(function(d){return d.Site===s && d.Metrique===met;});
-        return (r && r[colKey]!=null) ? Math.abs(+r[colKey])/1e6 : 0;
-      })
-    };
-  }
-
-  // ── Graphe CA global (barres horizontales groupées) ──────────────────────
-  mkChart('c-q1-ca', {
-    type:'bar',
-    data:{labels:sites, datasets:[
-      makeDs('CA','R2025','Q1 R2025','rgba(99,102,241,.7)'),
-      makeDs('CA','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
-      makeDs('CA','R2026','Q1 R2026','rgba(16,185,129,.85)'),
-    ]},
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M€';}}}},
-      scales:{x:{title:{display:true,text:'M€'}}}
-    }
+// ── Scorecards (parc ou site) ─────────────────────────────────────────────────
+function q1RenderCards(containerId, getVal){
+  var mets = [
+    {key:'CA',label:'CA'},{key:'PNE',label:'PNE'},
+    {key:'Marge_brute',label:'Marge brute'},
+    {key:'EBITDA',label:'EBITDA'},{key:'EBIT',label:'EBIT'},
+  ];
+  var wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  mets.forEach(function(m){
+    var r26=getVal(m.key,'R2026'), b26=getVal(m.key,'B2026');
+    var ecart=(r26!=null&&b26!=null)?r26-b26:null;
+    var isGood=ecart!=null&&ecart>=0;
+    var cls=ecart==null?'neutral':(isGood?'green':'red');
+    var pct=(b26&&b26!==0)?((r26/b26-1)*100):null;
+    var fillW=pct!=null?Math.min(Math.max((r26/b26*100),0),140):0;
+    var ecartStr=ecart!=null
+      ?'<span class="e-amt">'+(ecart>=0?'+':'')+(ecart/1e6).toFixed(2).replace('.',',')+' M€</span>'
+       +'<span class="e-pct">'+(pct!=null?(pct>=0?'+':'')+pct.toFixed(1)+'%':'')+'</span>'
+      :'—';
+    var card=document.createElement('div');
+    card.className='q1-sc '+cls;
+    card.innerHTML=
+      '<div class="q1-sc-label">'+m.label+'</div>'+
+      '<div class="q1-sc-val">'+(r26!=null?fmtM(r26):'—')+'</div>'+
+      '<div class="q1-sc-bud">Budget : '+(b26!=null?fmtM(b26):'—')+'</div>'+
+      '<div class="q1-sc-ecart '+(ecart==null?'':isGood?'pos':'neg')+'">'+
+        (ecart==null?'—':(isGood?'▲ ':'▼ ')+ecartStr)+'</div>'+
+      '<div class="q1-prog"><div class="q1-prog-fill '+(isGood?'green':'red')+
+        '" style="width:'+Math.min(fillW,100)+'%"></div></div>';
+    wrap.appendChild(card);
   });
+}
 
-  // ── Graphe Personnel global (barres horizontales groupées) ───────────────
-  mkChart('c-q1-pers', {
-    type:'bar',
-    data:{labels:sites, datasets:[
-      makeDs('Personnel','R2025','Q1 R2025','rgba(99,102,241,.7)'),
-      makeDs('Personnel','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
-      makeDs('Personnel','R2026','Q1 R2026','rgba(239,68,68,.8)'),
-    ]},
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M€';}}}},
-      scales:{x:{title:{display:true,text:'M€'}}}
-    }
-  });
+// ── Accordion : 5 métriques P&L, chacune expandable en vue site par site ──────
+function q1RenderAccordion(){
+  var mets=[
+    {key:'CA',label:'CA'},{key:'PNE',label:'PNE'},
+    {key:'Marge_brute',label:'Marge brute'},
+    {key:'EBITDA',label:'EBITDA'},{key:'EBIT',label:'EBIT'},
+  ];
+  var sites=[...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+  var wrap=document.getElementById('q1-accordion');
+  wrap.innerHTML='';
 
-  // ── Initialisation vue par site ──────────────────────────────────────────
-  if(!q1Site) q1Site = sites[0];
-  var sel = document.getElementById('q1-site-sel');
-  if(!sel.options.length){
-    sites.forEach(function(s){
-      var o = document.createElement('option');
-      o.value = s; o.text = s;
-      sel.appendChild(o);
+  mets.forEach(function(m,idx){
+    var r26=q1Sum(m.key,'R2026'), b26=q1Sum(m.key,'B2026');
+    var ecart=r26-b26;
+    var pct=(b26&&b26!==0)?((ecart/Math.abs(b26))*100):null;
+    var isGood=ecart>=0;
+    var col=isGood?'#10b981':'#ef4444';
+    var fillW=b26?Math.min(Math.max(r26/b26*100,0),130):0;
+    var ecartStr=(ecart>=0?'+':'')+(ecart/1e3).toFixed(0)+' k€'
+      +(pct!=null?' ('+(pct>=0?'+':'')+pct.toFixed(1)+'%)':'');
+
+    var item=document.createElement('div');
+    item.className='q1-acc-item';
+
+    var hdr=document.createElement('div');
+    hdr.className='q1-acc-hdr';
+    hdr.innerHTML=
+      '<div class="q1-acc-met">'+m.label+'</div>'+
+      '<div class="q1-acc-r26">'+fmtM(r26)+'</div>'+
+      '<div class="q1-acc-bud">Budget : '+fmtM(b26)+'</div>'+
+      '<div class="q1-acc-bar"><div class="q1-acc-bar-fill" style="width:'+Math.min(fillW,100)+'%;background:'+col+'"></div></div>'+
+      '<div class="q1-acc-ecart '+(isGood?'pos':'neg')+'">'+(isGood?'▲':'▼')+' '+ecartStr+'</div>'+
+      '<div class="q1-acc-chev'+(idx===0?' open':'')+'">&#9660;</div>';
+
+    var body=document.createElement('div');
+    body.className='q1-acc-body'+(idx===0?' open':'');
+
+    // Barres par site, triées par écart desc
+    var sData=sites.map(function(s){
+      var r=q1Get(s,m.key,'R2026'),b=q1Get(s,m.key,'B2026');
+      return {site:s,r26:r,b26:b,ecart:(r!=null&&b!=null?r-b:null)};
+    }).sort(function(a,b){
+      if(a.ecart==null)return 1; if(b.ecart==null)return -1;
+      return b.ecart-a.ecart;
     });
+    var maxA=Math.max.apply(null,sData.map(function(d){return d.ecart!=null?Math.abs(d.ecart):0;}));
+    if(!maxA)maxA=1;
+    var bHtml='';
+    sData.forEach(function(d){
+      var iG=d.ecart!=null&&d.ecart>=0;
+      var c=d.ecart==null?'#94a3b8':(iG?'#10b981':'#ef4444');
+      var bW=d.ecart!=null?Math.round(Math.abs(d.ecart)/maxA*100):0;
+      var p=(d.b26&&d.b26!==0)?((d.r26/d.b26-1)*100).toFixed(1):null;
+      var sg=d.ecart!=null&&d.ecart>=0?'+':'';
+      var vS=d.ecart!=null?sg+(d.ecart/1e3).toFixed(0)+'k€'+(p?' ('+sg+p+'%)':''):'—';
+      bHtml+='<div class="q1-site-bar">'+
+        '<div class="q1-site-bar-lbl">'+d.site+'</div>'+
+        '<div class="q1-site-bar-track"><div class="q1-site-bar-fill" style="width:'+bW+'%;background:'+c+'">'+
+          (bW>22?vS:'')+'</div></div>'+
+        (bW<=22?'<div class="q1-site-bar-val" style="color:'+c+'">'+vS+'</div>':'')+
+        '</div>';
+    });
+    body.innerHTML=bHtml;
+
+    hdr.addEventListener('click',function(){
+      var open=body.classList.contains('open');
+      body.classList.toggle('open',!open);
+      hdr.querySelector('.q1-acc-chev').classList.toggle('open',!open);
+    });
+    item.appendChild(hdr);
+    item.appendChild(body);
+    wrap.appendChild(item);
+  });
+}
+
+// ── Bullet charts (vue par site) ──────────────────────────────────────────────
+// Chaque ligne : barre grise = budget, barre colorée = réel, trait vertical = jalon budget
+// ── Vue par site : même style de barres HTML que l'accordion ─────────────────
+function renderQ1Site(){
+  var site=q1Site;
+  q1RenderCards('q1-site-cards',function(met,col){return q1Get(site,met,col);});
+
+  document.getElementById('q1-site-fin-title').textContent=
+    site+' — Synthèse financière — Réel vs Budget Q1 2026';
+  document.getElementById('q1-site-chg-title').textContent=
+    site+' — Charges détaillées — Réel vs Budget Q1 2026';
+
+  var finMet=[
+    ['CA','CA'],['PNE','PNE'],['Marge_brute','Marge brute'],['EBITDA','EBITDA'],['EBIT','EBIT']
+  ];
+  var chgMet=[
+    ['Personnel','Personnel'],['Energie','Énergie'],
+    ['Maint_courante','Maint. courante'],['Maint_oblig','Maint. oblig.'],
+    ['Traitement_sp','Trait. s.-p.'],['Autres_couts','Autres coûts']
+  ];
+
+  // Réutilise le même rendu que l'accordion mais pour un seul site
+  function renderSiteSectionBars(containerId, metrics, isCharges){
+    // écart : pour charges, économies = |budget| - |réel| ; pour financier : réel - budget
+    var ecarts=metrics.map(function(m){
+      var r=q1Get(site,m[0],'R2026'), b=q1Get(site,m[0],'B2026');
+      if(r==null||b==null) return null;
+      return isCharges ? Math.abs(b)-Math.abs(r) : r-b;
+    });
+    var maxA=Math.max.apply(null,ecarts.map(function(v){return v!=null?Math.abs(v):0;}));
+    if(!maxA) maxA=1;
+    var html='';
+    metrics.forEach(function(m,i){
+      var r=q1Get(site,m[0],'R2026'), b=q1Get(site,m[0],'B2026');
+      var ecart=ecarts[i];
+      var isGood=ecart!=null&&ecart>=0;
+      var col=ecart==null?'#94a3b8':(isGood?'#10b981':'#ef4444');
+      var bW=ecart!=null?Math.round(Math.abs(ecart)/maxA*100):0;
+      var pct=(b&&b!==0)?(isCharges?(Math.abs(b)-Math.abs(r))/Math.abs(b)*100:(r-b)/Math.abs(b)*100):null;
+      var sg=ecart!=null&&ecart>=0?'+':'';
+      var vS=ecart!=null
+        ?sg+(ecart/1e3).toFixed(0)+'k€'+(pct!=null?' ('+(pct>=0?'+':'')+pct.toFixed(1)+'%)':'')
+        :'—';
+      // Ligne : label | réel | budget | barre | écart
+      html+='<div class="q1-acc-hdr" style="cursor:default;padding:10px 10px">'+
+        '<div class="q1-acc-met">'+m[1]+'</div>'+
+        '<div class="q1-acc-r26">'+(r!=null?fmtM(isCharges?Math.abs(r):r):'—')+'</div>'+
+        '<div class="q1-acc-bud">Budget : '+(b!=null?fmtM(isCharges?Math.abs(b):b):'—')+'</div>'+
+        '<div class="q1-acc-bar"><div class="q1-acc-bar-fill" style="width:'+bW+'%;background:'+col+'"></div></div>'+
+        '<div class="q1-acc-ecart '+(ecart==null?'':isGood?'pos':'neg')+'">'+(ecart==null?'—':(isGood?'▲ ':'▼ ')+vS)+'</div>'+
+        '</div>';
+    });
+    document.getElementById(containerId).innerHTML=html;
   }
-  sel.value = q1Site;
+
+  renderSiteSectionBars('q1-site-fin-rows', finMet, false);
+  renderSiteSectionBars('q1-site-chg-rows', chgMet, true);
+}
+
+// ── Rendu principal onglet Q1 ─────────────────────────────────────────────────
+function renderQ1(){
+  var sites=[...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+  q1RenderCards('q1-global-cards',function(met,col){return q1Sum(met,col);});
+  q1RenderAccordion();
+  if(!q1Site)q1Site=sites[0];
+  var sel=document.getElementById('q1-site-sel');
+  if(!sel.options.length){
+    sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;sel.appendChild(o);});
+  }
+  sel.value=q1Site;
   renderQ1Site();
 }
 
-// ── Vue par site Q1 — deux graphes : synthèse financière + charges ────────────
-function renderQ1Site(){
-  var site = q1Site;
-  document.getElementById('q1-site-title-fin').textContent =
-    site + ' — Synthèse financière Q1 jan→mars 2026 (k€)';
-  document.getElementById('q1-site-title-chg').textContent =
-    site + ' — Charges détaillées Q1 jan→mars 2026 (k€, valeurs absolues)';
-
-  // Métriques synthèse financière (signées, en k€)
-  var finMetrics = [
-    ['CA','CA'], ['PNE','PNE'], ['Marge_brute','Marge brute'], ['EBITDA','EBITDA'], ['EBIT','EBIT']
-  ];
-  function mkDsSigned(colKey, label, color){
-    return {
-      label: label, backgroundColor: color, borderRadius: 4,
-      data: finMetrics.map(function(m){
-        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
-        return (r && r[colKey]!=null) ? Math.round(+r[colKey]/1e3) : 0;
-      })
-    };
-  }
-  mkChart('c-q1-site-fin', {
-    type:'bar',
-    data:{labels: finMetrics.map(function(m){return m[1];}), datasets:[
-      mkDsSigned('R2025','Q1 R2025','rgba(99,102,241,.75)'),
-      mkDsSigned('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
-      mkDsSigned('R2026','Q1 R2026','rgba(16,185,129,.88)'),
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k€';}}}},
-      scales:{y:{title:{display:true,text:'k€'}}}
-    }
-  });
-
-  // Métriques charges (valeurs absolues, en k€)
-  var chgMetrics = [
-    ['Personnel','Personnel'], ['Energie','Énergie'],
-    ['Maint_courante','Maint. courante'], ['Maint_oblig','Maint. oblig.'],
-    ['Traitement_sp','Traitement s.-p.'], ['Autres_couts','Autres coûts']
-  ];
-  function mkDsAbs(colKey, label, color){
-    return {
-      label: label, backgroundColor: color, borderRadius: 4,
-      data: chgMetrics.map(function(m){
-        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
-        return (r && r[colKey]!=null) ? Math.round(Math.abs(+r[colKey])/1e3) : 0;
-      })
-    };
-  }
-  mkChart('c-q1-site-chg', {
-    type:'bar',
-    data:{labels: chgMetrics.map(function(m){return m[1];}), datasets:[
-      mkDsAbs('R2025','Q1 R2025','rgba(99,102,241,.75)'),
-      mkDsAbs('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
-      mkDsAbs('R2026','Q1 R2026','rgba(239,68,68,.82)'),
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k€';}}}},
-      scales:{y:{title:{display:true,text:'k€ (valeur absolue)'}}}
-    }
-  });
-}
-
-function q1SetSite(s){ q1Site=s; renderQ1Site(); }
+function q1SetSite(s){q1Site=s;renderQ1Site();}
 
 // ══════════════════════════════════════════════════════
 // INITIALISATION — exécutée une seule fois au chargement de la page

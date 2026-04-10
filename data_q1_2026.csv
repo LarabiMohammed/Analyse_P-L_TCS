@@ -54,17 +54,17 @@ Le Havre,Maint_courante,-105141.43,-50594.78,-100398.71
 Le Havre,Maint_oblig,,,
 Le Havre,Traitement_sp,-19069.54,-12610.52,-16788.3
 Le Havre,Autres_couts,-264360.12,-290047.21,-293864.69
-Sevran,CA,1866034.55,1995576.85,3017231.12
-Sevran,PNE,1281343.67,1922956.05,1272233.12
-Sevran,Marge_brute,-44161.09,-128452.24,205686.24
-Sevran,EBITDA,-268972.09,-327739.9,6399.24
-Sevran,EBIT,-258215.59,-334232.9,1957.38
-Sevran,Personnel,-707354.05,-539650.73,-685690.13
-Sevran,Energie,-263730.04,-163677.33,-60552.99
-Sevran,Maint_courante,-90479.3,-415653.01,-44575.34
-Sevran,Maint_oblig,-162935.52,-244005.26,-78834.0
+Sevran,CA,1310563.55,1026515.49,1223786.12
+Sevran,PNE,1226455.67,953894.69,1162457.12
+Sevran,Marge_brute,-92140.45,-143926.34,95910.24
+Sevran,EBITDA,-262063.45,-317212.34,-77375.76
+Sevran,EBIT,-266306.95,-323705.34,-81817.62
+Sevran,Personnel,-709129.55,-539650.73,-685690.13
+Sevran,Energie,-160684.14,-80375.24,-60552.99
+Sevran,Maint_courante,-90479.3,-74612.73,-44575.34
+Sevran,Maint_oblig,-162935.52,-244974.06,-78834.0
 Sevran,Traitement_sp,0.0,1.5,0.0
-Sevran,Autres_couts,-95299.66,-195331.96,-194594.45
+Sevran,Autres_couts,-189661.42,-149784.21,-194594.45
 Chézy,CA,682303.8,689187.86,363970.46
 Chézy,PNE,657667.72,655941.96,358504.39
 Chézy,Marge_brute,78802.7,121972.53,-65618.03
@@ -87,17 +87,17 @@ Portes les Valences,Maint_courante,-15923.45,682.14,-51675.07
 Portes les Valences,Maint_oblig,-97790.23,-105578.21,-74250.0
 Portes les Valences,Traitement_sp,,,
 Portes les Valences,Autres_couts,-202747.46,-251373.83,-246705.88
-Montpellier,CA,2594752.02,3343573.25,2515490.19
-Montpellier,PNE,1200485.16,1673846.16,1311225.18
-Montpellier,Marge_brute,-224288.65,71891.46,-33964.93
-Montpellier,EBITDA,-343957.03,-93376.77,-199231.93
-Montpellier,EBIT,-398028.52,-127932.53,-233636.45
-Montpellier,Personnel,-860964.85,-804310.1,-841762.8
+Montpellier,CA,1359132.27,1554250.83,1388046.71
+Montpellier,PNE,1234805.41,1455234.01,1319267.63
+Montpellier,Marge_brute,-157558.49,120034.89,9611.62
+Montpellier,EBITDA,-277226.87,-45233.34,-155655.38
+Montpellier,EBIT,-331298.36,-79789.1,-190059.89
+Montpellier,Personnel,-828556.45,-767243.67,-806228.69
 Montpellier,Energie,-174313.3,-116862.06,-79706.79
-Montpellier,Maint_courante,-96100.41,-132617.35,-109176.04
+Montpellier,Maint_courante,-114433.19,-137568.35,-109176.04
 Montpellier,Maint_oblig,-53609.26,-62942.1,-56363.7
-Montpellier,Traitement_sp,-19521.54,0.0,-2291.64
-Montpellier,Autres_couts,-217694.65,-248086.08,-253755.55
+Montpellier,Traitement_sp,-3744.5,0.0,-2291.64
+Montpellier,Autres_couts,-215965.4,-248086.08,-253755.55
 Millau,CA,1159017.94,1357354.13,1388792.15
 Millau,PNE,1139952.97,1344666.71,1346892.67
 Millau,Marge_brute,56044.71,136343.14,112591.05

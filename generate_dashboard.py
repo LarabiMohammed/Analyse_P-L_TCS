@@ -261,6 +261,63 @@ select.sel:focus{border-color:#00a3e0}
 .cmp-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:.82rem}
 .cmp-row:last-child{border-bottom:none}
 .cmp-delta{font-size:.72rem;font-weight:600;margin-left:8px}
+/* ── Q1 2026 ────────────────────────────────────────────── */
+.q1-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.q1-period{font-size:.78rem;font-weight:600;color:#6b7280;background:#f3f4f6;padding:4px 12px;border-radius:20px}
+.q1-sc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.q1-sc{background:#fff;border-radius:14px;padding:18px 20px 14px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:5px solid #e5e7eb;position:relative;overflow:hidden}
+.q1-sc::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 14px 0 60px;opacity:.07}
+.q1-sc.green{border-top-color:#10b981}.q1-sc.green::after{background:#10b981}
+.q1-sc.red{border-top-color:#ef4444}.q1-sc.red::after{background:#ef4444}
+.q1-sc.neutral{border-top-color:#94a3b8}
+.q1-sc-label{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:10px}
+.q1-sc-val{font-size:1.45rem;font-weight:800;color:#111827;line-height:1;margin-bottom:3px;white-space:nowrap}
+.q1-sc-bud{font-size:.72rem;color:#b0b8c4;margin-bottom:10px}
+.q1-sc-ecart{font-size:.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.q1-sc-ecart .e-amt{font-size:.88rem}
+.q1-sc-ecart .e-pct{font-size:.72rem;background:rgba(0,0,0,.06);padding:1px 6px;border-radius:10px}
+.q1-sc-ecart.pos{color:#10b981}.q1-sc-ecart.neg{color:#ef4444}
+.q1-prog{height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.q1-prog-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.q1-prog-fill.green{background:linear-gradient(90deg,#34d399,#10b981)}
+.q1-prog-fill.red{background:linear-gradient(90deg,#f87171,#ef4444)}
+.q1-chart-card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:22px}
+.q1-chart-title{font-size:.85rem;font-weight:700;color:#003a63;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.q1-legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.q1-site-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.8rem}
+.q1-site-bar-lbl{width:140px;font-weight:600;color:#374151;text-align:right;flex-shrink:0}
+.q1-site-bar-track{flex:1;height:22px;background:#f1f5f9;border-radius:4px;position:relative;overflow:visible}
+.q1-site-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:.72rem;font-weight:700;color:#fff;min-width:30px;white-space:nowrap;transition:width .5s ease}
+.q1-site-bar-val{margin-left:8px;font-size:.75rem;font-weight:700;white-space:nowrap}
+.q1-sel-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.q1-sel-lbl{font-size:.82rem;font-weight:700;color:#003a63}
+/* ── Accordion P&L ── */
+.q1-acc-item{border-bottom:1px solid #f1f5f9}
+.q1-acc-item:last-child{border-bottom:none}
+.q1-acc-hdr{display:flex;align-items:center;gap:16px;padding:13px 10px;cursor:pointer;user-select:none;border-radius:8px;transition:background .15s}
+.q1-acc-hdr:hover{background:#f8fafc}
+.q1-acc-met{font-size:.85rem;font-weight:800;color:#003a63;width:110px;flex-shrink:0}
+.q1-acc-r26{font-size:.92rem;font-weight:700;color:#111827;width:90px}
+.q1-acc-bud{font-size:.73rem;color:#9ca3af;width:110px}
+.q1-acc-bar{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+.q1-acc-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.q1-acc-ecart{font-size:.82rem;font-weight:700;width:140px;text-align:right;flex-shrink:0}
+.q1-acc-ecart.pos{color:#10b981}.q1-acc-ecart.neg{color:#ef4444}
+.q1-acc-chev{font-size:.65rem;color:#9ca3af;transition:transform .22s;flex-shrink:0;width:14px;text-align:center}
+.q1-acc-chev.open{transform:rotate(180deg)}
+.q1-acc-body{display:none;padding:10px 0 18px 120px}
+.q1-acc-body.open{display:block}
+/* ── Bullet chart (vue par site) ── */
+.q1-section-lbl{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:20px 0 10px;padding-left:4px}
+.q1-bl-row{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.q1-bl-lbl{font-size:.79rem;font-weight:700;color:#374151;width:130px;text-align:right;flex-shrink:0}
+.q1-bl-wrap{flex:1;position:relative;height:28px}
+.q1-bl-bud{position:absolute;top:2px;left:0;height:24px;background:#e9eef5;border-radius:5px}
+.q1-bl-real{position:absolute;top:6px;left:0;height:16px;border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;min-width:4px;transition:width .5s ease;z-index:1}
+.q1-bl-mark{position:absolute;top:0;width:2px;height:28px;background:#94a3b8;border-radius:1px;z-index:2}
+.q1-bl-valcol{font-size:.74rem;font-weight:700;width:82px;flex-shrink:0;white-space:nowrap;color:#111827}
+.q1-bl-ecart{font-size:.71rem;font-weight:700;width:88px;flex-shrink:0;text-align:right;white-space:nowrap}
+.q1-bl-ecart.pos{color:#10b981}.q1-bl-ecart.neg{color:#ef4444}
 </style>
 </head>
 <body>
@@ -628,59 +685,52 @@ select.sel:focus{border-color:#00a3e0}
 
 <!-- ═══ ONGLET Q1 2026 ══════════════════════════════════════════════════════ -->
 <div class="page" id="tab-q1">
-  <div class="toolbar">
-    <span style="font-size:.82rem;color:#555">Cumul jan&rarr;mars 2026 &mdash; valeurs en M&euro; bruts</span>
-    <div class="spacer"></div>
+
+  <!-- ── En-tête ── -->
+  <div class="q1-header" style="margin-top:4px">
+    <div>
+      <div style="font-size:1.05rem;font-weight:800;color:#003a63;margin-bottom:2px">Suivi T1 2026 &mdash; R&eacute;el vs Budget</div>
+      <div class="q1-period">Cumul jan &rarr; mars 2026</div>
+    </div>
     <button class="btn-print" onclick="window.print()">&#128438; Exporter PDF</button>
   </div>
 
-  <!-- A — KPI globaux parc -->
-  <div class="section-sep" style="margin-top:18px">Vue globale parc</div>
-  <div class="kpi-grid" style="margin-bottom:18px">
-    <div class="kpi-card g"><div class="kpi-label">CA total Q1 R2026</div>
-      <div class="kpi-value" id="q1-ca-r26">&mdash;</div></div>
-    <div class="kpi-card"><div class="kpi-label">Ecart vs Budget Q1</div>
-      <div class="kpi-value" id="q1-ca-ecart-b">&mdash;</div></div>
-    <div class="kpi-card"><div class="kpi-label">Evolution vs Q1 2025</div>
-      <div class="kpi-value" id="q1-ca-ecart-r25">&mdash;</div></div>
-    <div class="kpi-card r"><div class="kpi-label">Personnel total Q1 R2026</div>
-      <div class="kpi-value" id="q1-pers-r26">&mdash;</div></div>
-  </div>
+  <!-- ── A — Vue globale parc ── -->
+  <div class="section-sep" style="margin-top:22px">Vue globale parc &mdash; 11 sites</div>
 
-  <!-- Graphe global CA -->
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card full">
-      <div class="card-title">CA Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
-      <div class="ch tall"><canvas id="c-q1-ca"></canvas></div>
+  <!-- Scorecards 5 métriques -->
+  <div class="q1-sc-grid" id="q1-global-cards"></div>
+
+  <!-- Accordion P&L par composante -->
+  <div class="q1-chart-card">
+    <div class="q1-chart-title">
+      Composantes P&amp;L &mdash; cliquer pour voir le d&eacute;tail par site
+      <span style="font-size:.7rem;font-weight:400;color:#9ca3af;margin-left:6px">&#9660; vert = au-dessus du budget</span>
     </div>
+    <div id="q1-accordion"></div>
   </div>
 
-  <!-- Graphe global Personnel -->
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card full">
-      <div class="card-title">Co&ucirc;ts de Personnel Q1 par site &mdash; R2025 / Budget 2026 / R2026</div>
-      <div class="ch tall"><canvas id="c-q1-pers"></canvas></div>
-    </div>
-  </div>
-
-  <!-- B — Vue par site -->
+  <!-- ── B — Vue par site ── -->
   <div class="section-sep">D&eacute;tail par site</div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <label style="font-size:.82rem;font-weight:700;color:#003a63">Site :</label>
+  <div class="q1-sel-row">
+    <span class="q1-sel-lbl">Site :</span>
     <select class="sel" id="q1-site-sel" onchange="q1SetSite(this.value)"></select>
   </div>
 
-  <!-- Graphes site : synthèse financière -->
-  <div class="card full" style="margin-bottom:18px">
-    <div class="card-title" id="q1-site-title-fin">&mdash;</div>
-    <div class="ch tall"><canvas id="c-q1-site-fin"></canvas></div>
+  <!-- Scorecards site -->
+  <div class="q1-sc-grid" id="q1-site-cards"></div>
+
+  <!-- Barres site — synthèse financière -->
+  <div class="q1-chart-card">
+    <div class="q1-chart-title" id="q1-site-fin-title">&mdash;</div>
+    <div id="q1-site-fin-rows"></div>
+  </div>
+  <!-- Barres site — charges -->
+  <div class="q1-chart-card" style="margin-bottom:32px">
+    <div class="q1-chart-title" id="q1-site-chg-title">&mdash;</div>
+    <div id="q1-site-chg-rows"></div>
   </div>
 
-  <!-- Graphes site : charges détaillées -->
-  <div class="card full" style="margin-bottom:18px">
-    <div class="card-title" id="q1-site-title-chg">&mdash;</div>
-    <div class="ch tall"><canvas id="c-q1-site-chg"></canvas></div>
-  </div>
 </div>
 
 <script>
@@ -2697,172 +2747,207 @@ function renderTk(){
 
 // ══════════════════════════════════════════════════════
 // ONGLET Q1 2026 — renderQ1() / renderQ1Site()
-// Affiche les comptes réels cumulés jan→mars 2026 (vs R2025 et Budget 2026).
-// Vue globale : 4 KPI cards parc + 2 graphes horizontaux (CA et Personnel).
-// Vue par site : 2 graphes verticaux (synthèse financière + charges détaillées).
-// Données : constante Q1_DATA (format [{Site, Metrique, R2025, R2026, B2026}]).
-// Valeurs affichées en M€ pour les graphes globaux, k€ pour les graphes par site.
+// Comparaison Réel Q1 2026 vs Budget Q1 2026.
+// Vue globale : 5 scorecards parc (CA, PNE, Marge, EBITDA, EBIT) + 2 graphes
+//   barres horizontales par site (EBITDA écart, CA écart) colorés vert/rouge.
+// Vue par site : 5 scorecards + 2 graphes (synthèse financière + charges).
+// Convention couleur : vert = au-dessus du budget, rouge = en dessous.
 // ══════════════════════════════════════════════════════
-var q1Site = null; // site actuellement sélectionné dans la vue par site
+var q1Site = null;
 
-function renderQ1(){
-  var sites = [...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+// ── Helpers Q1 ────────────────────────────────────────────────────────────────
+function q1Get(site, met, col){
+  var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===met;});
+  return (r && r[col]!=null) ? +r[col] : null;
+}
+function q1Sum(met, col){
+  return Q1_DATA.filter(function(d){return d.Metrique===met;})
+    .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);},0);
+}
 
-  // ── Somme d'une métrique sur tous les sites ──────────────────────────────
-  function getSum(met, col){
-    return Q1_DATA.filter(function(d){return d.Metrique===met;})
-      .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);}, 0);
-  }
-  var caR26  = getSum('CA','R2026');
-  var caB26  = getSum('CA','B2026');
-  var caR25  = getSum('CA','R2025');
-  var persR26 = getSum('Personnel','R2026');
-
-  // ── KPI cards ────────────────────────────────────────────────────────────
-  function fmtMSign(v){
-    if(v==null||isNaN(v)) return '\u2014';
-    var s=v<0?'\u2212':'+'+(v===0?'':' ');
-    return s+(Math.abs(v)/1e6).toFixed(2)+'\u00a0M\u20ac';
-  }
-  document.getElementById('q1-ca-r26').textContent      = fmtM(caR26);
-  document.getElementById('q1-ca-ecart-b').textContent  = fmtMSign(caR26-caB26);
-  document.getElementById('q1-ca-ecart-r25').textContent= fmtMSign(caR26-caR25);
-  document.getElementById('q1-pers-r26').textContent    = fmtM(Math.abs(persR26));
-
-  // Colorer l'écart budget (vert si positif, rouge si négatif)
-  var ecartB = caR26 - caB26;
-  var ecartEl = document.getElementById('q1-ca-ecart-b');
-  ecartEl.style.color = ecartB >= 0 ? '#059669' : '#dc2626';
-  var ecartR25El = document.getElementById('q1-ca-ecart-r25');
-  ecartR25El.style.color = (caR26-caR25) >= 0 ? '#059669' : '#dc2626';
-
-  // ── Helper : dataset pour graphes globaux ────────────────────────────────
-  function makeDs(met, colKey, label, color){
-    return {
-      label: label,
-      borderRadius: 3,
-      backgroundColor: color,
-      data: sites.map(function(s){
-        var r = Q1_DATA.find(function(d){return d.Site===s && d.Metrique===met;});
-        return (r && r[colKey]!=null) ? Math.abs(+r[colKey])/1e6 : 0;
-      })
-    };
-  }
-
-  // ── Graphe CA global (barres horizontales groupées) ──────────────────────
-  mkChart('c-q1-ca', {
-    type:'bar',
-    data:{labels:sites, datasets:[
-      makeDs('CA','R2025','Q1 R2025','rgba(99,102,241,.7)'),
-      makeDs('CA','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
-      makeDs('CA','R2026','Q1 R2026','rgba(16,185,129,.85)'),
-    ]},
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M\u20ac';}}}},
-      scales:{x:{title:{display:true,text:'M\u20ac'}}}
-    }
+// ── Scorecards (parc ou site) ─────────────────────────────────────────────────
+function q1RenderCards(containerId, getVal){
+  var mets = [
+    {key:'CA',label:'CA'},{key:'PNE',label:'PNE'},
+    {key:'Marge_brute',label:'Marge brute'},
+    {key:'EBITDA',label:'EBITDA'},{key:'EBIT',label:'EBIT'},
+  ];
+  var wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  mets.forEach(function(m){
+    var r26=getVal(m.key,'R2026'), b26=getVal(m.key,'B2026');
+    var ecart=(r26!=null&&b26!=null)?r26-b26:null;
+    var isGood=ecart!=null&&ecart>=0;
+    var cls=ecart==null?'neutral':(isGood?'green':'red');
+    var pct=(b26&&b26!==0)?((r26/b26-1)*100):null;
+    var fillW=pct!=null?Math.min(Math.max((r26/b26*100),0),140):0;
+    var ecartStr=ecart!=null
+      ?'<span class="e-amt">'+(ecart>=0?'+':'')+(ecart/1e6).toFixed(2).replace('.',',')+'\u00a0M\u20ac</span>'
+       +'<span class="e-pct">'+(pct!=null?(pct>=0?'+':'')+pct.toFixed(1)+'%':'')+'</span>'
+      :'\u2014';
+    var card=document.createElement('div');
+    card.className='q1-sc '+cls;
+    card.innerHTML=
+      '<div class="q1-sc-label">'+m.label+'</div>'+
+      '<div class="q1-sc-val">'+(r26!=null?fmtM(r26):'\u2014')+'</div>'+
+      '<div class="q1-sc-bud">Budget\u00a0: '+(b26!=null?fmtM(b26):'\u2014')+'</div>'+
+      '<div class="q1-sc-ecart '+(ecart==null?'':isGood?'pos':'neg')+'">'+
+        (ecart==null?'\u2014':(isGood?'\u25b2\u00a0':'\u25bc\u00a0')+ecartStr)+'</div>'+
+      '<div class="q1-prog"><div class="q1-prog-fill '+(isGood?'green':'red')+
+        '" style="width:'+Math.min(fillW,100)+'%"></div></div>';
+    wrap.appendChild(card);
   });
+}
 
-  // ── Graphe Personnel global (barres horizontales groupées) ───────────────
-  mkChart('c-q1-pers', {
-    type:'bar',
-    data:{labels:sites, datasets:[
-      makeDs('Personnel','R2025','Q1 R2025','rgba(99,102,241,.7)'),
-      makeDs('Personnel','B2026','Budget Q1 2026','rgba(245,158,11,.7)'),
-      makeDs('Personnel','R2026','Q1 R2026','rgba(239,68,68,.8)'),
-    ]},
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(3)+' M\u20ac';}}}},
-      scales:{x:{title:{display:true,text:'M\u20ac'}}}
-    }
-  });
+// ── Accordion : 5 métriques P&L, chacune expandable en vue site par site ──────
+function q1RenderAccordion(){
+  var mets=[
+    {key:'CA',label:'CA'},{key:'PNE',label:'PNE'},
+    {key:'Marge_brute',label:'Marge brute'},
+    {key:'EBITDA',label:'EBITDA'},{key:'EBIT',label:'EBIT'},
+  ];
+  var sites=[...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+  var wrap=document.getElementById('q1-accordion');
+  wrap.innerHTML='';
 
-  // ── Initialisation vue par site ──────────────────────────────────────────
-  if(!q1Site) q1Site = sites[0];
-  var sel = document.getElementById('q1-site-sel');
-  if(!sel.options.length){
-    sites.forEach(function(s){
-      var o = document.createElement('option');
-      o.value = s; o.text = s;
-      sel.appendChild(o);
+  mets.forEach(function(m,idx){
+    var r26=q1Sum(m.key,'R2026'), b26=q1Sum(m.key,'B2026');
+    var ecart=r26-b26;
+    var pct=(b26&&b26!==0)?((ecart/Math.abs(b26))*100):null;
+    var isGood=ecart>=0;
+    var col=isGood?'#10b981':'#ef4444';
+    var fillW=b26?Math.min(Math.max(r26/b26*100,0),130):0;
+    var ecartStr=(ecart>=0?'+':'')+(ecart/1e3).toFixed(0)+'\u00a0k\u20ac'
+      +(pct!=null?' ('+(pct>=0?'+':'')+pct.toFixed(1)+'%)':'');
+
+    var item=document.createElement('div');
+    item.className='q1-acc-item';
+
+    var hdr=document.createElement('div');
+    hdr.className='q1-acc-hdr';
+    hdr.innerHTML=
+      '<div class="q1-acc-met">'+m.label+'</div>'+
+      '<div class="q1-acc-r26">'+fmtM(r26)+'</div>'+
+      '<div class="q1-acc-bud">Budget\u00a0: '+fmtM(b26)+'</div>'+
+      '<div class="q1-acc-bar"><div class="q1-acc-bar-fill" style="width:'+Math.min(fillW,100)+'%;background:'+col+'"></div></div>'+
+      '<div class="q1-acc-ecart '+(isGood?'pos':'neg')+'">'+(isGood?'\u25b2':'\u25bc')+'\u00a0'+ecartStr+'</div>'+
+      '<div class="q1-acc-chev'+(idx===0?' open':'')+'">&#9660;</div>';
+
+    var body=document.createElement('div');
+    body.className='q1-acc-body'+(idx===0?' open':'');
+
+    // Barres par site, triées par écart desc
+    var sData=sites.map(function(s){
+      var r=q1Get(s,m.key,'R2026'),b=q1Get(s,m.key,'B2026');
+      return {site:s,r26:r,b26:b,ecart:(r!=null&&b!=null?r-b:null)};
+    }).sort(function(a,b){
+      if(a.ecart==null)return 1; if(b.ecart==null)return -1;
+      return b.ecart-a.ecart;
     });
+    var maxA=Math.max.apply(null,sData.map(function(d){return d.ecart!=null?Math.abs(d.ecart):0;}));
+    if(!maxA)maxA=1;
+    var bHtml='';
+    sData.forEach(function(d){
+      var iG=d.ecart!=null&&d.ecart>=0;
+      var c=d.ecart==null?'#94a3b8':(iG?'#10b981':'#ef4444');
+      var bW=d.ecart!=null?Math.round(Math.abs(d.ecart)/maxA*100):0;
+      var p=(d.b26&&d.b26!==0)?((d.r26/d.b26-1)*100).toFixed(1):null;
+      var sg=d.ecart!=null&&d.ecart>=0?'+':'';
+      var vS=d.ecart!=null?sg+(d.ecart/1e3).toFixed(0)+'k\u20ac'+(p?' ('+sg+p+'%)':''):'\u2014';
+      bHtml+='<div class="q1-site-bar">'+
+        '<div class="q1-site-bar-lbl">'+d.site+'</div>'+
+        '<div class="q1-site-bar-track"><div class="q1-site-bar-fill" style="width:'+bW+'%;background:'+c+'">'+
+          (bW>22?vS:'')+'</div></div>'+
+        (bW<=22?'<div class="q1-site-bar-val" style="color:'+c+'">'+vS+'</div>':'')+
+        '</div>';
+    });
+    body.innerHTML=bHtml;
+
+    hdr.addEventListener('click',function(){
+      var open=body.classList.contains('open');
+      body.classList.toggle('open',!open);
+      hdr.querySelector('.q1-acc-chev').classList.toggle('open',!open);
+    });
+    item.appendChild(hdr);
+    item.appendChild(body);
+    wrap.appendChild(item);
+  });
+}
+
+// ── Bullet charts (vue par site) ──────────────────────────────────────────────
+// Chaque ligne : barre grise = budget, barre colorée = réel, trait vertical = jalon budget
+// ── Vue par site : même style de barres HTML que l'accordion ─────────────────
+function renderQ1Site(){
+  var site=q1Site;
+  q1RenderCards('q1-site-cards',function(met,col){return q1Get(site,met,col);});
+
+  document.getElementById('q1-site-fin-title').textContent=
+    site+' \u2014 Synth\u00e8se financi\u00e8re \u2014 R\u00e9el vs Budget Q1 2026';
+  document.getElementById('q1-site-chg-title').textContent=
+    site+' \u2014 Charges d\u00e9taill\u00e9es \u2014 R\u00e9el vs Budget Q1 2026';
+
+  var finMet=[
+    ['CA','CA'],['PNE','PNE'],['Marge_brute','Marge brute'],['EBITDA','EBITDA'],['EBIT','EBIT']
+  ];
+  var chgMet=[
+    ['Personnel','Personnel'],['Energie','\u00c9nergie'],
+    ['Maint_courante','Maint. courante'],['Maint_oblig','Maint. oblig.'],
+    ['Traitement_sp','Trait. s.-p.'],['Autres_couts','Autres co\u00fbts']
+  ];
+
+  // Réutilise le même rendu que l'accordion mais pour un seul site
+  function renderSiteSectionBars(containerId, metrics, isCharges){
+    // écart : pour charges, économies = |budget| - |réel| ; pour financier : réel - budget
+    var ecarts=metrics.map(function(m){
+      var r=q1Get(site,m[0],'R2026'), b=q1Get(site,m[0],'B2026');
+      if(r==null||b==null) return null;
+      return isCharges ? Math.abs(b)-Math.abs(r) : r-b;
+    });
+    var maxA=Math.max.apply(null,ecarts.map(function(v){return v!=null?Math.abs(v):0;}));
+    if(!maxA) maxA=1;
+    var html='';
+    metrics.forEach(function(m,i){
+      var r=q1Get(site,m[0],'R2026'), b=q1Get(site,m[0],'B2026');
+      var ecart=ecarts[i];
+      var isGood=ecart!=null&&ecart>=0;
+      var col=ecart==null?'#94a3b8':(isGood?'#10b981':'#ef4444');
+      var bW=ecart!=null?Math.round(Math.abs(ecart)/maxA*100):0;
+      var pct=(b&&b!==0)?(isCharges?(Math.abs(b)-Math.abs(r))/Math.abs(b)*100:(r-b)/Math.abs(b)*100):null;
+      var sg=ecart!=null&&ecart>=0?'+':'';
+      var vS=ecart!=null
+        ?sg+(ecart/1e3).toFixed(0)+'k\u20ac'+(pct!=null?' ('+(pct>=0?'+':'')+pct.toFixed(1)+'%)':'')
+        :'\u2014';
+      // Ligne : label | réel | budget | barre | écart
+      html+='<div class="q1-acc-hdr" style="cursor:default;padding:10px 10px">'+
+        '<div class="q1-acc-met">'+m[1]+'</div>'+
+        '<div class="q1-acc-r26">'+(r!=null?fmtM(isCharges?Math.abs(r):r):'\u2014')+'</div>'+
+        '<div class="q1-acc-bud">Budget\u00a0: '+(b!=null?fmtM(isCharges?Math.abs(b):b):'\u2014')+'</div>'+
+        '<div class="q1-acc-bar"><div class="q1-acc-bar-fill" style="width:'+bW+'%;background:'+col+'"></div></div>'+
+        '<div class="q1-acc-ecart '+(ecart==null?'':isGood?'pos':'neg')+'">'+(ecart==null?'\u2014':(isGood?'\u25b2\u00a0':'\u25bc\u00a0')+vS)+'</div>'+
+        '</div>';
+    });
+    document.getElementById(containerId).innerHTML=html;
   }
-  sel.value = q1Site;
+
+  renderSiteSectionBars('q1-site-fin-rows', finMet, false);
+  renderSiteSectionBars('q1-site-chg-rows', chgMet, true);
+}
+
+// ── Rendu principal onglet Q1 ─────────────────────────────────────────────────
+function renderQ1(){
+  var sites=[...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+  q1RenderCards('q1-global-cards',function(met,col){return q1Sum(met,col);});
+  q1RenderAccordion();
+  if(!q1Site)q1Site=sites[0];
+  var sel=document.getElementById('q1-site-sel');
+  if(!sel.options.length){
+    sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;sel.appendChild(o);});
+  }
+  sel.value=q1Site;
   renderQ1Site();
 }
 
-// ── Vue par site Q1 — deux graphes : synthèse financière + charges ────────────
-function renderQ1Site(){
-  var site = q1Site;
-  document.getElementById('q1-site-title-fin').textContent =
-    site + ' \u2014 Synth\u00e8se financi\u00e8re Q1 jan\u2192mars 2026 (k\u20ac)';
-  document.getElementById('q1-site-title-chg').textContent =
-    site + ' \u2014 Charges d\u00e9taill\u00e9es Q1 jan\u2192mars 2026 (k\u20ac, valeurs absolues)';
-
-  // Métriques synthèse financière (signées, en k€)
-  var finMetrics = [
-    ['CA','CA'], ['PNE','PNE'], ['Marge_brute','Marge brute'], ['EBITDA','EBITDA'], ['EBIT','EBIT']
-  ];
-  function mkDsSigned(colKey, label, color){
-    return {
-      label: label, backgroundColor: color, borderRadius: 4,
-      data: finMetrics.map(function(m){
-        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
-        return (r && r[colKey]!=null) ? Math.round(+r[colKey]/1e3) : 0;
-      })
-    };
-  }
-  mkChart('c-q1-site-fin', {
-    type:'bar',
-    data:{labels: finMetrics.map(function(m){return m[1];}), datasets:[
-      mkDsSigned('R2025','Q1 R2025','rgba(99,102,241,.75)'),
-      mkDsSigned('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
-      mkDsSigned('R2026','Q1 R2026','rgba(16,185,129,.88)'),
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k\u20ac';}}}},
-      scales:{y:{title:{display:true,text:'k\u20ac'}}}
-    }
-  });
-
-  // Métriques charges (valeurs absolues, en k€)
-  var chgMetrics = [
-    ['Personnel','Personnel'], ['Energie','\u00c9nergie'],
-    ['Maint_courante','Maint. courante'], ['Maint_oblig','Maint. oblig.'],
-    ['Traitement_sp','Traitement s.-p.'], ['Autres_couts','Autres co\u00fbts']
-  ];
-  function mkDsAbs(colKey, label, color){
-    return {
-      label: label, backgroundColor: color, borderRadius: 4,
-      data: chgMetrics.map(function(m){
-        var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===m[0];});
-        return (r && r[colKey]!=null) ? Math.round(Math.abs(+r[colKey])/1e3) : 0;
-      })
-    };
-  }
-  mkChart('c-q1-site-chg', {
-    type:'bar',
-    data:{labels: chgMetrics.map(function(m){return m[1];}), datasets:[
-      mkDsAbs('R2025','Q1 R2025','rgba(99,102,241,.75)'),
-      mkDsAbs('B2026','Budget Q1 2026','rgba(245,158,11,.75)'),
-      mkDsAbs('R2026','Q1 R2026','rgba(239,68,68,.82)'),
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y||0).toFixed(0)+' k\u20ac';}}}},
-      scales:{y:{title:{display:true,text:'k\u20ac (valeur absolue)'}}}
-    }
-  });
-}
-
-function q1SetSite(s){ q1Site=s; renderQ1Site(); }
+function q1SetSite(s){q1Site=s;renderQ1Site();}
 
 // ══════════════════════════════════════════════════════
 // INITIALISATION — exécutée une seule fois au chargement de la page

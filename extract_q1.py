@@ -22,10 +22,10 @@ SITE_SHEETS = {
     "Amiens":            ["H66HTVP281"],
     "Paris 15":          ["H66IP15281"],
     "Le Havre":          ["H66NTES281"],
-    "Sevran":            ["H66ISET282", "H66ISVT281", "H66ISVT283"],  # 3 onglets
+    "Sevran":            ["H66ISVT281"],  # U701-SEVRAN-TRI uniquement
     "Chézy":             ["H66RSAL281"],
     "Portes les Valences": ["H66RZOS282"],
-    "Montpellier":       ["H66SSMT261", "H66SSMT281", "H66SSMT283"],  # 3 onglets
+    "Montpellier":       ["H66SSMT283"],  # Demeter-TRI uniquement
     "Millau":            ["H66SSMT284"],
     "Bègles":            ["H66SVBM281"],
 }
