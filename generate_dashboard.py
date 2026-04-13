@@ -556,7 +556,7 @@ select.sel:focus{border-color:#00a3e0}
   <div class="toolbar">
     <label>Ann&eacute;e :</label>
     <button class="btn-pill tk-sc-yr active" onclick="tkScSetYr('all',this)">Toutes (moy.)</button>
-    <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2023,this)">R2023</button>
+    <button class="btn-pill tk-sc-yr" id="tk-btn-2023" onclick="tkScSetYr(2023,this)">R2023</button>
     <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2024,this)">R2024</button>
     <button class="btn-pill tk-sc-yr" onclick="tkScSetYr(2025,this)">R2025</button>
     <div class="spacer"></div>
@@ -569,9 +569,13 @@ select.sel:focus{border-color:#00a3e0}
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
     <span style="font-size:.78rem;font-weight:700;color:#555">KPI :</span>
     <button class="btn-pill tk-kpi active" onclick="tkSetKpi('debit',this)">D&eacute;bit (t/h)</button>
-    <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo',this)">Disponibilit&eacute; (%)</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo',this)">Disponibilit&eacute; globale (%)</button>
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo_process',this)">Disponibilit&eacute; process (%)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('heures',this)">Heures fonct.</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('productivite',this)">Productivit&eacute; (t/h/op.)</button>
+  </div>
+  <div id="tk-dispo-proc-note" style="display:none;font-size:.75rem;color:#f59e0b;font-weight:600;margin-bottom:10px;padding:5px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;width:fit-content">
+    &#9888; Dispo process : donn&eacute;es 2023 indisponibles &mdash; R2023 exclu du scatter
   </div>
   <div class="row2" style="margin-bottom:28px">
     <div class="card" style="border-top:3px solid #f59e0b">
@@ -592,12 +596,18 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 
   <!-- 5 KPI cards site avec tendances -->
-  <div class="kpi-grid" style="margin-bottom:22px">
+  <div class="kpi-grid" style="margin-bottom:22px;grid-template-columns:repeat(6,1fr);gap:10px">
     <div class="kpi-card" style="border-left-color:#00a3e0">
-      <div class="kpi-label">Disponibilit&eacute;</div>
+      <div class="kpi-label">Dispo globale</div>
       <div class="kpi-value" id="tk-sk-dispo">—</div>
       <div class="kpi-sub" id="tk-sk-dispo-s">R2025</div>
       <div class="kpi-trend" id="tk-sk-dispo-t"></div>
+    </div>
+    <div class="kpi-card" style="border-left-color:#0ea5e9">
+      <div class="kpi-label">Dispo process</div>
+      <div class="kpi-value" id="tk-sk-dispo-proc">—</div>
+      <div class="kpi-sub" id="tk-sk-dispo-proc-s">R2025</div>
+      <div class="kpi-trend" id="tk-sk-dispo-proc-t"></div>
     </div>
     <div class="kpi-card g">
       <div class="kpi-label">D&eacute;bit</div>
@@ -639,7 +649,8 @@ select.sel:focus{border-color:#00a3e0}
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
     <span style="font-size:.78rem;font-weight:700;color:#555">Afficher en courbe :</span>
     <button class="btn-pill tk-kline" data-col="#0082b3" onclick="tkToggleKpiLine('debit',this)" style="border-color:#0082b3;color:#0082b3">D&eacute;bit</button>
-    <button class="btn-pill tk-kline" data-col="#059669" onclick="tkToggleKpiLine('dispo',this)" style="border-color:#059669;color:#059669">Dispo</button>
+    <button class="btn-pill tk-kline" data-col="#059669" onclick="tkToggleKpiLine('dispo',this)" style="border-color:#059669;color:#059669">Dispo globale</button>
+    <button class="btn-pill tk-kline" data-col="#0ea5e9" onclick="tkToggleKpiLine('dispo_process',this)" style="border-color:#0ea5e9;color:#0ea5e9">Dispo process</button>
     <button class="btn-pill tk-kline" data-col="#ef4444" onclick="tkToggleKpiLine('refus',this)" style="border-color:#ef4444;color:#ef4444">Taux de refus</button>
     <button class="btn-pill tk-kline" data-col="#8b5cf6" onclick="tkToggleKpiLine('heures',this)" style="border-color:#8b5cf6;color:#8b5cf6">Heures fonct.</button>
     <button class="btn-pill tk-kline" data-col="#6366f1" onclick="tkToggleKpiLine('tonnage',this)" style="border-color:#6366f1;color:#6366f1">Tonnage entrant</button>
@@ -2184,12 +2195,14 @@ function getTkMerged(){
     var mc=Math.abs(+(pl.Maintenance_courante||0));
     var maint=(mo+mc)>0?(mo+mc)/tn:null;
     var dispo=k.Dispo_globale!=null?+k.Dispo_globale*100:null;
+    var dispo_process=k.Dispo_process!=null&&k.Dispo_process!==''?+k.Dispo_process*100:null;
     var debit=k.Debit!=null?+k.Debit:null;
     var nbOp=k.Nb_trieurs_poste!=null&&k.Nb_trieurs_poste!==''?+k.Nb_trieurs_poste:null;
     var productivite=(debit!=null&&nbOp!=null&&nbOp>0)?debit/nbOp:null;
     _tkMerged.push({site:k.Site,annee:yr,
       gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
       dispo:dispo,
+      dispo_process:dispo_process,
       heures:k.Heures_fonctionnement!=null?+k.Heures_fonctionnement:null,
       tonnage:k.Tonnage!=null?+k.Tonnage:null,
       debit:debit,
@@ -2210,18 +2223,21 @@ function tkScFiltered(){
   if(tkScYr!=='all'){
     return m.filter(function(d){ return d.annee===+tkScYr; });
   }
-  // Mode "Toutes" : moyenne par site
+  // Mode "Toutes (moy.)" : moyenne par site sur toutes les années
+  // Exception : dispo_process n'a pas de données 2023, donc sa moyenne se calcule
+  // uniquement sur les lignes où la valeur est non-null (2024+2025), sans forcer l'exclusion
+  // des autres métriques — chaque métrique est moyennée sur ses valeurs non-null disponibles.
   var bySite={};
   m.forEach(function(d){
-    if(!bySite[d.site]) bySite[d.site]={site:d.site,gen:d.gen,_n:0,dispo:0,debit:0,heures:0,tonnage:0,productivite:0,personnel:0,maintenance:0,refus:0,_cnt:{}};
+    if(!bySite[d.site]) bySite[d.site]={site:d.site,gen:d.gen,dispo:0,dispo_process:0,debit:0,heures:0,tonnage:0,productivite:0,personnel:0,maintenance:0,refus:0,_cnt:{}};
     var r=bySite[d.site];
-    ['dispo','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+    ['dispo','dispo_process','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
       if(d[k]!=null){ r[k]+=d[k]; r._cnt[k]=(r._cnt[k]||0)+1; }
     });
   });
   return Object.values(bySite).map(function(r){
     var out={site:r.site,gen:r.gen,annee:'moy.'};
-    ['dispo','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+    ['dispo','dispo_process','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
       out[k]=r._cnt[k]?r[k]/r._cnt[k]:null;
     });
     return out;
@@ -2244,12 +2260,28 @@ function tkScSetGen(gen,el){
   renderTkScatter();
 }
 
-var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivit\u00e9 (t/h/op.)'};
+var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 globale (%)',dispo_process:'Disponibilit\u00e9 process (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivit\u00e9 (t/h/op.)'};
 
 function tkSetKpi(kpi,el){
   tkKpi=kpi;
   document.querySelectorAll('.tk-kpi').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
+  // Dispo process : griser R2023 et basculer sur "all" si 2023 était sélectionné
+  var btn2023=document.getElementById('tk-btn-2023');
+  var note=document.getElementById('tk-dispo-proc-note');
+  if(kpi==='dispo_process'){
+    if(btn2023){btn2023.style.opacity='.35';btn2023.style.pointerEvents='none';}
+    if(note) note.style.display='block';
+    if(tkScYr===2023){
+      tkScYr='all'; tkYr='all';
+      document.querySelectorAll('.tk-sc-yr').forEach(function(b){b.classList.remove('active');});
+      var allBtn=document.querySelector('.tk-sc-yr');
+      if(allBtn) allBtn.classList.add('active');
+    }
+  } else {
+    if(btn2023){btn2023.style.opacity='';btn2023.style.pointerEvents='';}
+    if(note) note.style.display='none';
+  }
   renderTkScatter();
 }
 
@@ -2320,7 +2352,7 @@ function renderTkCorr(){
   var tkTrend={};
   getTkMerged().forEach(function(d){
     if(!tkTrend[d.site]) tkTrend[d.site]={};
-    ['dispo','debit','heures','refus','tonnage','productivite'].forEach(function(k){
+    ['dispo','dispo_process','debit','heures','refus','tonnage','productivite'].forEach(function(k){
       if(d.annee===2023&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v23=d[k]; }
       if(d.annee===2025&&d[k]!=null) { if(!tkTrend[d.site][k]) tkTrend[d.site][k]={}; tkTrend[d.site][k].v25=d[k]; }
     });
@@ -2379,7 +2411,11 @@ function renderTkCorr(){
 }
 
 function renderTkScatter(){
-  var data=tkScFiltered();
+  // dispo_process : pas de données 2023 → on exclut 2023 et on l'indique
+  var noData2023 = (tkKpi==='dispo_process');
+  var data=tkScFiltered().filter(function(d){
+    return !noData2023 || d.annee!==2023;
+  });
   var xLbl=TK_KPI_LABELS[tkKpi]||tkKpi;
   var lp=document.getElementById('tk-kpi-lbl-pers');  if(lp) lp.textContent=xLbl;
   var lm=document.getElementById('tk-kpi-lbl-maint'); if(lm) lm.textContent=xLbl;
@@ -2509,25 +2545,29 @@ function renderTkSiteDetail(){
   if(!d.length) return;
   var yrs=d.map(function(r){return r.annee;});
 
-  // 5 KPI cards avec tendance 2023→2025
-  function setSkCard(valId,subId,trendId,vals,unit,higherIsBetter){
-    var v25=vals[vals.length-1],v23=vals[0];
+  // KPI cards avec tendance — refYr : année de référence pour le calcul d'évolution
+  function setSkCard(valId,subId,trendId,vals,unit,higherIsBetter,refYr){
+    var lastYr=yrs[yrs.length-1];
+    var refYear=refYr||yrs[0]; // par défaut première année disponible
+    var v25=vals[yrs.indexOf(lastYr)];
+    var vRef=vals[yrs.indexOf(refYear)];
     var el=document.getElementById(valId); if(el) el.textContent=v25!=null?v25.toFixed(1)+unit:'\u2014';
-    var s=document.getElementById(subId);  if(s)  s.textContent='R'+yrs[yrs.length-1];
+    var s=document.getElementById(subId);  if(s)  s.textContent='R'+lastYr;
     var t=document.getElementById(trendId); if(!t) return;
-    if(v23!=null&&v25!=null&&v23!==0){
-      var pct=(v25-v23)/Math.abs(v23)*100;
+    if(vRef!=null&&v25!=null&&vRef!==0){
+      var pct=(v25-vRef)/Math.abs(vRef)*100;
       var up=pct>=0;
       var good=(higherIsBetter&&up)||(!higherIsBetter&&!up);
-      t.textContent=(up?'\u25b2 ':'\u25bc ')+Math.abs(pct).toFixed(1)+'% vs 2023';
+      t.textContent=(up?'\u25b2 ':'\u25bc ')+Math.abs(pct).toFixed(1)+'% vs '+refYear;
       t.style.color=good?'#10b981':'#ef4444';
     } else { t.textContent=''; }
   }
-  setSkCard('tk-sk-dispo', 'tk-sk-dispo-s','tk-sk-dispo-t', d.map(function(r){return r.dispo;}),    '%',   true);
-  setSkCard('tk-sk-debit', 'tk-sk-debit-s','tk-sk-debit-t', d.map(function(r){return r.debit;}),    ' t/h',true);
-  setSkCard('tk-sk-refus', 'tk-sk-refus-s','tk-sk-refus-t', d.map(function(r){return r.refus;}),    '%',   false);
-  setSkCard('tk-sk-pers',  'tk-sk-pers-s', 'tk-sk-pers-t',  d.map(function(r){return r.personnel;}),'\u20ac',false);
-  setSkCard('tk-sk-maint', 'tk-sk-maint-s','tk-sk-maint-t', d.map(function(r){return r.maintenance;}),'\u20ac',false);
+  setSkCard('tk-sk-dispo',      'tk-sk-dispo-s',     'tk-sk-dispo-t',      d.map(function(r){return r.dispo;}),         '%', true, 2023);
+  setSkCard('tk-sk-dispo-proc', 'tk-sk-dispo-proc-s','tk-sk-dispo-proc-t', d.map(function(r){return r.dispo_process;}),  '%', true, 2024);
+  setSkCard('tk-sk-debit', 'tk-sk-debit-s','tk-sk-debit-t', d.map(function(r){return r.debit;}),      ' t/h',true,  2023);
+  setSkCard('tk-sk-refus', 'tk-sk-refus-s','tk-sk-refus-t', d.map(function(r){return r.refus;}),      '%',   false, 2023);
+  setSkCard('tk-sk-pers',  'tk-sk-pers-s', 'tk-sk-pers-t',  d.map(function(r){return r.personnel;}),  '\u20ac',false,2023);
+  setSkCard('tk-sk-maint', 'tk-sk-maint-s','tk-sk-maint-t', d.map(function(r){return r.maintenance;}),'\u20ac',false,2023);
 
   // CA + contexte
   renderTkCaChart();
@@ -2536,10 +2576,10 @@ function renderTkSiteDetail(){
   renderTkSiteCharts();
 }
 
-var tkKpiLines={debit:false,dispo:false,refus:false,heures:false,tonnage:false};
-var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',refus:'#ef4444',heures:'#8b5cf6',tonnage:'#6366f1'};
-var TK_KLINE_LBL={debit:'D\u00e9bit (t/h)',dispo:'Dispo (%)',refus:'Refus (%)',heures:'Heures (h)',tonnage:'Tonnage entrant (t)'};
-var TK_KLINE_UNIT={debit:'t/h',dispo:'%',refus:'%',heures:'h',tonnage:'t'};
+var tkKpiLines={debit:false,dispo:false,dispo_process:false,refus:false,heures:false,tonnage:false};
+var TK_KLINE_COL={debit:'#0082b3',dispo:'#059669',dispo_process:'#0ea5e9',refus:'#ef4444',heures:'#8b5cf6',tonnage:'#6366f1'};
+var TK_KLINE_LBL={debit:'D\u00e9bit (t/h)',dispo:'Dispo globale (%)',dispo_process:'Dispo process (%)',refus:'Refus (%)',heures:'Heures (h)',tonnage:'Tonnage entrant (t)'};
+var TK_KLINE_UNIT={debit:'t/h',dispo:'%',dispo_process:'%',refus:'%',heures:'h',tonnage:'t'};
 
 function tkToggleKpiLine(key,el){
   var wasActive=tkKpiLines[key];
@@ -2632,7 +2672,8 @@ function renderTkTable(){
     var dr=yrRef?m.find(function(r){return r.site===s&&r.annee===yrRef;})||{}:{};
     return{site:s,
       tonnage:dc.tonnage??null,
-      dispo:dc.dispo??null,   dispoR:dr.dispo??null,
+      dispo:dc.dispo??null,          dispoR:dr.dispo??null,
+      dispo_process:dc.dispo_process??null, dispo_processR:dr.dispo_process??null,
       debit:dc.debit??null,   debitR:dr.debit??null,
       refus:dc.refus??null,   refusR:dr.refus??null,
       pers:dc.personnel??null, persR:dr.personnel??null,
@@ -2706,7 +2747,8 @@ function renderTkTable(){
   var h=evoNote+'<div class="hm-wrap"><table class="hm-table" style="font-size:.82rem;border-collapse:collapse;width:100%"><thead><tr style="background:#f8fafc">';
   h+=th('site','Site');
   h+=th('tonnage','Tonnage'+suffix);
-  h+=th('dispo','Dispo'+suffix);
+  h+=th('dispo','Dispo globale'+suffix);
+  h+=th('dispo_process','Dispo process'+suffix);
   h+=th('debit','D\u00e9bit'+suffix);
   h+=th('refus','Refus'+suffix);
   h+=th('pers','Personnel \u20ac/t');
@@ -2722,6 +2764,7 @@ function renderTkTable(){
     h+='<td style="font-weight:600;padding:7px 12px;white-space:nowrap">'+r.site+'</td>';
     h+='<td style="text-align:center;padding:7px 10px;color:#475569">'+(r.tonnage!=null?Math.round(r.tonnage).toLocaleString('fr-FR')+' t':'—')+'</td>';
     h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.dispo,'dispo',true)+';font-weight:'+heatW(r.dispo,'dispo',true)+'">'+(r.dispo!=null?r.dispo.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'dispo')+evo(r.dispo,r.dispoR,true)+'</td>';
+    h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.dispo_process,'dispo',true)+';font-weight:'+heatW(r.dispo_process,'dispo',true)+'">'+(r.dispo_process!=null?r.dispo_process.toFixed(1)+'%':'—')+'</span>'+evo(r.dispo_process,r.dispo_processR,true)+'</td>';
     h+='<td style="text-align:center;padding:7px 10px">'+(r.debit!=null?r.debit.toFixed(1)+' t/h':'—')+evo(r.debit,r.debitR,true)+'</td>';
     h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.refus,'refus',false)+';font-weight:'+heatW(r.refus,'refus',false)+'">'+(r.refus!=null?r.refus.toFixed(1)+'%':'—')+'</span>'+rb(r.site,'refus')+evo(r.refus,r.refusR,false)+'</td>';
     h+='<td style="text-align:center;padding:7px 10px"><span style="color:'+heatCol(r.pers,'pers',false)+';font-weight:'+heatW(r.pers,'pers',false)+'">'+(r.pers!=null?r.pers.toFixed(1)+'\u20ac':'—')+'</span>'+rb(r.site,'pers')+evo(r.pers,r.persR,false)+'</td>';
