@@ -116,6 +116,8 @@ header h1{font-size:1.3rem;font-weight:700}
 .btn-pill:hover{background:#e0f6ff}
 .btn-pill.active{background:#00a3e0;color:#fff}
 .btn-pill.budget{border-color:#f59e0b;color:#d97706}.btn-pill.budget.active{background:#f59e0b;color:#fff;border-color:#f59e0b}
+.ov-toggle-btn{font-size:.75rem;padding:3px 12px;border:1px solid #003a63;border-radius:12px;background:#fff;color:#003a63;cursor:pointer;transition:all .15s}
+.ov-toggle-btn.ov-active{background:#003a63;color:#fff}
 select.sel{padding:5px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:.85rem;background:#fff;color:#333;cursor:pointer;outline:none}
 select.sel:focus{border-color:#00a3e0}
 .spacer{flex:1}
@@ -335,8 +337,8 @@ select.sel:focus{border-color:#00a3e0}
 <div class="tabs">
   <div class="tab active"  onclick="showTab('home',this)">&#127968; Accueil</div>
   <div class="tab"         onclick="showTab('ov',this)">Vue d&#8217;ensemble</div>
+  <div class="tab"         onclick="showTab('et',this)">Vue d&rsquo;ensemble &euro;/t</div>
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
-  <div class="tab"         onclick="showTab('et',this)">Vue &euro;/t</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
   <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
   <div class="tab"         onclick="showTab('q1',this)">Suivi Q1 2026</div>
@@ -391,11 +393,27 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card-title">Classement EBITDA par site (derni&egrave;re p&eacute;riode s&eacute;lectionn&eacute;e)</div>
     <div id="rank-wrap"></div>
   </div>
-  <div class="row2">
-    <div class="card full"><div class="card-title">Chiffre d&#8217;Affaires par site</div><div class="ch tall"><canvas id="c-ca"></canvas></div></div>
+  <!-- Ligne 1 : CA | Marge brute -->
+  <div class="row2" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span id="ov-title-CA">Chiffre d&#8217;affaires par site</span><span style="display:flex;gap:3px"><button id="ov-ca-met-CA" onclick="setOvCAMetric('CA')" class="ov-toggle-btn ov-active" style="font-size:.7rem;padding:2px 8px">CA</button><button id="ov-ca-met-PNE" onclick="setOvCAMetric('PNE')" class="ov-toggle-btn" style="font-size:.7rem;padding:2px 8px">PNE</button></span></span><span style="display:flex;gap:3px"><button id="ov-btn-grouped-CA" onclick="setOvView('CA','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="ov-btn-cumul-CA" onclick="setOvView('CA','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-ov-CA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="ov-title-MB">Marge brute par site</span><span style="display:flex;gap:4px"><button id="ov-btn-grouped-MB" onclick="setOvView('MB','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="ov-btn-cumul-MB" onclick="setOvView('MB','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-ov-MB"></canvas></div>
+    </div>
   </div>
-  <div class="row2">
-    <div class="card full"><div class="card-title" id="eb-chart-title">EBITDA par site</div><div class="ch" id="eb-chart-wrap"><canvas id="c-eb"></canvas></div></div>
+  <!-- Ligne 2 : EBITDA | EBIT -->
+  <div class="row2" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="ov-title-EBITDA">EBITDA par site</span><span style="display:flex;gap:4px"><button id="ov-btn-grouped-EBITDA" onclick="setOvView('EBITDA','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="ov-btn-cumul-EBITDA" onclick="setOvView('EBITDA','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-ov-EBITDA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="ov-title-EBIT">EBIT par site</span><span style="display:flex;gap:4px"><button id="ov-btn-grouped-EBIT" onclick="setOvView('EBIT','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="ov-btn-cumul-EBIT" onclick="setOvView('EBIT','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-ov-EBIT"></canvas></div>
+    </div>
   </div>
   <div class="row2">
     <div class="card full"><div class="card-title">&Eacute;volution de la marge EBITDA % par site &#8212; R&eacute;el uniquement (R2023 &rarr; R2025)</div><div class="ch tall"><canvas id="c-marg"></canvas></div></div>
@@ -416,32 +434,53 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div id="dt-compare" class="dt-exec"></div>
   <div id="dt-exec" class="dt-exec" style="display:none;margin:0 28px 0"></div>
+  <!-- Ligne 1 : Évolution M€ | Évolution €/t -->
   <div class="row2" id="dt-row-evol" style="margin-top:16px">
     <div class="card"><div class="card-title">&Eacute;volution CA / Marge / EBITDA / EBIT</div><div class="ch"><canvas id="c-evol"></canvas></div></div>
+    <div class="card"><div class="card-title">&Eacute;volution &euro;/t &mdash; CA / Marge brute / EBITDA / EBIT</div><div class="ch"><canvas id="c-evol-et"></canvas></div></div>
+  </div>
+  <!-- Ligne 2 : Cascade P&L pleine largeur avec toggle M€/€/t -->
+  <div class="row2" id="dt-row-wf" style="margin-top:0">
+    <div class="card full">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:10px"><span>Cascade P&amp;L (Waterfall)</span>
+          <select class="sel" id="wf-year" onchange="renderWaterfall()" style="font-size:.8rem">
+            <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option><option value="2026">B2026</option>
+          </select>
+        </span>
+        <span style="display:flex;gap:3px"><button id="wf-btn-me" onclick="setWfUnit('ME')" class="ov-toggle-btn ov-active">M&euro;</button><button id="wf-btn-et" onclick="setWfUnit('ET')" class="ov-toggle-btn">&euro;/t</button></span>
+      </div>
+      <div class="ch tall"><canvas id="c-wf"></canvas></div>
+    </div>
+  </div>
+  <!-- Ligne 3 : Donut charges | Charges €/t 2023/2024/2025 -->
+  <div class="row2" id="dt-row-charges" style="margin-top:0">
     <div class="card" id="dt-card-donut"><div class="card-title">R&eacute;partition des charges internes
       <select class="sel" id="donut-year" onchange="renderDonut()" style="margin-left:10px;font-size:.8rem">
         <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option>
       </select>
     </div><div class="ch"><canvas id="c-donut"></canvas></div></div>
+    <div class="card"><div class="card-title">Charges internes &euro;/t &mdash; R2023 / R2024 / R2025</div><div class="ch tall"><canvas id="c-dt-charges-et"></canvas></div></div>
   </div>
+  <!-- Ligne 4 : Positionnement vs parc | Résumé évolution vs parc -->
   <div class="row2" id="dt-row-bench" style="margin-top:0">
-    <div class="card"><div class="card-title">Positionnement vs parc &#8212; EBITDA &euro;/t
-      <select class="sel" id="bench-year" onchange="renderBench()" style="margin-left:10px;font-size:.8rem">
+    <div class="card"><div class="card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span id="bench-title">Positionnement vs parc</span>
+      <select class="sel" id="bench-metric" onchange="renderBench()" style="font-size:.8rem">
+        <option value="EBITDA">EBITDA &euro;/t</option>
+        <option value="CA">CA &euro;/t</option>
+        <option value="Marge_Brute_Cash">Marge brute &euro;/t</option>
+        <option value="PNE">PNE &euro;/t</option>
+        <option value="Personnel">Personnel &euro;/t</option>
+        <option value="Charges">Charges internes &euro;/t</option>
+      </select>
+      <select class="sel" id="bench-year" onchange="renderBench()" style="font-size:.8rem">
         <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option><option value="2026">B2026</option>
       </select>
     </div><div class="ch"><canvas id="c-bench"></canvas></div></div>
     <div class="card"><div class="card-title">R&eacute;sum&eacute; d&#8217;&eacute;volution vs parc</div><div id="bench-evol-wrap" style="overflow-y:auto;max-height:290px"></div></div>
   </div>
-  <div class="row2" id="dt-row-wf">
-    <div class="card full">
-      <div class="card-title">Cascade P&amp;L (Waterfall)
-        <select class="sel" id="wf-year" onchange="renderWaterfall()" style="margin-left:10px;font-size:.8rem">
-          <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option><option value="2026">B2026</option>
-        </select>
-      </div>
-      <div class="ch tall"><canvas id="c-wf"></canvas></div>
-    </div>
-  </div>
+  <!-- Tableau P&L détaillé -->
   <div class="card" id="dt-card-pl" style="margin-bottom:0">
     <div class="card-title" id="dt-pl-title">Tableau P&amp;L d&eacute;taill&eacute;</div>
     <div id="pl-wrap"></div>
@@ -463,11 +502,20 @@ select.sel:focus{border-color:#00a3e0}
     <div class="spacer"></div>
     <button class="btn-print" onclick="window.print()" title="Imprime l'onglet actif en PDF A4 paysage">&#128438; Exporter PDF</button>
   </div>
-  <div class="row2" style="margin-top:18px">
-    <div class="card"><div class="card-title">CA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-ca"></canvas></div></div>
-    <div class="card"><div class="card-title">EBITDA &euro;/t par site</div><div class="ch tall"><canvas id="c-et-eb"></canvas></div></div>
+  <div id="et-exec-summary" class="exec-summary"></div>
+  <!-- Ligne 1 : CA €/t | Marge brute €/t -->
+  <div class="row2" style="margin-top:18px;margin-bottom:14px">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span id="et-title-CA">CA &euro;/t par site</span><span style="display:flex;gap:3px"><button id="et-ca-met-CA" onclick="setEtCAMetric('CA')" class="ov-toggle-btn ov-active" style="font-size:.7rem;padding:2px 8px">CA</button><button id="et-ca-met-PNE" onclick="setEtCAMetric('PNE')" class="ov-toggle-btn" style="font-size:.7rem;padding:2px 8px">PNE</button></span></span><span style="display:flex;gap:3px"><button id="et-btn-grouped-CA" onclick="setEtView('CA','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="et-btn-cumul-CA" onclick="setEtView('CA','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-et2-CA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="et-title-MB">Marge brute &euro;/t par site</span><span style="display:flex;gap:4px"><button id="et-btn-grouped-MB" onclick="setEtView('MB','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="et-btn-cumul-MB" onclick="setEtView('MB','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-et2-MB"></canvas></div>
+    </div>
   </div>
-  <div class="row2">
+  <!-- Ligne 2 : Charges empilées (pleine largeur) -->
+  <div class="row2" style="margin-bottom:14px">
     <div class="card full">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div class="card-title" id="charges-et-title" style="margin:0">Charges internes &euro;/t par site</div>
@@ -482,6 +530,17 @@ select.sel:focus{border-color:#00a3e0}
         </div>
       </div>
       <div class="ch tall"><canvas id="c-charges-et"></canvas></div>
+    </div>
+  </div>
+  <!-- Ligne 3 : EBITDA €/t | EBIT €/t -->
+  <div class="row2" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="et-title-EBITDA">EBITDA &euro;/t par site</span><span style="display:flex;gap:4px"><button id="et-btn-grouped-EBITDA" onclick="setEtView('EBITDA','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="et-btn-cumul-EBITDA" onclick="setEtView('EBITDA','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-et2-EBITDA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between"><span id="et-title-EBIT">EBIT &euro;/t par site</span><span style="display:flex;gap:4px"><button id="et-btn-grouped-EBIT" onclick="setEtView('EBIT','grouped')" class="ov-toggle-btn">Par ann&#233;e</button><button id="et-btn-cumul-EBIT" onclick="setEtView('EBIT','cumul')" class="ov-toggle-btn ov-active">Cumul&#233;</button></span></div>
+      <div class="ch tall"><canvas id="c-et2-EBIT"></canvas></div>
     </div>
   </div>
   <div class="row2">
@@ -940,7 +999,16 @@ function renderExecSummary(){
   el.style.display='block';
 }
 
-let ovYears=new Set(['all']), cCA=null, cEB=null, cMarg=null;
+let ovYears=new Set(['all']), cEB=null, cMarg=null;
+var OV_METRICS=[
+  {id:'CA',     field:'CA',              label:'Chiffre d\u2019affaires par site'},
+  {id:'MB',     field:'Marge_Brute_Cash',label:'Marge brute par site'},
+  {id:'EBITDA', field:'EBITDA',          label:'EBITDA par site'},
+  {id:'EBIT',   field:'EBIT_Courant',    label:'EBIT par site'},
+];
+var ovView={CA:'cumul',MB:'cumul',EBITDA:'cumul',EBIT:'cumul'};
+var cOvCharts={CA:null,MB:null,EBITDA:null,EBIT:null};
+var ovCAMetric='CA'; // 'CA' ou 'PNE' pour la carte CA de la vue d'ensemble
 let ovSites=new Set(['all']);
 function toggleOvSite(s,btn){
   const allBtn=document.querySelector('#ov-site-pills .btn-pill');
@@ -980,7 +1048,66 @@ function toggleOvYear(y,btn){
 
 // ══════════════════════════════════════════════════════
 // ONGLET VUE D'ENSEMBLE — renderOv()
-// Graphiques comparatifs multi-sites : CA, EBITDA, taux EBITDA, tonnes.
+// Graphiques comparatifs multi-sites : CA, PNE, Marge brute, EBITDA, EBIT.
+function renderOvMetricChart(metId, field, canvasId, sitesVisible, activeYears){
+  var mode=ovView[metId]||'cumul';
+  var btnG=document.getElementById('ov-btn-grouped-'+metId);
+  var btnC=document.getElementById('ov-btn-cumul-'+metId);
+  if(btnG&&btnC){
+    if(mode==='cumul'){
+      btnG.classList.remove('ov-active'); btnC.classList.add('ov-active');
+    } else {
+      btnG.classList.add('ov-active'); btnC.classList.remove('ov-active');
+    }
+  }
+  // Pour la carte CA : peut afficher CA ou PNE selon ovCAMetric
+  if(metId==='CA'){
+    field=ovCAMetric==='PNE'?'PNE':'CA';
+    var btnCA=document.getElementById('ov-ca-met-CA'), btnPNE=document.getElementById('ov-ca-met-PNE');
+    if(btnCA&&btnPNE){if(ovCAMetric==='PNE'){btnCA.classList.remove('ov-active');btnPNE.classList.add('ov-active');}else{btnCA.classList.add('ov-active');btnPNE.classList.remove('ov-active');}}
+  }
+  var titleEl=document.getElementById('ov-title-'+metId);
+  var metLabel=metId==='CA'?(ovCAMetric==='PNE'?'PNE par site':'Chiffre d\u2019affaires par site'):OV_METRICS.find(function(m){return m.id===metId;}).label;
+  if(mode==='grouped'){
+    if(titleEl) titleEl.textContent=metLabel;
+    var ds=activeYears.map(function(yr,i){return{
+      label:yr2lbl(yr),
+      data:sitesVisible.map(function(s){var r=DATA.find(function(d){return d.Site===s&&String(d.Annee)===yr;});return r&&r[field]!=null?(r[field]/1e6):0;}),
+      backgroundColor:C3(i),borderRadius:4
+    };});
+    cOvCharts[metId]=mkChart(canvasId,{type:'bar',data:{labels:sitesVisible,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
+  } else {
+    var realYrs=activeYears.filter(function(yr){return yr!=='2026';});
+    var note=realYrs.map(yr2lbl).join(' + ');
+    if(titleEl) titleEl.textContent=metLabel+' \u2014 '+note;
+    var cumData=sitesVisible.map(function(s){
+      return realYrs.reduce(function(sum,yr){var r=DATA.find(function(d){return d.Site===s&&String(d.Annee)===yr;});return sum+(r&&r[field]!=null?(r[field]/1e6):0);},0);
+    });
+    var sortedCum=sitesVisible.map(function(s,i){return{s:s,v:cumData[i]};}).sort(function(a,b){return a.v-b.v;});
+    var bgColors=sortedCum.map(function(d){return d.v>=0?'rgba(16,185,129,.65)':'rgba(239,68,68,.65)';});
+    var bdColors=sortedCum.map(function(d){return d.v>=0?'#10b981':'#ef4444';});
+    cOvCharts[metId]=mkChart(canvasId,{type:'bar',data:{labels:sortedCum.map(function(d){return d.s;}),datasets:[{data:sortedCum.map(function(d){return d.v;}),backgroundColor:bgColors,borderColor:bdColors,borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,interaction:{mode:'index',axis:'y',intersect:true},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(items){return items[0].label;},label:function(c){return ' '+c.parsed.x.toFixed(2)+' M\u20ac';}}}},scales:{x:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  }
+}
+
+function setOvView(metId, mode){
+  ovView[metId]=mode;
+  var isAll=ovSites.has('all');
+  var siteArr=isAll?SITES:[...ovSites];
+  var activeYrs=ovYears.has('all')?REAL_YEARS:[...ovYears];
+  var allYrs=ovYears.has('all')?YEARS:activeYrs;
+  renderOvMetricChart(metId, OV_METRICS.find(function(m){return m.id===metId;}).field, 'c-ov-'+metId, siteArr, allYrs);
+}
+
+function setOvCAMetric(met){
+  ovCAMetric=met;
+  var isAll=ovSites.has('all');
+  var siteArr=isAll?SITES:[...ovSites];
+  var activeYrs=ovYears.has('all')?REAL_YEARS:[...ovYears];
+  var allYrs=ovYears.has('all')?YEARS:activeYrs;
+  renderOvMetricChart('CA','CA','c-ov-CA',siteArr,allYrs);
+}
+
 // Filtres : années (multi-sélection) + sites (multi-sélection).
 // Appelle aussi renderExecSummary() pour le résumé KPIs en haut de page.
 // ══════════════════════════════════════════════════════
@@ -1085,22 +1212,11 @@ function renderOv(){
   }
 
   const sitesVisible=siteArr;
+  const allYrs=ovYears.has('all')?YEARS:activeYrs;
 
-  const activeYears=ovYears.has('all')?YEARS:activeYrs;
-  const ds=activeYears.map((yr,i)=>({
-    label:yr2lbl(yr),
-    data:sitesVisible.map(s=>{const r=DATA.find(d=>d.Site===s&&String(d.Annee)===yr);return r?(r.CA/1e6):0;}),
-    backgroundColor:C3(i),borderRadius:4
-  }));
-  cCA=mkChart('c-ca',{type:'bar',data:{labels:sitesVisible,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac'}}},scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
-
-  // ── EBITDA chart ──
-  const ebNote = ovYears.has('all') ? REAL_YEARS.map(yr2lbl).join(' + ') : activeYrs.map(yr2lbl).join(' + ');
-  document.getElementById('eb-chart-title').textContent = 'EBITDA par site \u2014 ' + ebNote;
-  const ebData=sitesVisible.map(s=>rows.filter(d=>d.Site===s).reduce((a,d)=>a+(d.EBITDA||0),0));
-  const sorted=sitesVisible.map((s,i)=>({s,v:ebData[i]})).sort((a,b)=>a.v-b.v);
-  const isBgt26=hasBgt&&activeYrs.length===1;
-  cEB=mkChart('c-eb',{type:'bar',data:{labels:sorted.map(d=>d.s),datasets:[{label:'EBITDA',data:sorted.map(d=>d.v/1e6),backgroundColor:sorted.map(d=>d.v>=0?(isBgt26?'rgba(245,158,11,.55)':'rgba(16,185,129,.5)'):'rgba(239,68,68,.5)'),borderColor:sorted.map(d=>d.v>=0?(isBgt26?'#f59e0b':'#10b981'):'#ef4444'),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' EBITDA: '+c.parsed.x.toFixed(2)+' M\u20ac'}}},scales:{x:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  OV_METRICS.forEach(function(m){
+    renderOvMetricChart(m.id, m.field, 'c-ov-'+m.id, sitesVisible, allYrs);
+  });
 
   // Evolution marge EBITDA % par site
   const margSites=siteArr;
@@ -1133,7 +1249,8 @@ function renderOv(){
 // ══════════════════════════════════════════════════════
 // ONGLET 2 — DETAIL
 // ══════════════════════════════════════════════════════
-let cEvol=null, cDonut=null, cWF=null, cBench=null;
+let cEvol=null, cEvolEt=null, cDonut=null, cWF=null, cBench=null, cDtChargesEt=null;
+var dtWfUnit='ME'; // 'ME' ou 'ET' pour le toggle M€/€/t du waterfall
 let cmpYear='2025';
 
 function setCmpYear(yr){
@@ -1162,7 +1279,7 @@ function renderDt(){
   if(cmpDiv) cmpDiv.style.display=isCmp?'block':'none';
   document.getElementById('dt-exec').style.display=isCmp?'none':'none'; // handled by renderSiteExec
   // En mode comparaison : uniquement le bloc compare + graphique évolution
-  ['dt-card-donut','dt-row-wf','dt-row-bench','dt-card-pl'].forEach(id=>{
+  ['dt-row-wf','dt-row-charges','dt-row-bench','dt-card-pl'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display=isCmp?'none':'';
   });
@@ -1171,7 +1288,9 @@ function renderDt(){
   } else {
     renderSiteExec(site,rows);
     renderEvol(rows);
+    renderEvolEt(rows);
     renderDonut();
+    renderDtChargesEt(site);
     renderBench();
     renderWaterfall();
     renderPL(rows);
@@ -1302,15 +1421,33 @@ function renderSiteExec(site,rows){
 function renderBench(){
   const site=document.getElementById('dt-site').value;
   const yr=document.getElementById('bench-year').value;
+  const metricKey=document.getElementById('bench-metric').value;
   if(!site) return;
 
-  // EBITDA eur/t pour tous les sites pour l'annee selectionnee
-  const getEurt=(s)=>{
-    const row=DATA.find(d=>d.Site===s&&String(d.Annee)===String(yr));
+  // Labels affichage
+  const BENCH_LABELS={EBITDA:'EBITDA \u20ac/t',CA:'CA \u20ac/t',Marge_Brute_Cash:'Marge brute \u20ac/t',PNE:'PNE \u20ac/t',Personnel:'Personnel \u20ac/t',Charges:'Charges internes \u20ac/t'};
+  const metLabel=BENCH_LABELS[metricKey]||metricKey+' \u20ac/t';
+  const titleEl=document.getElementById('bench-title');
+  if(titleEl) titleEl.textContent='Positionnement vs parc \u2014 '+metLabel;
+
+  // Fonction de calcul de la valeur pour un site et une année
+  function getBenchVal(s,y){
+    const row=DATA.find(d=>d.Site===s&&String(d.Annee)===String(y));
     if(!row||!row.Tonnes_entrantes||Number(row.Tonnes_entrantes)===0) return null;
-    return Number(row.EBITDA)/Number(row.Tonnes_entrantes);
-  };
-  const pts=SITES.map(s=>({s,v:getEurt(s)})).filter(d=>d.v!==null).sort((a,b)=>b.v-a.v);
+    const tn=Number(row.Tonnes_entrantes);
+    if(metricKey==='Charges'){
+      // Charges internes = PNE - Marge_Brute_Cash (valeur absolue)
+      const v=row.PNE!=null&&row.Marge_Brute_Cash!=null?Number(row.PNE)-Number(row.Marge_Brute_Cash):null;
+      return v!==null?Math.abs(v)/tn:null;
+    }
+    const v=row[metricKey]!=null?Number(row[metricKey]):null;
+    return v!==null?v/tn:null;
+  }
+
+  // Tri : décroissant pour tout sauf Charges (croissant = mieux payé moins)
+  const isLowGood=metricKey==='Charges';
+  const pts=SITES.map(s=>({s,v:getBenchVal(s,yr)})).filter(d=>d.v!==null)
+    .sort((a,b)=>isLowGood?a.v-b.v:b.v-a.v);
 
   const labels=pts.map(d=>d.s);
   const values=pts.map(d=>d.v);
@@ -1322,33 +1459,60 @@ function renderBench(){
     data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:borders,borderWidth:2,borderRadius:4}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+(c.parsed.x||0).toFixed(1)+' \u20ac/t'}}},
-      scales:{x:{title:{display:true,text:'EBITDA \u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}
+      scales:{x:{title:{display:true,text:metLabel},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}
     }
   });
 
   // Tableau evolution vs parc
   const rank=pts.findIndex(d=>d.s===site)+1;
-  let h='<table class="rank-table" style="font-size:.78rem"><thead><tr><th style="text-align:left">Ann\u00e9e</th><th>EBITDA \u20ac/t</th><th>Moy. parc</th><th>\u00c9cart</th><th>Rang</th></tr></thead><tbody>';
+  let h='<table class="rank-table" style="font-size:.78rem"><thead><tr><th style="text-align:left">Ann\u00e9e</th><th>'+metLabel+'</th><th>Moy. parc</th><th>\u00c9cart</th><th>Rang</th></tr></thead><tbody>';
   YEARS.forEach((y,yi)=>{
-    const siteVal=getEurt_yr(site,y);
-    const allVals=SITES.map(s=>getEurt_yr(s,y)).filter(v=>v!==null);
+    const siteVal=getBenchVal(site,y);
+    const allVals=SITES.map(s=>getBenchVal(s,y)).filter(v=>v!==null);
     const avg=allVals.length?allVals.reduce((a,b)=>a+b,0)/allVals.length:null;
     const ecart=siteVal!==null&&avg!==null?siteVal-avg:null;
-    const rnk=allVals.length?[...allVals].sort((a,b)=>b-a).indexOf(siteVal)+1:null;
+    const sortedVals=isLowGood?[...allVals].sort((a,b)=>a-b):[...allVals].sort((a,b)=>b-a);
+    const rnk=allVals.length?sortedVals.indexOf(siteVal)+1:null;
     const isBgt=y==='2026';
     const rowStyle=isBgt?'background:rgba(245,158,11,.08);font-style:italic;color:#92400e':'';
     const yearLabel=isBgt?'<b style="color:#d97706">B2026</b> <span style="background:#fde68a;color:#92400e;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;vertical-align:middle;margin-left:3px">BUDGET</span>':'<b>'+y+'</b>';
     let trend='';
-    if(yi>0&&!isBgt){const prev=getEurt_yr(site,YEARS[yi-1]);if(prev!==null&&siteVal!==null)trend=siteVal>prev?'\u2191':siteVal<prev?'\u2193':'\u2192';}
+    if(yi>0&&!isBgt){const prev=getBenchVal(site,YEARS[yi-1]);if(prev!==null&&siteVal!==null){const better=isLowGood?siteVal<prev:siteVal>prev;trend=better?'\u2191':siteVal===prev?'\u2192':'\u2193';}}
+    const goodEcart=isLowGood?ecart!==null&&ecart<0:ecart!==null&&ecart>=0;
     h+='<tr style="'+rowStyle+'"><td>'+yearLabel+' '+trend+'</td>';
-    h+='<td class="'+(siteVal>=0?'pos':'neg')+'">'+(siteVal!==null?siteVal.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
+    h+='<td class="'+(siteVal===null?'':(isLowGood?(siteVal<=0?'pos':'neg'):(siteVal>=0?'pos':'neg')))+'">'+(siteVal!==null?siteVal.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
     h+='<td>'+(avg!==null&&!isBgt?avg.toFixed(1)+' \u20ac/t':'\u2014')+'</td>';
-    h+='<td>'+(ecart!==null&&!isBgt?(ecart>=0?'<span class="pos">+':' <span class="neg">')+ecart.toFixed(1)+' \u20ac/t</span>':'\u2014')+'</td>';
+    h+='<td>'+(ecart!==null&&!isBgt?(goodEcart?'<span class="pos">+':' <span class="neg">')+ecart.toFixed(1)+' \u20ac/t</span>':'\u2014')+'</td>';
     h+='<td>'+(rnk&&!isBgt?rnk+'/'+allVals.length:'\u2014')+'</td></tr>';
   });
   h+='</tbody></table>';
   h+='<div style="margin-top:10px;font-size:.78rem;color:#555;padding:0 4px">Rang '+yr+' : <b>'+rank+'/'+pts.length+'</b> sites</div>';
   document.getElementById('bench-evol-wrap').innerHTML=h;
+}
+
+function renderEvolEt(rows){
+  const realRows=rows.filter(function(d){return String(d.Annee)!=='2026';});
+  const labs=realRows.map(function(d){return yr2lbl(String(d.Annee));});
+  const mk=function(label,key,color){return{label:label,data:realRows.map(function(d){var tn=Number(d.Tonnes_entrantes)||0;return tn>0?(d[key]||0)/tn:null;}),borderColor:color,backgroundColor:color+'22',tension:.3,fill:false,pointRadius:5,spanGaps:true};};
+  cEvolEt=mkChart('c-evol-et',{type:'line',data:{labels:labs,datasets:[mk('CA \u20ac/t','CA',COLORS[0]),mk('Marge brute \u20ac/t','Marge_Brute_Cash',COLORS[3]),mk('EBITDA \u20ac/t','EBITDA',COLORS[2]),mk('EBIT \u20ac/t','EBIT_Courant',COLORS[4])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+' \u20ac/t':'\u2014');}}}},scales:{y:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
+}
+
+function renderDtChargesEt(site){
+  // X axis = années, datasets = postes de charge (barres empilées)
+  var yrs=['R2023','R2024','R2025'];
+  var chargeMetrics=[
+    {m:"  VE000051 - Co\u00fbts de personnel",                                          l:'Personnel',       color:'#0f3460'},
+    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",       l:'\u00c9nergie',          color:'#e94560'},
+    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",               l:'Maint. courante', color:'#533483'},
+    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",     l:'Maint. oblig.',   color:'#16c79a'},
+    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",                 l:'Traitement s.-p.',color:'#f4a261'},
+    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                                l:'Autres co\u00fbts',    color:'#2196f3'},
+  ];
+  var datasets=chargeMetrics.map(function(cm){
+    return{label:cm.l,backgroundColor:cm.color+'cc',borderColor:cm.color,borderWidth:1,borderRadius:2,
+      data:yrs.map(function(yr){var v=getVal(site,yr,cm.m);return v!==null?Math.abs(v):0;})};
+  });
+  cDtChargesEt=mkChart('c-dt-charges-et',{type:'bar',data:{labels:yrs,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10},usePointStyle:true}},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';}}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
 }
 
 function getEurt_yr(site,yr){
@@ -1376,12 +1540,23 @@ function renderDonut(){
   cDonut=mkChart('c-donut',{type:'doughnut',data:{labels:labs,datasets:[{data:vals,backgroundColor:COLORS.slice(0,5),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}},tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.parsed)+' \u20ac'}}}}});
 }
 
+function setWfUnit(unit){
+  dtWfUnit=unit;
+  var btnME=document.getElementById('wf-btn-me'), btnET=document.getElementById('wf-btn-et');
+  if(btnME&&btnET){if(unit==='ET'){btnME.classList.remove('ov-active');btnET.classList.add('ov-active');}else{btnME.classList.add('ov-active');btnET.classList.remove('ov-active');}}
+  renderWaterfall();
+}
+
 function renderWaterfall(){
   const site=document.getElementById('dt-site').value;
   const yr=document.getElementById('wf-year').value;
   if(!site) return;
   const row=DATA.find(d=>d.Site===site&&String(d.Annee)===yr);
   if(!row){const _cw=Chart.getChart(document.getElementById('c-wf'));if(_cw)_cw.destroy();cWF=null;return;}
+
+  const isET=dtWfUnit==='ET'&&Number(row.Tonnes_entrantes)>0;
+  const divisor=isET?Number(row.Tonnes_entrantes):1e6;
+  const unitLabel=isET?'\u20ac/t':'M\u20ac';
 
   // Build waterfall steps
   const steps=[
@@ -1404,20 +1579,21 @@ function renderWaterfall(){
   let running=0;
   const barData=[], colors=[], stepOrig=[];
   steps.forEach(s=>{
-    const vm=s.v/1e6;
+    const vm=s.v/divisor;
     stepOrig.push(vm);
     if(s.type==='total'||s.type==='subtotal'){
       barData.push([0,vm]);
-      colors.push('rgba(15,52,96,.82)');   // bleu pour CA, PNE, MB, EBITDA, EBIT
+      colors.push('rgba(15,52,96,.82)');
       running=vm;
     } else {
       const start=running, end=running+vm;
       barData.push([Math.min(start,end),Math.max(start,end)]);
-      colors.push('rgba(239,68,68,.72)');  // rouge pour tous les postes de coût
+      colors.push('rgba(239,68,68,.72)');
       running=end;
     }
   });
 
+  const decimals=isET?1:2;
   cWF=mkChart('c-wf',{
     type:'bar',
     data:{labels:steps.map(s=>s.l),datasets:[{data:barData,backgroundColor:colors,borderColor:colors.map(c=>c.replace('.82','1').replace('.72','1')),borderWidth:1,borderRadius:3}]},
@@ -1425,10 +1601,10 @@ function renderWaterfall(){
       plugins:{legend:{display:false},
         tooltip:{callbacks:{
           title:c=>steps[c[0].dataIndex].l,
-          label:c=>{const v=stepOrig[c.dataIndex];const s=steps[c.dataIndex];const sign=s.type==='delta'?(v>=0?'+':''):( v>=0?'':'-');return ' '+sign+Math.abs(v).toFixed(2)+' M\u20ac'+(s.type==='delta'?' (\u0394)':' (total)');}
+          label:c=>{const v=stepOrig[c.dataIndex];const s=steps[c.dataIndex];const sign=s.type==='delta'?(v>=0?'+':''):(v>=0?'':'-');return ' '+sign+Math.abs(v).toFixed(decimals)+' '+unitLabel+(s.type==='delta'?' (\u0394)':' (total)');}
         }}
       },
-      scales:{y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}}}
+      scales:{y:{title:{display:true,text:unitLabel},grid:{color:'#f0f0f0'}}}
     }
   });
 }
@@ -1499,9 +1675,74 @@ function renderPL(rows){
 // Source données : data_synthese_eur_t.csv (format long, une ligne par métrique)
 // Accès via getVal(site, année, métrique) qui cherche dans EURT[]
 // ══════════════════════════════════════════════════════
-let etYears=new Set(['all']), etSites=new Set(['all']), cEtEB=null, cEtCA=null, cScatter=null, cChargesEt=null;
+let etYears=new Set(['all']), etSites=new Set(['all']), cScatter=null, cChargesEt=null;
 let etScatterMetric='ebitda'; // métrique axe Y du scatter : 'ebitda' | 'ca' | 'charges'
 let etChargeFilter=new Set(['all']); // charges sélectionnées dans le filtre du graphe empilé
+var etView={CA:'cumul',MB:'cumul',EBITDA:'cumul',EBIT:'cumul'};
+var cEtCharts={CA:null,MB:null,EBITDA:null,EBIT:null};
+var etCAMetric='CA'; // 'CA' ou 'PNE' pour la carte CA de la vue €/t
+
+function getEtVal(s, yr, metId){
+  var yrNum=yr.replace(/^R/,'');
+  var row=DATA.find(function(d){return d.Site===s&&String(d.Annee)===yrNum;});
+  if(!row||!row.Tonnes_entrantes||Number(row.Tonnes_entrantes)===0) return null;
+  var tn=Number(row.Tonnes_entrantes);
+  if(metId==='CA')     return getVal(s, yr, "VE000001 - Chiffre d'affaires");
+  if(metId==='PNE')    return Number(row.PNE)/tn;
+  if(metId==='MB')     return Number(row.Marge_Brute_Cash)/tn;
+  if(metId==='EBITDA') return getVal(s, yr, 'EBITDA');
+  if(metId==='EBIT')   return Number(row.EBIT_Courant)/tn;
+  return null;
+}
+
+var ET_METRIC_LABELS={CA:'CA \u20ac/t par site',PNE:'PNE \u20ac/t par site',MB:'Marge brute \u20ac/t par site',EBITDA:'EBITDA \u20ac/t par site',EBIT:'EBIT \u20ac/t par site'};
+
+function renderEtMetricChart(metId, canvasId, sites, yrs){
+  // Pour la carte CA : peut afficher CA ou PNE selon etCAMetric
+  var effectiveMetId=metId;
+  if(metId==='CA'){
+    effectiveMetId=etCAMetric;
+    var btnCA=document.getElementById('et-ca-met-CA'), btnPNE=document.getElementById('et-ca-met-PNE');
+    if(btnCA&&btnPNE){if(etCAMetric==='PNE'){btnCA.classList.remove('ov-active');btnPNE.classList.add('ov-active');}else{btnCA.classList.add('ov-active');btnPNE.classList.remove('ov-active');}}
+  }
+  var mode=etView[metId]||'cumul';
+  var btnG=document.getElementById('et-btn-grouped-'+metId);
+  var btnC=document.getElementById('et-btn-cumul-'+metId);
+  if(btnG&&btnC){if(mode==='cumul'){btnG.classList.remove('ov-active');btnC.classList.add('ov-active');}else{btnG.classList.add('ov-active');btnC.classList.remove('ov-active');}}
+  var titleEl=document.getElementById('et-title-'+metId);
+  var baseLabel=ET_METRIC_LABELS[effectiveMetId]||ET_METRIC_LABELS[metId];
+  if(mode==='grouped'){
+    if(titleEl) titleEl.textContent=baseLabel;
+    var ds=yrs.map(function(yr,i){return{label:yr,data:sites.map(function(s){return getEtVal(s,yr,effectiveMetId);}),backgroundColor:C3(i)+'bb',borderColor:C3(i),borderWidth:2,borderRadius:4};});
+    cEtCharts[metId]=mkChart(canvasId,{type:'bar',data:{labels:sites,datasets:ds},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,interaction:{mode:'index',axis:'y',intersect:true},plugins:{legend:{position:'top'},tooltip:{callbacks:{title:function(items){return items[0].label;},label:function(c){return ' '+c.dataset.label+': '+(c.parsed.x||0).toFixed(1)+' \u20ac/t';}}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  } else {
+    var note=yrs.join(' + ');
+    if(titleEl) titleEl.textContent=baseLabel+' \u2014 '+note;
+    // Moyenne des années sélectionnées pour chaque site
+    var avgData=sites.map(function(s){
+      var vals=yrs.map(function(yr){return getEtVal(s,yr,effectiveMetId);}).filter(function(v){return v!==null;});
+      return vals.length>0?vals.reduce(function(a,b){return a+b;},0)/vals.length:null;
+    });
+    var sorted=sites.map(function(s,i){return{s:s,v:avgData[i]};}).filter(function(d){return d.v!==null;}).sort(function(a,b){return a.v-b.v;});
+    var bgColors=sorted.map(function(d){return d.v>=0?'rgba(16,185,129,.65)':'rgba(239,68,68,.65)';});
+    var bdColors=sorted.map(function(d){return d.v>=0?'#10b981':'#ef4444';});
+    cEtCharts[metId]=mkChart(canvasId,{type:'bar',data:{labels:sorted.map(function(d){return d.s;}),datasets:[{data:sorted.map(function(d){return d.v;}),backgroundColor:bgColors,borderColor:bdColors,borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,interaction:{mode:'index',axis:'y',intersect:true},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(items){return items[0].label;},label:function(c){return ' '+(c.parsed.x||0).toFixed(1)+' \u20ac/t';}}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
+  }
+}
+
+function setEtCAMetric(met){
+  etCAMetric=met;
+  var yrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
+  var sites=etSites.has('all')?SITES:[...etSites];
+  renderEtMetricChart('CA','c-et2-CA',sites,yrs);
+}
+
+function setEtView(metId, mode){
+  etView[metId]=mode;
+  var yrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
+  var sites=etSites.has('all')?SITES:[...etSites];
+  renderEtMetricChart(metId, 'c-et2-'+metId, sites, yrs);
+}
 
 function toggleChargeFil(label, btn){
   var allBtn=document.querySelector('.charge-fil');
@@ -1548,16 +1789,127 @@ const getVal=(s,yr,metric)=>{
   return r&&r.Valeur_EUR_t!==''?Number(r.Valeur_EUR_t):null;
 };
 
+function renderEtExecSummary(){
+  var el=document.getElementById('et-exec-summary');
+  if(!el) return;
+  var ALL_ET_YRS=['R2023','R2024','R2025'];
+  var yrs=etYears.has('all')?ALL_ET_YRS:[...etYears];
+  var sites=etSites.has('all')?SITES:[...etSites];
+  var firstYr=yrs[0], lastYr=yrs[yrs.length-1];
+  var isMultiYr=yrs.length>1;
+  var periodLabel=isMultiYr?(firstYr+' \u2192 '+lastYr):lastYr;
+
+  // Moyenne pondérée parc (total valeur / total tonnes) pour une année
+  function wAvg(yr, field){
+    var totV=0, totT=0;
+    sites.forEach(function(s){
+      var yrNum=yr.replace(/^R/,'');
+      var row=DATA.find(function(d){return d.Site===s&&String(d.Annee)===yrNum;});
+      if(row&&Number(row.Tonnes_entrantes)>0){
+        totV+=Number(row[field])||0;
+        totT+=Number(row.Tonnes_entrantes);
+      }
+    });
+    return totT>0?totV/totT:null;
+  }
+  function wAvgCharges(yr){
+    var totV=0, totT=0;
+    sites.forEach(function(s){
+      var yrNum=yr.replace(/^R/,'');
+      var row=DATA.find(function(d){return d.Site===s&&String(d.Annee)===yrNum;});
+      if(row&&Number(row.Tonnes_entrantes)>0){
+        totV+=Math.abs((Number(row.PNE)||0)-(Number(row.Marge_Brute_Cash)||0));
+        totT+=Number(row.Tonnes_entrantes);
+      }
+    });
+    return totT>0?totV/totT:null;
+  }
+
+  function fmtEt(v){return v!=null?v.toFixed(1)+' \u20ac/t':'\u2014';}
+  function fmtEtSgn(v){return v!=null?(v>=0?'+':'')+v.toFixed(1)+' \u20ac/t':'\u2014';}
+  function evoSpan(vLast, vFirst, unit){
+    if(vLast==null||vFirst==null) return '';
+    var d=vLast-vFirst;
+    var col=d>=0?'#6ee7b7':'#fca5a5';
+    var arr=d>=0?'\u2B06':'\u2B07';
+    return '<span style="color:'+col+';font-size:.78rem;margin-left:6px">'+arr+' '+(d>=0?'+':'')+d.toFixed(1)+(unit||'')+' </span>';
+  }
+  function evoVsPrev(vLast, lastY, field, isCharges){
+    var idx=ALL_ET_YRS.indexOf(lastY);
+    if(idx<=0) return '';
+    var vPrev=isCharges?wAvgCharges(ALL_ET_YRS[idx-1]):wAvg(ALL_ET_YRS[idx-1], field);
+    if(vPrev==null||vLast==null) return '';
+    var d=vLast-vPrev;
+    var col=d>=0?'#6ee7b7':'#fca5a5';
+    var arr=d>=0?'\u2B06':'\u2B07';
+    return '<span style="color:'+col+';font-size:.78rem;margin-left:6px">'+arr+' '+(d>=0?'+':'')+d.toFixed(1)+' \u20ac/t vs '+ALL_ET_YRS[idx-1]+'</span>';
+  }
+
+  // Valeurs dernière / première année
+  var caLast=wAvg(lastYr,'CA'), caFirst=wAvg(firstYr,'CA');
+  var ebLast=wAvg(lastYr,'EBITDA'), ebFirst=wAvg(firstYr,'EBITDA');
+  var chLast=wAvgCharges(lastYr), chFirst=wAvgCharges(firstYr);
+
+  // Cellule CA €/t
+  var caCell;
+  if(isMultiYr&&caFirst!=null&&caLast!=null){
+    caCell='<div class="es-cell"><div class="es-label">CA \u20ac/t parc ('+firstYr+' \u2192 '+lastYr+')</div>'
+      +'<div class="es-val">'+fmtEt(caFirst)+' \u2192 '+fmtEt(caLast)+evoSpan(caLast,caFirst,' \u20ac/t')+'</div></div>';
+  } else {
+    caCell='<div class="es-cell"><div class="es-label">CA \u20ac/t parc ('+lastYr+')</div>'
+      +'<div class="es-val">'+fmtEt(caLast)+evoVsPrev(caLast,lastYr,'CA',false)+'</div></div>';
+  }
+
+  // Cellule EBITDA €/t
+  var ebCell;
+  var ebColor=ebLast!=null&&ebLast>=0?'#6ee7b7':'#fca5a5';
+  if(isMultiYr&&ebFirst!=null&&ebLast!=null){
+    ebCell='<div class="es-cell"><div class="es-label">EBITDA \u20ac/t parc ('+firstYr+' \u2192 '+lastYr+')</div>'
+      +'<div class="es-val" style="color:'+ebColor+'">'+fmtEtSgn(ebFirst)+' \u2192 '+fmtEtSgn(ebLast)+evoSpan(ebLast,ebFirst,' \u20ac/t')+'</div></div>';
+  } else {
+    ebCell='<div class="es-cell"><div class="es-label">EBITDA \u20ac/t parc ('+lastYr+')</div>'
+      +'<div class="es-val" style="color:'+ebColor+'">'+fmtEtSgn(ebLast)+evoVsPrev(ebLast,lastYr,'EBITDA',false)+'</div></div>';
+  }
+
+  // Cellule Charges €/t
+  var chCell;
+  if(isMultiYr&&chFirst!=null&&chLast!=null){
+    var chD=chLast-chFirst; var chCol=chD<=0?'#6ee7b7':'#fca5a5'; var chArr=chD<=0?'\u2B06':'\u2B07';
+    var chEvo='<span style="color:'+chCol+';font-size:.78rem;margin-left:6px">'+chArr+' '+(chD>=0?'+':'')+chD.toFixed(1)+' \u20ac/t</span>';
+    chCell='<div class="es-cell"><div class="es-label">Charges \u20ac/t parc ('+firstYr+' \u2192 '+lastYr+')</div>'
+      +'<div class="es-val">'+fmtEt(chFirst)+' \u2192 '+fmtEt(chLast)+chEvo+'</div></div>';
+  } else {
+    chCell='<div class="es-cell"><div class="es-label">Charges \u20ac/t parc ('+lastYr+')</div>'
+      +'<div class="es-val">'+fmtEt(chLast)+evoVsPrev(chLast,lastYr,'',true)+'</div></div>';
+  }
+
+  // Meilleur / pire site EBITDA €/t sur lastYr
+  var bySiteEt=sites.map(function(s){return{s:s,v:getEtVal(s,lastYr,'EBITDA')};}).filter(function(d){return d.v!==null;}).sort(function(a,b){return b.v-a.v;});
+  var best=bySiteEt[0], worst=bySiteEt[bySiteEt.length-1];
+  var positifs=bySiteEt.filter(function(d){return d.v>=0;}).length;
+
+  var msg='<div class="es-title">&#128202; Synth\u00e8se \u2014 Vue d\u2019ensemble \u20ac/t</div>';
+  msg+='<div class="es-grid">';
+  msg+='<div class="es-cell es-period"><div class="es-label">P\u00e9riode</div><div class="es-val">'+periodLabel+'</div></div>';
+  msg+=caCell+ebCell+chCell;
+  msg+='<div class="es-cell"><div class="es-label">Sites EBITDA \u20ac/t &gt; 0</div><div class="es-val" style="color:'+(positifs===sites.length?'#6ee7b7':positifs===0?'#fca5a5':'#fde68a')+'">'+positifs+'/'+sites.length+'</div></div>';
+  if(sites.length>1&&best) msg+='<div class="es-cell"><div class="es-label">&#127942; Meilleur EBITDA \u20ac/t</div><div class="es-val">'+best.s+'<span style="font-size:.75rem;opacity:.75;margin-left:5px">'+fmtEtSgn(best.v)+'</span></div></div>';
+  if(sites.length>1&&worst&&worst.v<0) msg+='<div class="es-cell"><div class="es-label">&#9888; Plus d\u00e9ficitaire</div><div class="es-val" style="color:#fca5a5">'+worst.s+'<span style="font-size:.75rem;opacity:.75;margin-left:5px">'+fmtEtSgn(worst.v)+'</span></div></div>';
+  msg+='</div>';
+  el.innerHTML=msg;
+  el.style.display='block';
+}
+
 function renderEt(){
   const yrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
   const sites=etSites.has('all')?SITES:[...etSites];
 
+  renderEtExecSummary();
 
-  const makeBar=(metric)=>yrs.map((yr,i)=>({label:yr2lbl(yr),data:sites.map(s=>getVal(s,yr,metric)),backgroundColor:C3(i)+'bb',borderColor:C3(i),borderWidth:2,borderRadius:4}));
-
-  cEtEB=mkChart('c-et-eb',{type:'bar',data:{labels:sites,datasets:makeBar('EBITDA')},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+(c.parsed.x||0).toFixed(1)+' \u20ac/t'}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
-
-  cEtCA=mkChart('c-et-ca',{type:'bar',data:{labels:sites,datasets:makeBar("VE000001 - Chiffre d'affaires")},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+(c.parsed.x||0).toFixed(1)+' \u20ac/t'}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
+  // Graphiques métriques avec toggle Par année / Cumulé
+  ['CA','MB','EBITDA','EBIT'].forEach(function(metId){
+    renderEtMetricChart(metId, 'c-et2-'+metId, sites, yrs);
+  });
 
   // Charges internes empilées — triées par EBITDA €/t
   const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
