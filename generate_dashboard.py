@@ -393,6 +393,10 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card-title">Classement EBITDA par site (derni&egrave;re p&eacute;riode s&eacute;lectionn&eacute;e)</div>
     <div id="rank-wrap"></div>
   </div>
+  <!-- Parc consolidé M€ -->
+  <div class="row2" style="margin-bottom:14px">
+    <div class="card full"><div class="card-title">Parc consolid&eacute; &mdash; CA / Marge brute / EBITDA / EBIT (M&euro; r&eacute;el)</div><div class="ch"><canvas id="c-ov-parc"></canvas></div></div>
+  </div>
   <!-- Ligne 1 : CA | Marge brute -->
   <div class="row2" style="margin-bottom:14px">
     <div class="card">
@@ -503,6 +507,10 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-print" onclick="window.print()" title="Imprime l'onglet actif en PDF A4 paysage">&#128438; Exporter PDF</button>
   </div>
   <div id="et-exec-summary" class="exec-summary"></div>
+  <!-- Parc consolidé €/t -->
+  <div class="row2" style="margin-top:14px;margin-bottom:14px">
+    <div class="card full"><div class="card-title">Parc consolid&eacute; &mdash; CA / Marge brute / EBITDA / EBIT (&euro;/t r&eacute;el)</div><div class="ch"><canvas id="c-et-parc"></canvas></div></div>
+  </div>
   <!-- Ligne 1 : CA €/t | Marge brute €/t -->
   <div class="row2" style="margin-top:18px;margin-bottom:14px">
     <div class="card">
@@ -999,7 +1007,7 @@ function renderExecSummary(){
   el.style.display='block';
 }
 
-let ovYears=new Set(['all']), cEB=null, cMarg=null;
+let ovYears=new Set(['all']), cEB=null, cMarg=null, cOvParc=null;
 var OV_METRICS=[
   {id:'CA',     field:'CA',              label:'Chiffre d\u2019affaires par site'},
   {id:'MB',     field:'Marge_Brute_Cash',label:'Marge brute par site'},
@@ -1213,6 +1221,27 @@ function renderOv(){
 
   const sitesVisible=siteArr;
   const allYrs=ovYears.has('all')?YEARS:activeYrs;
+
+  // Graphique parc consolidé M€ (toujours réel uniquement)
+  (function(){
+    var parcMets=[
+      {key:'CA',              label:'CA',          color:COLORS[0]},
+      {key:'Marge_Brute_Cash',label:'Marge brute', color:COLORS[3]},
+      {key:'EBITDA',          label:'EBITDA',      color:COLORS[2]},
+      {key:'EBIT_Courant',    label:'EBIT',        color:COLORS[4]},
+    ];
+    var parcDs=parcMets.map(function(m){
+      return{label:m.label,backgroundColor:m.color+'bb',borderColor:m.color,borderWidth:1,borderRadius:4,
+        data:REAL_YEARS.map(function(yr){
+          return siteArr.reduce(function(s,site){var r=DATA.find(function(d){return d.Site===site&&String(d.Annee)===yr;});return s+(r&&r[m.key]!=null?r[m.key]/1e6:0);},0);
+        })};
+    });
+    cOvParc=mkChart('c-ov-parc',{type:'bar',data:{labels:REAL_YEARS.map(yr2lbl),datasets:parcDs},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:11},usePointStyle:true}},
+          tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(2)+' M\u20ac';}}}},
+        scales:{x:{grid:{display:false}},y:{title:{display:true,text:'M\u20ac'},grid:{color:'#f0f0f0'}}}}});
+  })();
 
   OV_METRICS.forEach(function(m){
     renderOvMetricChart(m.id, m.field, 'c-ov-'+m.id, sitesVisible, allYrs);
@@ -1675,7 +1704,7 @@ function renderPL(rows){
 // Source données : data_synthese_eur_t.csv (format long, une ligne par métrique)
 // Accès via getVal(site, année, métrique) qui cherche dans EURT[]
 // ══════════════════════════════════════════════════════
-let etYears=new Set(['all']), etSites=new Set(['all']), cScatter=null, cChargesEt=null;
+let etYears=new Set(['all']), etSites=new Set(['all']), cScatter=null, cChargesEt=null, cEtParc=null;
 let etScatterMetric='ebitda'; // métrique axe Y du scatter : 'ebitda' | 'ca' | 'charges'
 let etChargeFilter=new Set(['all']); // charges sélectionnées dans le filtre du graphe empilé
 var etView={CA:'cumul',MB:'cumul',EBITDA:'cumul',EBIT:'cumul'};
@@ -1905,6 +1934,30 @@ function renderEt(){
   const sites=etSites.has('all')?SITES:[...etSites];
 
   renderEtExecSummary();
+
+  // Graphique parc consolidé €/t (toujours réel uniquement)
+  (function(){
+    var etParcMets=[
+      {key:'CA',              label:'CA \u20ac/t',          color:COLORS[0]},
+      {key:'Marge_Brute_Cash',label:'Marge brute \u20ac/t', color:COLORS[3]},
+      {key:'EBITDA',          label:'EBITDA \u20ac/t',      color:COLORS[2]},
+      {key:'EBIT_Courant',    label:'EBIT \u20ac/t',        color:COLORS[4]},
+    ];
+    var etParcYrs=['2023','2024','2025'];
+    var etParcDs=etParcMets.map(function(m){
+      return{label:m.label,backgroundColor:m.color+'bb',borderColor:m.color,borderWidth:1,borderRadius:4,
+        data:etParcYrs.map(function(yr){
+          var totVal=0,totTn=0;
+          sites.forEach(function(site){var r=DATA.find(function(d){return d.Site===site&&String(d.Annee)===yr;});if(r){totVal+=(r[m.key]||0);totTn+=(Number(r.Tonnes_entrantes)||0);}});
+          return totTn>0?totVal/totTn:null;
+        })};
+    });
+    cEtParc=mkChart('c-et-parc',{type:'bar',data:{labels:etParcYrs.map(function(y){return yr2lbl(y);}),datasets:etParcDs},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:11},usePointStyle:true}},
+          tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+' \u20ac/t':'\u2014');}}}},
+        scales:{x:{grid:{display:false}},y:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
+  })();
 
   // Graphiques métriques avec toggle Par année / Cumulé
   ['CA','MB','EBITDA','EBIT'].forEach(function(metId){
