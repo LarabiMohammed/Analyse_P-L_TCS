@@ -1959,11 +1959,11 @@ function toggleChargeFil(label, btn){
     if(etChargeFilter.size===0){ etChargeFilter=new Set(['all']); allBtn.classList.add('active'); }
   }
   etChargesDrill=null; // retour vue de base si on change le filtre
-  renderEt();
+  renderEtChargesOnly();
 }
 function etChargesDrillBack(){
   etChargesDrill=null;
-  renderEt();
+  renderEtChargesOnly();
 }
 
 function setScatterMetric(m,btn){
@@ -2108,6 +2108,71 @@ function renderEtExecSummary(){
   el.style.display='block';
 }
 
+function renderEtChargesOnly(){
+  const sites=etSites.has('all')?SITES:[...etSites];
+  const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
+  const chargeYear=etActiveYrs[etActiveYrs.length-1];
+  const chargeBaseMetrics=[
+    {m:"  VE000051 - Co\u00fbts de personnel",                                        l:'Personnel',       color:'#0f3460', drillable:true},
+    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",     l:'\u00c9nergie',         color:'#e94560', drillable:false},
+    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",             l:'Maint. courante', color:'#533483', drillable:false},
+    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",   l:'Maint. oblig.',   color:'#16c79a', drillable:false},
+    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",               l:'Traitement s.-p.',color:'#f4a261', drillable:false},
+    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                              l:'Autres co\u00fbts',    color:'#2196f3', drillable:true},
+  ];
+  const chargeSites=[...sites].sort(function(a,b){
+    var va=getVal(a,chargeYear,'EBITDA')||0, vb=getVal(b,chargeYear,'EBITDA')||0; return vb-va;
+  });
+  var pillsDiv=document.getElementById('charge-filter-pills');
+  var backBtnEt=document.getElementById('charges-et-back-btn');
+  var chTitleEl=document.getElementById('charges-et-title');
+  var chargeDs, isStacked, chTooltipCb;
+  if(etChargesDrill){
+    var subItemsEt=getChargesDrillSubItems(etChargesDrill);
+    chargeDs=subItemsEt.map(function(si){
+      return{label:si.l,backgroundColor:si.color+'cc',borderColor:si.color,borderWidth:1,borderRadius:2,
+        data:chargeSites.map(function(s){return getDrillValEt(s,chargeYear,si.field);})};
+    });
+    isStacked=true;
+    if(chTitleEl) chTitleEl.innerHTML='D\u00e9tail '+etChargesDrill+' \u20ac/t par site<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='none';});
+    if(backBtnEt) backBtnEt.style.display='';
+    chTooltipCb=function(c){var v=c.parsed.y||0;return ' '+c.dataset.label+(v<0?' (cr\u00e9dit) ':' ')+Math.abs(v).toFixed(1)+' \u20ac/t';};
+  } else {
+    var isAllCharges=etChargeFilter.has('all');
+    var filteredChargeMetrics=isAllCharges?chargeBaseMetrics:chargeBaseMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
+    isStacked=isAllCharges||filteredChargeMetrics.length>1;
+    chargeDs=filteredChargeMetrics.map(function(cm){
+      return{label:cm.l,data:chargeSites.map(function(s){var v=getVal(s,chargeYear,cm.m);return v!==null?Math.abs(v):0;}),
+        backgroundColor:cm.color+'cc',borderColor:cm.color,borderWidth:isStacked?1:2,borderRadius:isStacked?2:4};
+    });
+    var chMode=isAllCharges?'tri\u00e9es par EBITDA \u20ac/t':'benchmark';
+    if(chTitleEl) chTitleEl.innerHTML='Charges internes \u20ac/t par site \u2014 '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='';});
+    if(backBtnEt) backBtnEt.style.display='none';
+    chTooltipCb=function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';};
+  }
+  cChargesEt=mkChart('c-charges-et',{type:'bar',data:{labels:chargeSites,datasets:chargeDs},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:true},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:chTooltipCb}}},
+      scales:{x:{stacked:isStacked,grid:{display:false}},y:{stacked:isStacked,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}},
+      onHover:function(evt,elements,chart){
+        var canvas=chart?chart.canvas:null; if(!canvas) return;
+        if(etChargesDrill){canvas.style.cursor='default';return;}
+        if(!elements.length){canvas.style.cursor='default';return;}
+        var cm=chargeBaseMetrics[elements[0].datasetIndex];
+        canvas.style.cursor=cm&&cm.drillable?'pointer':'default';
+      },
+      onClick:function(evt,elements){
+        if(etChargesDrill||!elements.length) return;
+        var cm=chargeBaseMetrics[elements[0].datasetIndex];
+        if(cm&&cm.drillable){etChargesDrill=cm.l;renderEtChargesOnly();}
+      }
+    }
+  });
+  buildChargesLegend('charges-et-legend','charges-et-hint',cChargesEt,['Personnel','Autres co\u00fbts'],function(lbl){etChargesDrill=lbl;renderEtChargesOnly();},!!etChargesDrill);
+}
+
 function renderEt(){
   const yrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
   const sites=etSites.has('all')?SITES:[...etSites];
@@ -2143,91 +2208,8 @@ function renderEt(){
     renderEtMetricChart(metId, 'c-et2-'+metId, sites, yrs);
   });
 
-  // Charges internes empilées — triées par EBITDA €/t
-  const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
-  const chargeYear=etActiveYrs[etActiveYrs.length-1];
-  const chTitle=document.getElementById('charges-et-title');
-  if(chTitle) chTitle.innerHTML='Charges internes \u20ac/t par site \u2014 tri\u00e9es par EBITDA \u20ac/t<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
-  const chargeBaseMetrics=[
-    {m:"  VE000051 - Co\u00fbts de personnel",                                        l:'Personnel',       color:'#0f3460', drillable:true},
-    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",     l:'\u00c9nergie',         color:'#e94560', drillable:false},
-    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",             l:'Maint. courante', color:'#533483', drillable:false},
-    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",   l:'Maint. oblig.',   color:'#16c79a', drillable:false},
-    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",               l:'Traitement s.-p.',color:'#f4a261', drillable:false},
-    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                              l:'Autres co\u00fbts',    color:'#2196f3', drillable:true},
-  ];
-  // Trier les sites par EBITDA €/t décroissant
-  const chargeSites=[...sites].sort((a,b)=>{
-    const va=getVal(a,chargeYear,'EBITDA')||0, vb=getVal(b,chargeYear,'EBITDA')||0;
-    return vb-va;
-  });
-
-  var pillsDiv=document.getElementById('charge-filter-pills');
-  var backBtnEt=document.getElementById('charges-et-back-btn');
-  var chTitleEl=document.getElementById('charges-et-title');
-  var chargeDs, isStacked, chTooltipCb;
-
-  if(etChargesDrill){
-    // ── Mode drill : sous-postes du poste sélectionné ──────────────────────
-    var subItemsEt=getChargesDrillSubItems(etChargesDrill);
-    chargeDs=subItemsEt.map(function(si){
-      return{label:si.l,backgroundColor:si.color+'cc',borderColor:si.color,borderWidth:1,borderRadius:2,
-        data:chargeSites.map(function(s){return getDrillValEt(s,chargeYear,si.field);})};
-    });
-    isStacked=true;
-    if(chTitleEl) chTitleEl.innerHTML='D\u00e9tail '+etChargesDrill+' \u20ac/t par site<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
-    // Masquer pills, afficher bouton retour
-    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='none';});
-    if(backBtnEt) backBtnEt.style.display='';
-    chTooltipCb=function(c){
-      var v=c.parsed.y||0;
-      return ' '+c.dataset.label+(v<0?' (cr\u00e9dit) ':' ')+Math.abs(v).toFixed(1)+' \u20ac/t';
-    };
-  } else {
-    // ── Mode base : tous les postes (avec filtre pills) ─────────────────────
-    var isAllCharges=etChargeFilter.has('all');
-    var filteredChargeMetrics=isAllCharges?chargeBaseMetrics:chargeBaseMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
-    isStacked=isAllCharges||filteredChargeMetrics.length>1;
-    chargeDs=filteredChargeMetrics.map(function(cm){
-      return{label:cm.l,data:chargeSites.map(function(s){var v=getVal(s,chargeYear,cm.m);return v!==null?Math.abs(v):0;}),
-        backgroundColor:cm.color+'cc',borderColor:cm.color,borderWidth:isStacked?1:2,borderRadius:isStacked?2:4};
-    });
-    var chMode=isAllCharges?'tri\u00e9es par EBITDA \u20ac/t':'benchmark';
-    if(chTitleEl) chTitleEl.innerHTML='Charges internes \u20ac/t par site \u2014 '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
-    // Afficher pills, masquer bouton retour
-    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='';});
-    if(backBtnEt) backBtnEt.style.display='none';
-    chTooltipCb=function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';};
-  }
-
-  cChargesEt=mkChart('c-charges-et',{
-    type:'bar',
-    data:{labels:chargeSites,datasets:chargeDs},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'nearest',intersect:true},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:chTooltipCb}}
-      },
-      scales:{
-        x:{stacked:isStacked,grid:{display:false}},
-        y:{stacked:isStacked,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}
-      },
-      onHover:function(evt,elements,chart){
-        var canvas=chart?chart.canvas:null; if(!canvas) return;
-        if(etChargesDrill){canvas.style.cursor='default';return;}
-        if(!elements.length){canvas.style.cursor='default';return;}
-        var cm=chargeBaseMetrics[elements[0].datasetIndex];
-        canvas.style.cursor=cm&&cm.drillable?'pointer':'default';
-      },
-      onClick:function(evt,elements){
-        if(etChargesDrill||!elements.length) return;
-        var cm=chargeBaseMetrics[elements[0].datasetIndex];
-        if(cm&&cm.drillable){etChargesDrill=cm.l;renderEt();}
-      }
-    }
-  });
-  buildChargesLegend('charges-et-legend','charges-et-hint',cChargesEt,['Personnel','Autres co\u00fbts'],function(lbl){etChargesDrill=lbl;renderEt();},!!etChargesDrill);
+  // Charges internes empilées
+  renderEtChargesOnly();
 
   // Scatter quadrant — métrique sélectionnable
   const scatterYear=chargeYear.replace('R','');
@@ -2514,7 +2496,51 @@ function setRgCAType(type,btn){
 
 function setRgMetric(m){
   rgMetric=m;
-  renderRg();
+  renderRgCardsOnly();
+}
+
+function renderRgCardsOnly(){
+  const allRows=DATA.map(function(d){return Object.assign({},d,{Reg:d.Region||REG_MAP[d.Site]||'Autre'});});
+  const activeRgYrs=rgYears.has('all')?REAL_YEARS:[...rgYears].filter(function(y){return y!=='2026';});
+  const rows=allRows.filter(function(d){return activeRgYrs.includes(String(d.Annee));});
+  const regions=[...new Set(allRows.map(function(d){return d.Reg;}))].sort();
+  const rgMvMap={};
+  regions.forEach(function(rg){rgMvMap[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d[rgMetric]||0);},0);});
+  const rgTnMap2={};
+  regions.forEach(function(rg){rgTnMap2[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);});
+  const rgCAMap={};
+  regions.forEach(function(rg){rgCAMap[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.CA||0);},0);});
+  const sortedCards=regions.map(function(rg){return {rg:rg,v:rgMvMap[rg],tn:rgTnMap2[rg]||0,ca:rgCAMap[rg]||0};}).sort(function(a,b){return b.v-a.v;});
+  const maxAbsV=Math.max.apply(null,sortedCards.map(function(d){return Math.abs(d.v)||0;}));
+  const RG_SITES={};
+  regions.forEach(function(rg){RG_SITES[rg]=[...new Set(allRows.filter(function(d){return d.Reg===rg;}).map(function(d){return d.Site;}))];});
+  const ML={'CA':'CA','PNE':'PNE','Marge_Brute_Cash':'Marge Brute','EBITDA':'EBITDA','EBIT_Courant':'EBIT'};
+  var cards='<div style="display:flex;flex-direction:column;gap:8px;width:100%">';
+  sortedCards.forEach(function(d,i){
+    var isPos=d.v>=0;
+    var col=isPos?'#10b981':'#ef4444';
+    var bgcol=isPos?'rgba(16,185,129,.08)':'rgba(239,68,68,.08)';
+    var pct=maxAbsV>0?(Math.abs(d.v)/maxAbsV*100):0;
+    var tauxStr=d.ca?(d.v/d.ca*100).toFixed(1)+'%':'\u2014';
+    var siteList=RG_SITES[d.rg]||[];
+    var vLabel=fmtM(d.v);
+    cards+='<div style="display:flex;align-items:center;gap:12px;background:'+bgcol+';border-left:3px solid '+col+';border-radius:8px;padding:10px 14px">';
+    cards+='<div style="min-width:80px"><div style="font-size:.65rem;color:#aaa;font-weight:600;letter-spacing:.5px">#'+(i+1)+'</div>';
+    cards+='<div style="font-size:1rem;font-weight:700;color:#1a1a2e">'+d.rg+'</div>';
+    cards+='<div style="font-size:.65rem;color:#aaa;margin-top:1px">'+siteList.join(' \u00b7 ')+'</div></div>';
+    cards+='<div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+    cards+='<span style="font-size:.68rem;color:#888">'+ML[rgMetric]+'</span>';
+    cards+='<span style="font-size:1rem;font-weight:700;color:'+col+'">'+vLabel+'</span></div>';
+    cards+='<div style="background:#e5e7eb;border-radius:4px;height:8px">';
+    cards+='<div style="width:'+pct.toFixed(1)+'%;height:8px;background:'+col+';border-radius:4px;transition:width .3s"></div></div></div>';
+    cards+='<div style="min-width:90px;text-align:right">';
+    cards+='<div style="font-size:.72rem;color:#555">'+fmtK(d.tn)+'</div>';
+    cards+='<div style="font-size:.65rem;color:#aaa">tonnes entr.</div>';
+    if(rgMetric==='EBITDA'&&d.ca){cards+='<div style="font-size:.68rem;color:'+col+';font-weight:600;margin-top:3px">'+tauxStr+'</div><div style="font-size:.62rem;color:#aaa">taux EBITDA</div>';}
+    cards+='</div></div>';
+  });
+  cards+='</div>';
+  document.getElementById('rg-map').innerHTML=cards;
 }
 
 function toggleRgDrill(el){
@@ -2605,54 +2631,8 @@ function renderRg(){
     cRgEBT=mkChart('c-rg-ebt',{type:'bar',data:{labels:ebtArr.map(function(d){return d.rg;}),datasets:[{label:'EBITDA \u20ac/t',data:ebtArr.map(function(d){return d.v;}),backgroundColor:ebtArr.map(function(d){return d.v>=0?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)';}),borderColor:ebtArr.map(function(d){return d.v>=0?'#10b981':'#ef4444';}),borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.parsed.x.toFixed(1)+' \u20ac/t';}}}},scales:{x:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}},y:{grid:{display:false}}}}});
   }
 
-  // ── Cartes visuelles par r\u00e9gion ──────────────────────────────
-  const rgMvMap={};
-  regions.forEach(function(rg){rgMvMap[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d[rgMetric]||0);},0);});
-  const rgTnMap2={};
-  regions.forEach(function(rg){rgTnMap2[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.Tonnes_entrantes||0);},0);});
-  const rgCAMap={};
-  regions.forEach(function(rg){rgCAMap[rg]=rows.filter(function(d){return d.Reg===rg;}).reduce(function(s,d){return s+(d.CA||0);},0);});
-  const sortedCards=regions.map(function(rg){return {rg:rg,v:rgMvMap[rg],tn:rgTnMap2[rg]||0,ca:rgCAMap[rg]||0};}).sort(function(a,b){return b.v-a.v;});
-  const maxAbsV=Math.max.apply(null,sortedCards.map(function(d){return Math.abs(d.v)||0;}));
-  const RG_SITES={};
-  regions.forEach(function(rg){RG_SITES[rg]=[...new Set(allRows.filter(function(d){return d.Reg===rg;}).map(function(d){return d.Site;}))];});
-  const ML={'CA':'CA','PNE':'PNE','Marge_Brute_Cash':'Marge Brute','EBITDA':'EBITDA','EBIT_Courant':'EBIT'};
-  let cards='<div style="display:flex;flex-direction:column;gap:8px;width:100%">';
-  sortedCards.forEach(function(d,i){
-    const isPos=d.v>=0;
-    const col=isPos?'#10b981':'#ef4444';
-    const bgcol=isPos?'rgba(16,185,129,.08)':'rgba(239,68,68,.08)';
-    const pct=maxAbsV>0?(Math.abs(d.v)/maxAbsV*100):0;
-    const tauxStr=d.ca?(d.v/d.ca*100).toFixed(1)+'%':'—';
-    const sites=RG_SITES[d.rg]||[];
-    const vLabel=fmtM(d.v);
-    cards+='<div style="display:flex;align-items:center;gap:12px;background:'+bgcol+';border-left:3px solid '+col+';border-radius:8px;padding:10px 14px">';
-    // Rank + nom
-    cards+='<div style="min-width:80px">';
-    cards+='<div style="font-size:.65rem;color:#aaa;font-weight:600;letter-spacing:.5px">#'+(i+1)+'</div>';
-    cards+='<div style="font-size:1rem;font-weight:700;color:#1a1a2e">'+d.rg+'</div>';
-    cards+='<div style="font-size:.65rem;color:#aaa;margin-top:1px">'+sites.join(' \u00b7 ')+'</div>';
-    cards+='</div>';
-    // Barre + valeur
-    cards+='<div style="flex:1">';
-    cards+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-    cards+='<span style="font-size:.68rem;color:#888">'+ML[rgMetric]+'</span>';
-    cards+='<span style="font-size:1rem;font-weight:700;color:'+col+'">'+vLabel+'</span>';
-    cards+='</div>';
-    cards+='<div style="background:#e5e7eb;border-radius:4px;height:8px">';
-    cards+='<div style="width:'+pct.toFixed(1)+'%;height:8px;background:'+col+';border-radius:4px;transition:width .3s"></div>';
-    cards+='</div>';
-    cards+='</div>';
-    // Stats droite
-    cards+='<div style="min-width:90px;text-align:right">';
-    cards+='<div style="font-size:.72rem;color:#555">'+fmtK(d.tn)+'</div>';
-    cards+='<div style="font-size:.65rem;color:#aaa">tonnes entr.</div>';
-    if(rgMetric==='EBITDA'&&d.ca){cards+='<div style="font-size:.68rem;color:'+col+';font-weight:600;margin-top:3px">'+tauxStr+'</div><div style="font-size:.62rem;color:#aaa">taux EBITDA</div>';}
-    cards+='</div>';
-    cards+='</div>';
-  });
-  cards+='</div>';
-  document.getElementById('rg-map').innerHTML=cards;
+  // ── Cartes visuelles par région
+  renderRgCardsOnly();
 
   // ── Tableau drill-down + taux% + \u0394 N-1 ────────────────────────
   const tableYrs=activeRgYrs;
