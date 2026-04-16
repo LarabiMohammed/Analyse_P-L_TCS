@@ -80,13 +80,15 @@ data       = load_csv("data_synthese.csv")       # P&L brut par site et année
 data_eur_t = load_csv("data_synthese_eur_t.csv") # Charges détaillées en €/t (format long : une ligne par métrique)
 data_kpi   = load_csv("data_kpi_techniques.csv") # KPIs techniques : dispo, débit, heures, nb trieurs, etc.
 data_q1    = load_csv("data_q1_2026.csv")         # Comptes réels Q1 2026 : jan→mars, par site et métrique
+data_detail= load_csv("data_detail_pl.csv")      # Sous-postes Personnel + Autres coûts (R2023/R2024/R2025)
 
 # Sérialisation JSON avec ensure_ascii=True : évite les problèmes d'encodage
 # des caractères accentués lors de l'injection dans le template HTML.
-DATA_JSON  = json.dumps(data,       ensure_ascii=True)
-EUR_T_JSON = json.dumps(data_eur_t, ensure_ascii=True)
-KPI_JSON   = json.dumps(data_kpi,   ensure_ascii=True)
-Q1_JSON    = json.dumps(data_q1,    ensure_ascii=True)
+DATA_JSON   = json.dumps(data,        ensure_ascii=True)
+EUR_T_JSON  = json.dumps(data_eur_t,  ensure_ascii=True)
+KPI_JSON    = json.dumps(data_kpi,    ensure_ascii=True)
+Q1_JSON     = json.dumps(data_q1,     ensure_ascii=True)
+DETAIL_JSON = json.dumps(data_detail, ensure_ascii=True)
 
 # ── Template HTML ────────────────────────────────────────────────────────────
 HTML = """\
@@ -341,7 +343,7 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
   <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
-  <div class="tab"         onclick="showTab('q1',this)">Suivi Q1 2026</div>
+  <div class="tab"         onclick="showTab('q1',this)">Suivi T1 2026</div>
 </div>
 
 <!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
@@ -464,7 +466,17 @@ select.sel:focus{border-color:#00a3e0}
         <option value="2025">R2025</option><option value="2024">R2024</option><option value="2023">R2023</option>
       </select>
     </div><div class="ch"><canvas id="c-donut"></canvas></div></div>
-    <div class="card"><div class="card-title">Charges internes &euro;/t &mdash; R2023 / R2024 / R2025</div><div class="ch tall"><canvas id="c-dt-charges-et"></canvas></div></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div class="card-title" id="dt-charges-et-title" style="margin:0">Charges internes &euro;/t &mdash; R2023 / R2024 / R2025</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center" id="dt-charge-fil-pills">
+          <button id="dt-charges-back-btn" onclick="dtChargesDrillBack()" style="display:none;background:#f0f4f8;border:1px solid #003a63;border-radius:20px;padding:3px 14px;cursor:pointer;font-size:.75rem;color:#003a63">&larr; Toutes les charges</button>
+        </div>
+      </div>
+      <div id="dt-charges-et-legend" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px;margin-bottom:2px"></div>
+      <div id="dt-charges-et-hint" style="font-size:11.5px;color:#666;text-align:center;padding:4px 0 8px;font-style:italic"></div>
+      <div class="ch tall"><canvas id="c-dt-charges-et"></canvas></div>
+    </div>
   </div>
   <!-- Ligne 4 : Positionnement vs parc | Résumé évolution vs parc -->
   <div class="row2" id="dt-row-bench" style="margin-top:0">
@@ -527,7 +539,7 @@ select.sel:focus{border-color:#00a3e0}
     <div class="card full">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div class="card-title" id="charges-et-title" style="margin:0">Charges internes &euro;/t par site</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap" id="charge-filter-pills">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center" id="charge-filter-pills">
           <button class="btn-pill charge-fil active" onclick="toggleChargeFil(&#39;all&#39;,this)" style="font-size:.75rem;padding:3px 12px">Toutes</button>
           <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Personnel&#39;,this)" style="font-size:.75rem;padding:3px 12px">Personnel</button>
           <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;\u00c9nergie&#39;,this)" style="font-size:.75rem;padding:3px 12px">&Eacute;nergie</button>
@@ -535,8 +547,11 @@ select.sel:focus{border-color:#00a3e0}
           <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Maint. oblig.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Maint. oblig.</button>
           <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Traitement s.-p.&#39;,this)" style="font-size:.75rem;padding:3px 12px">Traitement s.-p.</button>
           <button class="btn-pill charge-fil" onclick="toggleChargeFil(&#39;Autres co\u00fbts&#39;,this)" style="font-size:.75rem;padding:3px 12px">Autres co&ucirc;ts</button>
+          <button id="charges-et-back-btn" onclick="etChargesDrillBack()" style="display:none;background:#f0f4f8;border:1px solid #003a63;border-radius:20px;padding:3px 14px;cursor:pointer;font-size:.75rem;color:#003a63">&larr; Toutes les charges</button>
         </div>
       </div>
+      <div id="charges-et-legend" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px;margin-bottom:2px"></div>
+      <div id="charges-et-hint" style="font-size:11.5px;color:#666;text-align:center;padding:4px 0 8px;font-style:italic"></div>
       <div class="ch tall"><canvas id="c-charges-et"></canvas></div>
     </div>
   </div>
@@ -640,9 +655,7 @@ select.sel:focus{border-color:#00a3e0}
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('dispo_process',this)">Disponibilit&eacute; process (%)</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('heures',this)">Heures fonct.</button>
     <button class="btn-pill tk-kpi" onclick="tkSetKpi('productivite',this)">Productivit&eacute; (t/h/op.)</button>
-  </div>
-  <div id="tk-dispo-proc-note" style="display:none;font-size:.75rem;color:#f59e0b;font-weight:600;margin-bottom:10px;padding:5px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;width:fit-content">
-    &#9888; Dispo process : donn&eacute;es 2023 indisponibles &mdash; R2023 exclu du scatter
+    <button class="btn-pill tk-kpi" onclick="tkSetKpi('fonctions_tri',this)">Fonctions de tri</button>
   </div>
   <div class="row2" style="margin-bottom:28px">
     <div class="card" style="border-top:3px solid #f59e0b">
@@ -817,6 +830,7 @@ select.sel:focus{border-color:#00a3e0}
 // ══════════════════════════════════════════════════════
 const DATA = %%DATA%%;
 const EURT = %%EURT%%;
+const DETAIL_PL = %%DETAIL_PL%%;
 
 // ══════════════════════════════════════════════════════
 // UTILS
@@ -1301,6 +1315,8 @@ function renderDt(){
   const site=document.getElementById('dt-site').value;
   const site2=(document.getElementById('dt-site2')||{}).value||'';
   if(!site) return;
+  dtChargesDrill=null;           // reset drill-down quand le site change
+  dtChargeFilter=new Set(['all']); // reset filtre pills quand le site change
   const rows=DATA.filter(d=>d.Site===site).sort((a,b)=>a.Annee-b.Annee);
   const isCmp=!!(site2&&site2!==site);
   const cmpDiv=document.getElementById('dt-compare');
@@ -1526,22 +1542,176 @@ function renderEvolEt(rows){
   cEvolEt=mkChart('c-evol-et',{type:'line',data:{labels:labs,datasets:[mk('CA \u20ac/t','CA',COLORS[0]),mk('Marge brute \u20ac/t','Marge_Brute_Cash',COLORS[3]),mk('EBITDA \u20ac/t','EBITDA',COLORS[2]),mk('EBIT \u20ac/t','EBIT_Courant',COLORS[4])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(1)+' \u20ac/t':'\u2014');}}}},scales:{y:{title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
 }
 
-function renderDtChargesEt(site){
-  // X axis = années, datasets = postes de charge (barres empilées)
-  var yrs=['R2023','R2024','R2025'];
-  var chargeMetrics=[
-    {m:"  VE000051 - Co\u00fbts de personnel",                                          l:'Personnel',       color:'#0f3460'},
-    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",       l:'\u00c9nergie',          color:'#e94560'},
-    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",               l:'Maint. courante', color:'#533483'},
-    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",     l:'Maint. oblig.',   color:'#16c79a'},
-    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",                 l:'Traitement s.-p.',color:'#f4a261'},
-    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                                l:'Autres co\u00fbts',    color:'#2196f3'},
-  ];
-  var datasets=chargeMetrics.map(function(cm){
-    return{label:cm.l,backgroundColor:cm.color+'cc',borderColor:cm.color,borderWidth:1,borderRadius:2,
-      data:yrs.map(function(yr){var v=getVal(site,yr,cm.m);return v!==null?Math.abs(v):0;})};
+// ── Légende HTML personnalisée pour les graphes charges (remplace la légende Chart.js) ────
+// legendDivId : id du div HTML où injecter la légende
+// chartRef    : instance Chart.js
+// drillable   : tableau de labels déclenchant un drill ['Personnel','Autres coûts']
+// drillFn     : function(label) appelée lors d'un clic drill
+// isDrill     : bool — en mode drill, tous les items sont juste toggle (pas de drill imbriqué)
+function buildChargesLegend(legendDivId, hintDivId, chartRef, drillable, drillFn, isDrill){
+  var div=document.getElementById(legendDivId);
+  if(!div||!chartRef) return;
+  div.innerHTML='';
+  chartRef.data.datasets.forEach(function(ds,i){
+    var color=Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.backgroundColor;
+    // normalise : retire l'alpha éventuel (ex. '#003a63cc' → '#003a63')
+    if(color&&color.length===9&&color[0]==='#') color=color.slice(0,7);
+    var canDrill=!isDrill&&drillable.indexOf(ds.label)>=0;
+    var btn=document.createElement('button');
+    btn.setAttribute('type','button');
+    btn.style.cssText='background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:inherit;padding:3px 10px;border-radius:4px;line-height:1.4';
+    var dot=document.createElement('span');
+    dot.style.cssText='display:inline-block;width:11px;height:11px;border-radius:50%;flex-shrink:0;background:'+color;
+    var txt=document.createElement('span');
+    txt.textContent=ds.label;
+    if(canDrill){
+      txt.style.cssText='text-decoration:underline;text-decoration-style:dotted;color:#003a63;font-weight:600';
+      btn.title='Cliquer pour voir le sous-d\u00e9tail';
+    }
+    btn.appendChild(dot);btn.appendChild(txt);
+    var visible=[true];
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(canDrill){drillFn(ds.label);}
+      else{visible[0]=!visible[0];chartRef.setDatasetVisibility(i,visible[0]);btn.style.opacity=visible[0]?'1':'0.4';chartRef.update();}
+    });
+    div.appendChild(btn);
   });
-  cDtChargesEt=mkChart('c-dt-charges-et',{type:'bar',data:{labels:yrs,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10},usePointStyle:true}},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';}}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}}}});
+  // Hint dans le div séparé
+  var hintDiv=hintDivId?document.getElementById(hintDivId):null;
+  if(hintDiv){
+    if(!isDrill){
+      hintDiv.innerHTML='Cliquez sur <b style="color:#003a63">Personnel</b> ou <b style="color:#003a63">Autres co\u00fbts</b> pour afficher le d\u00e9tail de leurs sous-postes';
+      hintDiv.style.display='';
+    } else {
+      hintDiv.innerHTML='';
+      hintDiv.style.display='none';
+    }
+  }
+}
+
+// ── Helper partagé : définition des sous-postes selon le poste drill ──────────
+function getChargesDrillSubItems(poste){
+  if(poste==='Personnel') return [
+    {field:'Pers_interne',       l:'Exploit. interne',   color:'#1a56db'},  // bleu vif
+    {field:'Pers_externe',       l:'Exploit. externe',   color:'#e3a008'},  // orange/ambre
+    {field:'Pers_maint_interne', l:'Maint. interne',     color:'#057a55'},  // vert foncé
+    {field:'Pers_maint_externe', l:'Maint. externe',     color:'#e02424'},  // rouge
+    {field:'Pers_avantages',     l:'Avantages sociaux',  color:'#7e3af2'},  // violet
+  ];
+  return [
+    {field:'Autr_labo',       l:'Laboratoire',        color:'#e53935'},
+    {field:'Autr_equip',      l:'\u00c9quip. mobiles', color:'#f4511e'},
+    {field:'Autr_batiment',   l:'B\u00e2timents',      color:'#f9a825'},
+    {field:'Autr_taxes',      l:'Taxes & redevances',  color:'#558b2f'},
+    {field:'Autr_assurances', l:'Assurances',          color:'#00838f'},
+    {field:'Autr_autres',     l:'Autres',              color:'#6d4c41'},
+  ];
+}
+
+// ── Calcul €/t d'un sous-poste pour un site + année ───────────────────────────
+function getDrillValEt(site, yr, field){
+  var row=DETAIL_PL.find(function(d){return d.Site===site&&d.Annee===yr;});
+  if(!row) return 0;
+  var v=row[field];
+  if(v==null||v===''||v==='None') return 0;
+  var tnRow=DATA.find(function(d){return d.Site===site&&String(d.Annee)===yr.replace('R','');});
+  var tn=tnRow&&+tnRow.Tonnes_entrantes>0?+tnRow.Tonnes_entrantes:null;
+  return tn?(-(+v))/tn:0; // negate : coûts négatifs → positifs, crédits → négatifs
+}
+
+function renderDtChargesEt(site){
+  var yrs=['R2023','R2024','R2025'];
+  var baseMetrics=[
+    {m:"  VE000051 - Co\u00fbts de personnel",                                        l:'Personnel',       color:'#0f3460', drillable:true},
+    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",     l:'\u00c9nergie',         color:'#e94560', drillable:false},
+    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",             l:'Maint. courante', color:'#533483', drillable:false},
+    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",   l:'Maint. oblig.',   color:'#16c79a', drillable:false},
+    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",               l:'Traitement s.-p.',color:'#f4a261', drillable:false},
+    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                              l:'Autres co\u00fbts',    color:'#2196f3', drillable:true},
+  ];
+
+  var titleEl=document.getElementById('dt-charges-et-title');
+  var pillsDiv=document.getElementById('dt-charge-fil-pills');
+  var backBtn=document.getElementById('dt-charges-back-btn');
+  var datasets, tooltipCb, isStacked;
+
+  if(dtChargesDrill){
+    // ── Mode drill : sous-postes du poste sélectionné ──
+    var subItems=getChargesDrillSubItems(dtChargesDrill);
+    datasets=subItems.map(function(si){
+      return{label:si.l,backgroundColor:si.color+'cc',borderColor:si.color,borderWidth:1,borderRadius:2,
+        data:yrs.map(function(yr){return getDrillValEt(site,yr,si.field);})};
+    });
+    isStacked=true;
+    if(titleEl) titleEl.textContent='D\u00e9tail '+dtChargesDrill+' \u2014 '+site+' (\u20ac/t)';
+    if(pillsDiv) pillsDiv.querySelectorAll('.dt-charge-fil').forEach(function(b){b.style.display='none';});
+    if(backBtn)  backBtn.style.display='';
+    tooltipCb=function(c){
+      var v=c.parsed.y||0;
+      return ' '+c.dataset.label+(v<0?' (cr\u00e9dit) ':' ')+Math.abs(v).toFixed(1)+' \u20ac/t';
+    };
+  } else {
+    // ── Mode base : filtre pills ──
+    var isAllDt=dtChargeFilter.has('all');
+    var filteredDt=isAllDt?baseMetrics:baseMetrics.filter(function(cm){return dtChargeFilter.has(cm.l);});
+    isStacked=isAllDt||filteredDt.length>1;
+    datasets=filteredDt.map(function(cm){
+      return{label:cm.l,backgroundColor:cm.color+'cc',borderColor:cm.color,
+        borderWidth:isStacked?1:2,borderRadius:isStacked?2:4,
+        data:yrs.map(function(yr){var v=getVal(site,yr,cm.m);return v!==null?Math.abs(v):0;})};
+    });
+    if(titleEl) titleEl.textContent='Charges internes \u20ac/t \u2014 R2023 / R2024 / R2025';
+    if(pillsDiv) pillsDiv.querySelectorAll('.dt-charge-fil').forEach(function(b){b.style.display='';});
+    if(backBtn)  backBtn.style.display='none';
+    tooltipCb=function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';};
+  }
+
+  cDtChargesEt=mkChart('c-dt-charges-et',{type:'bar',data:{labels:yrs,datasets:datasets},options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'nearest',intersect:true},
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:tooltipCb}},
+    },
+    scales:{x:{stacked:isStacked,grid:{display:false}},y:{stacked:isStacked,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}},
+    onHover:function(evt,elements,chart){
+      var canvas=chart?chart.canvas:null; if(!canvas) return;
+      if(dtChargesDrill){canvas.style.cursor='default';return;}
+      if(!elements.length){canvas.style.cursor='default';return;}
+      var cm=baseMetrics[elements[0].datasetIndex];
+      canvas.style.cursor=cm&&cm.drillable?'pointer':'default';
+    },
+    onClick:function(evt,elements){
+      if(dtChargesDrill||!elements.length) return;
+      var cm=baseMetrics[elements[0].datasetIndex];
+      if(cm&&cm.drillable){dtChargesDrill=cm.l;renderDtChargesEt(site);}
+    }
+  }});
+  buildChargesLegend('dt-charges-et-legend','dt-charges-et-hint',cDtChargesEt,['Personnel','Autres co\u00fbts'],function(lbl){dtChargesDrill=lbl;renderDtChargesEt(site);},!!dtChargesDrill);
+}
+
+function dtChargesDrillBack(){
+  dtChargesDrill=null;
+  var site=document.getElementById('dt-site').value;
+  renderDtChargesEt(site);
+}
+
+function toggleDtChargeFil(label,btn){
+  var allBtn=document.querySelector('.dt-charge-fil');
+  if(label==='all'){
+    dtChargeFilter=new Set(['all']);
+    document.querySelectorAll('.dt-charge-fil').forEach(function(b){b.classList.remove('active');});
+    allBtn.classList.add('active');
+  } else {
+    dtChargeFilter.delete('all'); allBtn.classList.remove('active');
+    if(dtChargeFilter.has(label)){dtChargeFilter.delete(label);btn.classList.remove('active');}
+    else{dtChargeFilter.add(label);btn.classList.add('active');}
+    if(dtChargeFilter.size===0){dtChargeFilter=new Set(['all']);allBtn.classList.add('active');}
+  }
+  dtChargesDrill=null;
+  var site=document.getElementById('dt-site').value;
+  renderDtChargesEt(site);
 }
 
 function getEurt_yr(site,yr){
@@ -1707,6 +1877,9 @@ function renderPL(rows){
 let etYears=new Set(['all']), etSites=new Set(['all']), cScatter=null, cChargesEt=null, cEtParc=null;
 let etScatterMetric='ebitda'; // métrique axe Y du scatter : 'ebitda' | 'ca' | 'charges'
 let etChargeFilter=new Set(['all']); // charges sélectionnées dans le filtre du graphe empilé
+let etChargesDrill=null;             // 'Personnel' | 'Autres coûts' | null — drill-down vue €/t
+let dtChargesDrill=null;             // 'Personnel' | 'Autres coûts' | null — drill-down détail site
+let dtChargeFilter=new Set(['all']); // filtre pills charges détail site
 var etView={CA:'cumul',MB:'cumul',EBITDA:'cumul',EBIT:'cumul'};
 var cEtCharts={CA:null,MB:null,EBITDA:null,EBIT:null};
 var etCAMetric='CA'; // 'CA' ou 'PNE' pour la carte CA de la vue €/t
@@ -1785,8 +1958,14 @@ function toggleChargeFil(label, btn){
     else { etChargeFilter.add(label); btn.classList.add('active'); }
     if(etChargeFilter.size===0){ etChargeFilter=new Set(['all']); allBtn.classList.add('active'); }
   }
+  etChargesDrill=null; // retour vue de base si on change le filtre
   renderEt();
 }
+function etChargesDrillBack(){
+  etChargesDrill=null;
+  renderEt();
+}
+
 function setScatterMetric(m,btn){
   etScatterMetric=m;
   document.querySelectorAll('.scatter-metric-btn').forEach(b=>b.classList.remove('active'));
@@ -1969,50 +2148,86 @@ function renderEt(){
   const chargeYear=etActiveYrs[etActiveYrs.length-1];
   const chTitle=document.getElementById('charges-et-title');
   if(chTitle) chTitle.innerHTML='Charges internes \u20ac/t par site \u2014 tri\u00e9es par EBITDA \u20ac/t<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
-  const chargeMetrics=[
-    {m:"  VE000051 - Co\u00fbts de personnel",                                          l:'Personnel',       color:'#0f3460'},
-    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",       l:'\u00c9nergie',          color:'#e94560'},
-    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",               l:'Maint. courante', color:'#533483'},
-    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",     l:'Maint. oblig.',   color:'#16c79a'},
-    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",                 l:'Traitement s.-p.',color:'#f4a261'},
-    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                                l:'Autres co\u00fbts',    color:'#2196f3'},
+  const chargeBaseMetrics=[
+    {m:"  VE000051 - Co\u00fbts de personnel",                                        l:'Personnel',       color:'#0f3460', drillable:true},
+    {m:"  VE000077 - Co\u00fbt des \u00e9nergies pour production & distribution",     l:'\u00c9nergie',         color:'#e94560', drillable:false},
+    {m:"  VE000067 - Entretien & maintenance courante (hors personnel)",             l:'Maint. courante', color:'#533483', drillable:false},
+    {m:"  VE000071 - Maint. Obligatoire Programm\u00e9e & renouvel. (hors pers.)",   l:'Maint. oblig.',   color:'#16c79a', drillable:false},
+    {m:"  VE000089 - Traitement et \u00e9vacuation des sous-produits",               l:'Traitement s.-p.',color:'#f4a261', drillable:false},
+    {m:"  VE000097 - Autres co\u00fbts d'exploitation",                              l:'Autres co\u00fbts',    color:'#2196f3', drillable:true},
   ];
   // Trier les sites par EBITDA €/t décroissant
   const chargeSites=[...sites].sort((a,b)=>{
     const va=getVal(a,chargeYear,'EBITDA')||0, vb=getVal(b,chargeYear,'EBITDA')||0;
     return vb-va;
   });
-  // Filtre charges sélectionnées
-  var isAllCharges=etChargeFilter.has('all');
-  var filteredChargeMetrics=isAllCharges?chargeMetrics:chargeMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
-  var isStacked=isAllCharges||filteredChargeMetrics.length>1; // empilé si tout ou multi-sélection, groupé si 1 seule charge
-  var chargeDs=filteredChargeMetrics.map(function(cm){
-    return {
-      label:cm.l,
-      data:chargeSites.map(function(s){ var v=getVal(s,chargeYear,cm.m); return v!==null?Math.abs(v):0; }),
-      backgroundColor:cm.color+'cc',
-      borderColor:cm.color,
-      borderWidth:isStacked?1:2,
-      borderRadius:isStacked?2:4,
-    };
-  });
+
+  var pillsDiv=document.getElementById('charge-filter-pills');
+  var backBtnEt=document.getElementById('charges-et-back-btn');
   var chTitleEl=document.getElementById('charges-et-title');
-  if(chTitleEl){
+  var chargeDs, isStacked, chTooltipCb;
+
+  if(etChargesDrill){
+    // ── Mode drill : sous-postes du poste sélectionné ──────────────────────
+    var subItemsEt=getChargesDrillSubItems(etChargesDrill);
+    chargeDs=subItemsEt.map(function(si){
+      return{label:si.l,backgroundColor:si.color+'cc',borderColor:si.color,borderWidth:1,borderRadius:2,
+        data:chargeSites.map(function(s){return getDrillValEt(s,chargeYear,si.field);})};
+    });
+    isStacked=true;
+    if(chTitleEl) chTitleEl.innerHTML='D\u00e9tail '+etChargesDrill+' \u20ac/t par site<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+    // Masquer pills, afficher bouton retour
+    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='none';});
+    if(backBtnEt) backBtnEt.style.display='';
+    chTooltipCb=function(c){
+      var v=c.parsed.y||0;
+      return ' '+c.dataset.label+(v<0?' (cr\u00e9dit) ':' ')+Math.abs(v).toFixed(1)+' \u20ac/t';
+    };
+  } else {
+    // ── Mode base : tous les postes (avec filtre pills) ─────────────────────
+    var isAllCharges=etChargeFilter.has('all');
+    var filteredChargeMetrics=isAllCharges?chargeBaseMetrics:chargeBaseMetrics.filter(function(cm){return etChargeFilter.has(cm.l);});
+    isStacked=isAllCharges||filteredChargeMetrics.length>1;
+    chargeDs=filteredChargeMetrics.map(function(cm){
+      return{label:cm.l,data:chargeSites.map(function(s){var v=getVal(s,chargeYear,cm.m);return v!==null?Math.abs(v):0;}),
+        backgroundColor:cm.color+'cc',borderColor:cm.color,borderWidth:isStacked?1:2,borderRadius:isStacked?2:4};
+    });
     var chMode=isAllCharges?'tri\u00e9es par EBITDA \u20ac/t':'benchmark';
-    chTitleEl.innerHTML='Charges internes \u20ac/t par site \u2014 '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+    if(chTitleEl) chTitleEl.innerHTML='Charges internes \u20ac/t par site \u2014 '+chMode+'<span style="font-size:11px;font-weight:400;color:#999;margin-left:8px">'+chargeYear+'</span>';
+    // Afficher pills, masquer bouton retour
+    if(pillsDiv) pillsDiv.querySelectorAll('.charge-fil').forEach(function(b){b.style.display='';});
+    if(backBtnEt) backBtnEt.style.display='none';
+    chTooltipCb=function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';};
   }
+
   cChargesEt=mkChart('c-charges-et',{
     type:'bar',
     data:{labels:chargeSites,datasets:chargeDs},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:10},usePointStyle:true}},
-        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+(c.parsed.y||0).toFixed(1)+' \u20ac/t';}}}},
+      interaction:{mode:'nearest',intersect:true},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:chTooltipCb}}
+      },
       scales:{
         x:{stacked:isStacked,grid:{display:false}},
         y:{stacked:isStacked,title:{display:true,text:'\u20ac/t'},grid:{color:'#f0f0f0'}}
+      },
+      onHover:function(evt,elements,chart){
+        var canvas=chart?chart.canvas:null; if(!canvas) return;
+        if(etChargesDrill){canvas.style.cursor='default';return;}
+        if(!elements.length){canvas.style.cursor='default';return;}
+        var cm=chargeBaseMetrics[elements[0].datasetIndex];
+        canvas.style.cursor=cm&&cm.drillable?'pointer':'default';
+      },
+      onClick:function(evt,elements){
+        if(etChargesDrill||!elements.length) return;
+        var cm=chargeBaseMetrics[elements[0].datasetIndex];
+        if(cm&&cm.drillable){etChargesDrill=cm.l;renderEt();}
       }
     }
   });
+  buildChargesLegend('charges-et-legend','charges-et-hint',cChargesEt,['Personnel','Autres co\u00fbts'],function(lbl){etChargesDrill=lbl;renderEt();},!!etChargesDrill);
 
   // Scatter quadrant — métrique sélectionnable
   const scatterYear=chargeYear.replace('R','');
@@ -2604,6 +2819,7 @@ function getTkMerged(){
     var debit=k.Debit!=null?+k.Debit:null;
     var nbOp=k.Nb_trieurs_poste!=null&&k.Nb_trieurs_poste!==''?+k.Nb_trieurs_poste:null;
     var productivite=(debit!=null&&nbOp!=null&&nbOp>0)?debit/nbOp:null;
+    var nbFctTri=k.Nb_fonctions_tri!=null&&k.Nb_fonctions_tri!==''?+k.Nb_fonctions_tri:null;
     _tkMerged.push({site:k.Site,annee:yr,
       gen:TK_ANCIENS.has(k.Site)?'ancien':'recent',
       dispo:dispo,
@@ -2612,6 +2828,7 @@ function getTkMerged(){
       tonnage:k.Tonnage!=null?+k.Tonnage:null,
       debit:debit,
       productivite:productivite,
+      fonctions_tri:nbFctTri,
       personnel:cp,
       maintenance:maint,
       refus:k.Taux_refus!=null&&k.Taux_refus!==''?+k.Taux_refus:null});
@@ -2634,15 +2851,15 @@ function tkScFiltered(){
   // des autres métriques — chaque métrique est moyennée sur ses valeurs non-null disponibles.
   var bySite={};
   m.forEach(function(d){
-    if(!bySite[d.site]) bySite[d.site]={site:d.site,gen:d.gen,dispo:0,dispo_process:0,debit:0,heures:0,tonnage:0,productivite:0,personnel:0,maintenance:0,refus:0,_cnt:{}};
+    if(!bySite[d.site]) bySite[d.site]={site:d.site,gen:d.gen,dispo:0,dispo_process:0,debit:0,heures:0,tonnage:0,productivite:0,fonctions_tri:0,personnel:0,maintenance:0,refus:0,_cnt:{}};
     var r=bySite[d.site];
-    ['dispo','dispo_process','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+    ['dispo','dispo_process','debit','heures','tonnage','productivite','fonctions_tri','personnel','maintenance','refus'].forEach(function(k){
       if(d[k]!=null){ r[k]+=d[k]; r._cnt[k]=(r._cnt[k]||0)+1; }
     });
   });
   return Object.values(bySite).map(function(r){
     var out={site:r.site,gen:r.gen,annee:'moy.'};
-    ['dispo','dispo_process','debit','heures','tonnage','productivite','personnel','maintenance','refus'].forEach(function(k){
+    ['dispo','dispo_process','debit','heures','tonnage','productivite','fonctions_tri','personnel','maintenance','refus'].forEach(function(k){
       out[k]=r._cnt[k]?r[k]/r._cnt[k]:null;
     });
     return out;
@@ -2665,28 +2882,12 @@ function tkScSetGen(gen,el){
   renderTkScatter();
 }
 
-var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 globale (%)',dispo_process:'Disponibilit\u00e9 process (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivit\u00e9 (t/h/op.)'};
+var TK_KPI_LABELS={debit:'D\u00e9bit (t/h)',dispo:'Disponibilit\u00e9 globale (%)',dispo_process:'Disponibilit\u00e9 process (%)',heures:'Heures de fonctionnement (h)',productivite:'Productivit\u00e9 (t/h/op.)',fonctions_tri:'Nb fonctions de tri (TOs + robots)'};
 
 function tkSetKpi(kpi,el){
   tkKpi=kpi;
   document.querySelectorAll('.tk-kpi').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
-  // Dispo process : griser R2023 et basculer sur "all" si 2023 était sélectionné
-  var btn2023=document.getElementById('tk-btn-2023');
-  var note=document.getElementById('tk-dispo-proc-note');
-  if(kpi==='dispo_process'){
-    if(btn2023){btn2023.style.opacity='.35';btn2023.style.pointerEvents='none';}
-    if(note) note.style.display='block';
-    if(tkScYr===2023){
-      tkScYr='all'; tkYr='all';
-      document.querySelectorAll('.tk-sc-yr').forEach(function(b){b.classList.remove('active');});
-      var allBtn=document.querySelector('.tk-sc-yr');
-      if(allBtn) allBtn.classList.add('active');
-    }
-  } else {
-    if(btn2023){btn2023.style.opacity='';btn2023.style.pointerEvents='';}
-    if(note) note.style.display='none';
-  }
   renderTkScatter();
 }
 
@@ -2710,21 +2911,21 @@ function tkSetCaX(key,el){
 // r positif : quand le KPI monte, la charge monte
 // |r| ≥ 0.7 = lien fort · 0.4–0.7 = modéré · < 0.4 = faible
 const TK_CORR={
-  'Amiens':         {pers:{dispo:-0.904,debit:0.706,heures:0.525,refus:0.072,tonnage:0.904},  maint:{dispo:0.51,debit:-0.189,heures:-0.911,refus:-0.617,tonnage:-0.511}},
-  'B\u00e8gles':    {pers:{dispo:-0.267,debit:-0.895,heures:-0.622,refus:-0.769,tonnage:-0.998},maint:{dispo:0.436,debit:-0.967,heures:0.051,refus:-0.155,tonnage:-0.789}},
-  'Ch\u00e9zy':     {pers:{dispo:0.088,debit:-0.135,heures:0.564,refus:0.785,tonnage:0.215},  maint:{dispo:1.0,debit:0.979,heures:-0.784,refus:0.674,tonnage:0.989}},
-  'Le Havre':       {pers:{dispo:0.607,debit:-0.96,heures:0.988,refus:0.968,tonnage:-0.917},  maint:{dispo:0.994,debit:-0.863,heures:0.79,refus:0.482,tonnage:-0.92}},
-  'Millau':         {pers:{dispo:-0.999,debit:-0.855,heures:-0.986,refus:null,tonnage:-0.995}, maint:{dispo:0.971,debit:0.964,heures:0.903,refus:null,tonnage:0.93}},
-  'Montpellier':    {pers:{dispo:-0.798,debit:-0.559,heures:-0.878,refus:-0.037,tonnage:-0.998},maint:{dispo:0.456,debit:0.721,heures:0.322,refus:0.978,tonnage:-0.24}},
-  'Nantes':         {pers:{dispo:0.264,debit:-0.739,heures:-0.997,refus:-0.905,tonnage:-0.894},maint:{dispo:-0.692,debit:0.971,heures:0.915,refus:0.998,tonnage:0.999}},
-  'Paris 15':       {pers:{dispo:-0.873,debit:0.331,heures:-0.529,refus:0.928,tonnage:0.351}, maint:{dispo:-1.0,debit:0.743,heures:-0.872,refus:0.636,tonnage:-0.141}},
-  'Portes les Valences':{pers:{dispo:0.785,debit:0.787,heures:0.66,refus:0.836,tonnage:0.385},maint:{dispo:-0.953,debit:-0.951,heures:-0.992,refus:-0.922,tonnage:-0.981}},
-  'Saran':          {pers:{dispo:0.628,debit:0.942,heures:0.628,refus:0.947,tonnage:0.976},   maint:{dispo:0.202,debit:-0.857,heures:0.203,refus:-0.353,tonnage:-0.451}},
-  'Sevran':         {pers:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0},            maint:{dispo:1.0,debit:-1.0,heures:1.0,refus:1.0,tonnage:1.0}}
+  'Amiens':         {pers:{dispo:-0.904,dispo_process:-1.0,  debit:0.706, heures:0.525, refus:0.072, tonnage:0.904},  maint:{dispo:0.51,  dispo_process:0.82,  debit:-0.189,heures:-0.911,refus:-0.617,tonnage:-0.511}},
+  'B\u00e8gles':    {pers:{dispo:-0.267,dispo_process:-0.395,debit:-0.895,heures:-0.622,refus:-0.769,tonnage:-0.998}, maint:{dispo:0.436, dispo_process:0.311, debit:-0.967,heures:0.051, refus:-0.155,tonnage:-0.789}},
+  'Ch\u00e9zy':     {pers:{dispo:0.088, dispo_process:0.018, debit:-0.135,heures:0.564, refus:0.785, tonnage:0.215},  maint:{dispo:1.0,   dispo_process:0.999, debit:0.979, heures:-0.784,refus:0.674, tonnage:0.989}},
+  'Le Havre':       {pers:{dispo:0.607, dispo_process:0.45,  debit:-0.96, heures:0.988, refus:0.968, tonnage:-0.917}, maint:{dispo:0.994, dispo_process:0.958, debit:-0.863,heures:0.79,  refus:0.482, tonnage:-0.92}},
+  'Millau':         {pers:{dispo:-0.999,dispo_process:-0.993,debit:-0.855,heures:-0.986,refus:null,  tonnage:-0.995}, maint:{dispo:0.971, dispo_process:0.987, debit:0.964, heures:0.903, refus:null,  tonnage:0.93}},
+  'Montpellier':    {pers:{dispo:-0.798,dispo_process:-0.98, debit:-0.559,heures:-0.878,refus:-0.037,tonnage:-0.998}, maint:{dispo:0.456, dispo_process:-0.366,debit:0.721, heures:0.322, refus:0.978, tonnage:-0.24}},
+  'Nantes':         {pers:{dispo:0.264, dispo_process:0.741, debit:-0.739,heures:-0.997,refus:-0.905,tonnage:-0.894}, maint:{dispo:-0.692,dispo_process:-0.972,debit:0.971, heures:0.915, refus:0.998, tonnage:0.999}},
+  'Paris 15':       {pers:{dispo:-0.873,dispo_process:-0.884,debit:0.331, heures:-0.529,refus:0.928, tonnage:0.351},  maint:{dispo:-1.0,  dispo_process:-1.0,  debit:0.743, heures:-0.872,refus:0.636, tonnage:-0.141}},
+  'Portes les Valences':{pers:{dispo:0.785,dispo_process:0.122,debit:0.787,heures:0.66,refus:0.836, tonnage:0.385},  maint:{dispo:-0.953,dispo_process:-0.892,debit:-0.951,heures:-0.992,refus:-0.922,tonnage:-0.981}},
+  'Saran':          {pers:{dispo:0.628, dispo_process:0.773, debit:0.942, heures:0.628, refus:0.947, tonnage:0.976},  maint:{dispo:0.202, dispo_process:-0.0,  debit:-0.857,heures:0.203, refus:-0.353,tonnage:-0.451}},
+  'Sevran':         {pers:{dispo:1.0,   dispo_process:1.0,   debit:-1.0,  heures:1.0,   refus:1.0,   tonnage:1.0},    maint:{dispo:1.0,   dispo_process:1.0,   debit:-1.0,  heures:1.0,   refus:1.0,   tonnage:1.0}}
 };
 const TK_CORR_SITES=['Amiens','B\u00e8gles','Ch\u00e9zy','Le Havre','Millau','Montpellier','Nantes','Paris 15','Portes les Valences','Saran','Sevran'];
-const TK_CORR_KPIS=['dispo','debit','heures','refus','tonnage'];
-const TK_CORR_KPI_LBL={dispo:'Dispo',debit:'D\u00e9bit',heures:'Heures',refus:'Taux de refus',tonnage:'Tonnage'};
+const TK_CORR_KPIS=['dispo','dispo_process','debit','heures','refus','tonnage'];
+const TK_CORR_KPI_LBL={dispo:'Dispo glob.',dispo_process:'Dispo proc.',debit:'D\u00e9bit',heures:'Heures',refus:'Taux refus',tonnage:'Tonnage'};
 
 function corrColor(r){
   if(r===null)return{bg:'#f1f5f9',fg:'#94a3b8'};
@@ -2816,11 +3017,7 @@ function renderTkCorr(){
 }
 
 function renderTkScatter(){
-  // dispo_process : pas de données 2023 → on exclut 2023 et on l'indique
-  var noData2023 = (tkKpi==='dispo_process');
-  var data=tkScFiltered().filter(function(d){
-    return !noData2023 || d.annee!==2023;
-  });
+  var data=tkScFiltered();
   var xLbl=TK_KPI_LABELS[tkKpi]||tkKpi;
   var lp=document.getElementById('tk-kpi-lbl-pers');  if(lp) lp.textContent=xLbl;
   var lm=document.getElementById('tk-kpi-lbl-maint'); if(lm) lm.textContent=xLbl;
@@ -3279,10 +3476,10 @@ function q1RenderAccordion(){
       '<div class="q1-acc-bud">Budget\u00a0: '+fmtM(b26)+'</div>'+
       '<div class="q1-acc-bar"><div class="q1-acc-bar-fill" style="width:'+Math.min(fillW,100)+'%;background:'+col+'"></div></div>'+
       '<div class="q1-acc-ecart '+(isGood?'pos':'neg')+'">'+(isGood?'\u25b2':'\u25bc')+'\u00a0'+ecartStr+'</div>'+
-      '<div class="q1-acc-chev'+(idx===0?' open':'')+'">&#9660;</div>';
+      '<div class="q1-acc-chev">&#9660;</div>';
 
     var body=document.createElement('div');
-    body.className='q1-acc-body'+(idx===0?' open':'');
+    body.className='q1-acc-body';
 
     // Barres par site, triées par écart desc
     var sData=sites.map(function(s){
@@ -3478,7 +3675,8 @@ html_out = (HTML
     .replace("%%DATA%%",    DATA_JSON) # données P&L (data_synthese.csv)
     .replace("%%EURT%%",    EUR_T_JSON)# charges €/t détaillées (data_synthese_eur_t.csv)
     .replace("%%KPI%%",     KPI_JSON)  # KPIs techniques (data_kpi_techniques.csv)
-    .replace("%%Q1_DATA%%", Q1_JSON)   # comptes réels Q1 2026 (data_q1_2026.csv)
+    .replace("%%Q1_DATA%%",   Q1_JSON)    # comptes réels Q1 2026 (data_q1_2026.csv)
+    .replace("%%DETAIL_PL%%", DETAIL_JSON)# sous-postes Personnel + Autres coûts
 )
 
 # ── Écriture du fichier final ─────────────────────────────────────────────────
