@@ -2212,6 +2212,8 @@ function renderEt(){
   renderEtChargesOnly();
 
   // Scatter quadrant — métrique sélectionnable
+  const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
+  const chargeYear=etActiveYrs[etActiveYrs.length-1];
   const scatterYear=chargeYear.replace('R','');
 
   // Calcul de la valeur Y selon la métrique sélectionnée

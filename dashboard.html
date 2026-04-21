@@ -258,7 +258,7 @@ select.sel:focus{border-color:#00a3e0}
   </div>
   <div class="header-right">
     <div>R2023 &middot; R2024 &middot; R2025 &middot; <span style="background:rgba(245,158,11,.35);border:1px solid rgba(245,158,11,.6);padding:1px 7px;border-radius:4px;font-size:.75rem;font-weight:700">B2026</span></div>
-    <div>Mis &agrave; jour le 16/04/2026 16:57</div>
+    <div>Mis &agrave; jour le 21/04/2026 14:00</div>
   </div>
 </header>
 
@@ -286,7 +286,7 @@ select.sel:focus{border-color:#00a3e0}
       <div class="home-kpi"><div class="home-kpi-val" id="hm-tx">—</div><div class="home-kpi-lbl">Taux EBITDA (R2025)</div><div class="home-kpi-trend" id="hm-tx-tr"></div></div>
       <div class="home-kpi"><div class="home-kpi-val" id="hm-ns">—</div><div class="home-kpi-lbl">Sites suivis</div><div class="home-kpi-trend" id="hm-ns-tr"></div></div>
     </div>
-    <div class="home-date">Mis &agrave; jour le 16/04/2026 16:57</div>
+    <div class="home-date">Mis &agrave; jour le 21/04/2026 14:00</div>
   </div>
 </div>
 
@@ -2138,6 +2138,8 @@ function renderEt(){
   renderEtChargesOnly();
 
   // Scatter quadrant — métrique sélectionnable
+  const etActiveYrs=etYears.has('all')?['R2023','R2024','R2025']:[...etYears];
+  const chargeYear=etActiveYrs[etActiveYrs.length-1];
   const scatterYear=chargeYear.replace('R','');
 
   // Calcul de la valeur Y selon la métrique sélectionnée
