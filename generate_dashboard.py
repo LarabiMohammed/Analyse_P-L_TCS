@@ -343,6 +343,8 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
   <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
+  <div class="tab"         onclick="showTab('pm',this)">Personnel &amp; Maintenance</div>
+  <div class="tab"         onclick="showTab('fi',this)">Fili&egrave;re &amp; Cessions internes</div>
   <div class="tab"         onclick="showTab('q1',this)">Suivi T1 2026</div>
 </div>
 
@@ -668,6 +670,56 @@ select.sel:focus{border-color:#00a3e0}
     </div>
   </div>
 
+  <!-- SECTION BENCH — Comparaison KPIs entre sites et évolution -->
+  <div class="section-sep" style="margin-top:18px">Benchmark KPIs &mdash; comparaison entre sites &amp; &eacute;volution</div>
+  <div class="row2" style="margin-bottom:22px">
+
+    <!-- Graphique 1 : Classement inter-sites pour un KPI/année donné -->
+    <div class="card" style="border-top:3px solid #3b82f6">
+      <div class="card-title" id="tk-bench-title">Classement des sites &mdash; D&eacute;bit (t/h) &middot; R2025</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap">
+        <span style="font-size:.75rem;font-weight:700;color:#555">KPI :</span>
+        <button class="btn-pill tk-bench-kpi active" onclick="tkBenchSetKpi('debit',this)" style="font-size:.72rem;padding:3px 10px">D&eacute;bit</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('dispo',this)" style="font-size:.72rem;padding:3px 10px">Dispo</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('dispo_process',this)" style="font-size:.72rem;padding:3px 10px">Dispo proc.</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('refus',this)" style="font-size:.72rem;padding:3px 10px">Taux refus</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('heures',this)" style="font-size:.72rem;padding:3px 10px">Heures</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('tonnage',this)" style="font-size:.72rem;padding:3px 10px">Tonnage</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('productivite',this)" style="font-size:.72rem;padding:3px 10px">Productivit&eacute;</button>
+        <button class="btn-pill tk-bench-kpi" onclick="tkBenchSetKpi('fonctions_tri',this)" style="font-size:.72rem;padding:3px 10px">Fonctions tri</button>
+      </div>
+      <div id="tk-bench-yr-row" style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:.75rem;font-weight:700;color:#555">Ann&eacute;e :</span>
+        <button class="btn-pill tk-bench-yr" onclick="tkBenchSetYr(2023,this)" style="font-size:.72rem;padding:3px 10px">R2023</button>
+        <button class="btn-pill tk-bench-yr" onclick="tkBenchSetYr(2024,this)" style="font-size:.72rem;padding:3px 10px">R2024</button>
+        <button class="btn-pill tk-bench-yr active" onclick="tkBenchSetYr(2025,this)" style="font-size:.72rem;padding:3px 10px">R2025</button>
+      </div>
+      <div style="position:relative;height:380px"><canvas id="c-tk-bench"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">Tri d&eacute;croissant &middot; ligne en pointill&eacute;s = moyenne du parc</div>
+    </div>
+
+    <!-- Graphique 2 : Évolution 2023→2025 pour un site/KPI donné -->
+    <div class="card" style="border-top:3px solid #10b981">
+      <div class="card-title" id="tk-evol-title">&Eacute;volution &mdash; D&eacute;bit (t/h)</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap">
+        <label style="font-size:.75rem;font-weight:700;color:#555">Site :</label>
+        <select class="sel" id="tk-evol-site" onchange="tkEvolSetSite(this.value)" style="font-size:.75rem;padding:3px 8px"></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:.75rem;font-weight:700;color:#555">KPI :</span>
+        <button class="btn-pill tk-evol-kpi active" onclick="tkEvolSetKpi('debit',this)" style="font-size:.72rem;padding:3px 10px">D&eacute;bit</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('dispo',this)" style="font-size:.72rem;padding:3px 10px">Dispo</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('dispo_process',this)" style="font-size:.72rem;padding:3px 10px">Dispo proc.</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('refus',this)" style="font-size:.72rem;padding:3px 10px">Taux refus</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('heures',this)" style="font-size:.72rem;padding:3px 10px">Heures</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('tonnage',this)" style="font-size:.72rem;padding:3px 10px">Tonnage</button>
+        <button class="btn-pill tk-evol-kpi" onclick="tkEvolSetKpi('productivite',this)" style="font-size:.72rem;padding:3px 10px">Productivit&eacute;</button>
+      </div>
+      <div style="position:relative;height:380px"><canvas id="c-tk-evol"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">&Eacute;volution 2023 &rarr; 2025 du site choisi &middot; ligne en pointill&eacute;s = moyenne du parc</div>
+    </div>
+  </div>
+
   <!-- SECTION B — Vue par site -->
   <div class="section-sep">Analyse par site &mdash; &eacute;volution 2023&nbsp;&rarr;&nbsp;2025</div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
@@ -772,6 +824,146 @@ select.sel:focus{border-color:#00a3e0}
   <div class="card full" style="margin-bottom:18px">
     <div id="tk-table-wrap"></div>
   </div>
+</div>
+
+<!-- ═══ ONGLET PERSONNEL & MAINTENANCE ═════════════════════════════════════ -->
+<div class="page" id="tab-pm">
+  <div class="toolbar">
+    <label>Ann&eacute;e :</label>
+    <button class="btn-pill pm-yr" onclick="pmSetYr(2023,this)">R2023</button>
+    <button class="btn-pill pm-yr" onclick="pmSetYr(2024,this)">R2024</button>
+    <button class="btn-pill pm-yr active" onclick="pmSetYr(2025,this)">R2025</button>
+    <div class="spacer"></div>
+    <button class="btn-print" onclick="window.print()" style="margin-left:12px">&#128438; Exporter PDF</button>
+  </div>
+
+  <!-- ────── SECTION A — PERSONNEL HORAIRE ────── -->
+  <div class="section-sep" style="margin-top:18px">Co&ucirc;ts horaires du Personnel d&rsquo;exploitation &mdash; interne vs int&eacute;rim</div>
+  <p style="font-size:.78rem;color:#666;margin:6px 0 14px;line-height:1.5">
+    Personnel d&rsquo;exploitation divis&eacute; par les heures de fonctionnement du site.<br>
+    &bull; <b style="color:#d97706">Exploitation interne</b> = op&eacute;rateurs de tri + encadrement de proximit&eacute; SPE (VE000052)<br>
+    &bull; <b style="color:#78350f">Int&eacute;rim</b> = personnel externe (VE000053)<br>
+    <i>&Agrave; noter : le personnel maintenance et les avantages sociaux ne sont pas inclus dans ce graphe (visibles dans le <b>Personnel Total &euro;/h</b> du tableau r&eacute;cap en bas).</i>
+  </p>
+
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card" style="border-top:3px solid #f59e0b">
+      <div class="card-title" id="pm-pers-bench-title">Co&ucirc;t horaire par site &mdash; R2025</div>
+      <div style="position:relative;height:420px"><canvas id="c-pm-pers-bench"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
+        Barres empil&eacute;es : Personnel interne (tri) + externe (int&eacute;rim)
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid #10b981">
+      <div class="card-title" id="pm-pers-evol-title">&Eacute;volution co&ucirc;t horaire &mdash; site s&eacute;lectionn&eacute;</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:8px 0">
+        <label style="font-size:.75rem;font-weight:700;color:#555">Site :</label>
+        <select class="sel" id="pm-pers-site" onchange="pmSetPersSite(this.value)" style="font-size:.75rem;padding:3px 8px"></select>
+      </div>
+      <div style="position:relative;height:380px"><canvas id="c-pm-pers-evol"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ────── SECTION B — MAINTENANCE ────── -->
+  <div class="section-sep" style="margin-top:18px">Maintenance &mdash; GER (oblig.) vs Entretien courant</div>
+  <p style="font-size:.78rem;color:#666;margin:6px 0 14px">
+    GER = Maintenance Obligatoire Programm&eacute;e &amp; renouvellement (VE000071).
+    Entretien courant = Maintenance courante hors personnel (VE000067).
+    Donn&eacute;es exprim&eacute;es en &euro;/tonne entrante.
+  </p>
+
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card" style="border-top:3px solid #8b5cf6">
+      <div class="card-title" id="pm-maint-bench-title">Maintenance &euro;/t par site &mdash; R2025</div>
+      <div style="position:relative;height:420px"><canvas id="c-pm-maint-bench"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
+        Barres empil&eacute;es : GER + Entretien courant
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid #ef4444">
+      <div class="card-title" id="pm-maint-evol-title">&Eacute;volution Maintenance &euro;/t &mdash; site s&eacute;lectionn&eacute;</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:8px 0">
+        <label style="font-size:.75rem;font-weight:700;color:#555">Site :</label>
+        <select class="sel" id="pm-maint-site" onchange="pmSetMaintSite(this.value)" style="font-size:.75rem;padding:3px 8px"></select>
+      </div>
+      <div style="position:relative;height:380px"><canvas id="c-pm-maint-evol"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ────── SECTION C — TABLEAU RÉCAP ────── -->
+  <div class="section-sep">Tableau r&eacute;capitulatif &mdash; ann&eacute;e s&eacute;lectionn&eacute;e</div>
+  <div id="pm-table-wrap"></div>
+</div>
+
+<!-- ═══ ONGLET FILIÈRE & CESSIONS INTERNES ═════════════════════════════════ -->
+<div class="page" id="tab-fi">
+  <div class="toolbar">
+    <label>Ann&eacute;e :</label>
+    <button class="btn-pill fi-yr" onclick="fiSetYr(2023,this)">R2023</button>
+    <button class="btn-pill fi-yr" onclick="fiSetYr(2024,this)">R2024</button>
+    <button class="btn-pill fi-yr active" onclick="fiSetYr(2025,this)">R2025</button>
+    <div class="spacer"></div>
+    <button class="btn-print" onclick="window.print()" style="margin-left:12px">&#128438; Exporter PDF</button>
+  </div>
+
+  <!-- Bandeau simple : liste des sites par groupe -->
+  <div style="display:flex;gap:14px;margin:18px 0;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px;background:#fef2f2;border-left:3px solid #dc2626;border-radius:5px;padding:10px 14px">
+      <div style="font-size:.7rem;font-weight:700;color:#991b1b;letter-spacing:.5px">🏭 SITES MULTIFILI&Egrave;RE</div>
+      <div style="font-size:.85rem;color:#1e293b;margin-top:4px">Nantes &middot; B&egrave;gles &middot; Saran</div>
+    </div>
+    <div style="flex:1;min-width:300px;background:#f0fdf4;border-left:3px solid #059669;border-radius:5px;padding:10px 14px">
+      <div style="font-size:.7rem;font-weight:700;color:#047857;letter-spacing:.5px">⚙️ SITES EN PROPRE</div>
+      <div style="font-size:.85rem;color:#1e293b;margin-top:4px">Le Havre &middot; Amiens &middot; Paris 15 &middot; Sevran &middot; Ch&eacute;zy &middot; Portes les Valences &middot; Montpellier &middot; Millau</div>
+    </div>
+  </div>
+
+  <!-- ────── KPI cards résumé ────── -->
+  <div class="kpi-grid" style="margin-bottom:22px;grid-template-columns:repeat(4,1fr);gap:12px">
+    <div class="kpi-card r">
+      <div class="kpi-label">Cessions Charge &mdash; <b>Multifili&egrave;re</b></div>
+      <div class="kpi-value" id="fi-kpi-mf-charge">&mdash;</div>
+      <div class="kpi-sub" id="fi-kpi-mf-charge-pct">&mdash;</div>
+    </div>
+    <div class="kpi-card g">
+      <div class="kpi-label">Cessions Charge &mdash; <b>Propre</b></div>
+      <div class="kpi-value" id="fi-kpi-pr-charge">&mdash;</div>
+      <div class="kpi-sub" id="fi-kpi-pr-charge-pct">&mdash;</div>
+    </div>
+    <div class="kpi-card o">
+      <div class="kpi-label">Ratio Cessions / CA &mdash; <b>Multifili&egrave;re</b></div>
+      <div class="kpi-value" id="fi-kpi-mf-ratio">&mdash;</div>
+      <div class="kpi-sub">moyenne du groupe</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ratio Cessions / CA &mdash; <b>Propre</b></div>
+      <div class="kpi-value" id="fi-kpi-pr-ratio">&mdash;</div>
+      <div class="kpi-sub">moyenne du groupe</div>
+    </div>
+  </div>
+
+  <!-- ────── SECTION A — Barres comparatives ────── -->
+  <div class="section-sep">Cessions internes par site &mdash; ann&eacute;e s&eacute;lectionn&eacute;e</div>
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card" style="border-top:3px solid #dc2626">
+      <div class="card-title">Cessions internes (Charge) &mdash; valeurs absolues</div>
+      <div style="position:relative;height:450px"><canvas id="c-fi-bench-abs"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
+        Sites group&eacute;s par cat&eacute;gorie &middot; tri d&eacute;croissant dans chaque groupe
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid #2563eb">
+      <div class="card-title">Cessions internes en % du CA &mdash; poids dans le P&amp;L</div>
+      <div style="position:relative;height:450px"><canvas id="c-fi-bench-pct"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
+        Montre le poids r&eacute;el du flux interne dans l&rsquo;activit&eacute; de chaque site
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SECTION B — Tableau détaillé ────── -->
+  <div class="section-sep">Tableau d&eacute;taill&eacute; par site</div>
+  <div id="fi-table-wrap"></div>
 </div>
 
 <!-- ═══ ONGLET Q1 2026 ══════════════════════════════════════════════════════ -->
@@ -886,6 +1078,8 @@ function showTab(id,el){
     if(id==='et') renderEt();
     if(id==='rg') renderRg();
     if(id==='tk') renderTk();
+    if(id==='pm') renderPm();
+    if(id==='fi') renderFi();
     if(id==='q1') renderQ1();
   }));
 }
@@ -3359,6 +3553,768 @@ function renderTkTable(){
   document.getElementById('tk-table-wrap').innerHTML=h;
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ONGLET PERSONNEL & MAINTENANCE — renderPm()
+// Vue dédiée aux 2 plus gros postes de charges du parc
+//   - SECTION A : coûts horaires Personnel (tri/interne vs intérim/externe)
+//   - SECTION B : Maintenance GER vs Entretien courant (€/t)
+//   - SECTION C : tableau récap par site (année sélectionnée)
+// ══════════════════════════════════════════════════════════════════════════════
+var pmYr=2025;
+var pmPersSite=null, pmMaintSite=null;
+var cPmPersBench=null, cPmPersEvol=null, cPmMaintBench=null, cPmMaintEvol=null;
+
+// Helper : récupère les valeurs de personnel & maintenance pour un site/année
+function pmGetSiteData(site, yr){
+  var annee_pl=({2023:'Réel 2023',2024:'R 2024',2025:'Réel 2025',2026:'B 2026'})[yr];
+  var pl=DATA.find(function(d){return d.Site===site&&d.Annee_PL===annee_pl;});
+  if(!pl) return null;
+  var kpi=KPI_RAW.find(function(k){return k.Site===site&&+k.Annee===yr;});
+  var heures=kpi&&kpi.Heures_fonctionnement?+kpi.Heures_fonctionnement:null;
+  var tonnage=pl.Tonnes_entrantes?Math.abs(+pl.Tonnes_entrantes):null;
+  var annee_dpl='R'+yr;
+  var dpl=DETAIL_PL.find(function(d){return d.Site===site&&d.Annee===annee_dpl;});
+  var persInterne=dpl&&dpl.Pers_interne!=null?Math.abs(+dpl.Pers_interne):null;
+  var persExterne=dpl&&dpl.Pers_externe!=null?Math.abs(+dpl.Pers_externe):null;
+  var persTotal=pl.Couts_personnel!=null?Math.abs(+pl.Couts_personnel):null;
+  var maintGER=pl.Maintenance_obligatoire!=null?Math.abs(+pl.Maintenance_obligatoire):null;
+  var maintCourante=pl.Maintenance_courante!=null?Math.abs(+pl.Maintenance_courante):null;
+  return {
+    site:site, yr:yr, heures:heures, tonnage:tonnage,
+    persInterne:persInterne, persExterne:persExterne, persTotal:persTotal,
+    persInterneH:heures&&persInterne!=null?persInterne/heures:null,
+    persExterneH:heures&&persExterne!=null?persExterne/heures:null,
+    persTotalH:heures&&persTotal!=null?persTotal/heures:null,
+    maintGER:maintGER, maintCourante:maintCourante,
+    maintGERT:tonnage&&maintGER!=null?maintGER/tonnage:null,
+    maintCouranteT:tonnage&&maintCourante!=null?maintCourante/tonnage:null,
+    maintTotalT:tonnage?(((maintGER||0)+(maintCourante||0))/tonnage):null,
+  };
+}
+
+// ── SECTION A.1 : classement coût horaire Personnel par site ───────────────────
+function renderPmPersBench(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;}))).sort();
+  var rows=sites.map(function(s){return pmGetSiteData(s,pmYr);}).filter(function(r){return r&&r.persTotalH!=null;});
+  rows.sort(function(a,b){return b.persTotalH-a.persTotalH;});
+
+  document.getElementById('pm-pers-bench-title').innerHTML=
+    'Co&ucirc;t horaire Personnel d&rsquo;exploitation par site &mdash; R'+pmYr+
+    ' <span style="font-size:11px;font-weight:400;color:#666;margin-left:8px">interne en orange &middot; int&eacute;rim en marron</span>';
+
+  cPmPersBench=mkChart('c-pm-pers-bench',{type:'bar',
+    data:{
+      labels:rows.map(function(r){return r.site;}),
+      datasets:[
+        {label:'Exploitation interne (tri + encadrement SPE)', data:rows.map(function(r){return r.persInterneH||0;}),
+          backgroundColor:'rgba(245,158,11,.75)',borderColor:'#d97706',borderWidth:1.5,stack:'pers'},
+        {label:'Intérim (externe)', data:rows.map(function(r){return r.persExterneH||0;}),
+          backgroundColor:'rgba(120,53,15,.7)',borderColor:'#78350f',borderWidth:1.5,stack:'pers'},
+      ]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},usePointStyle:true}},
+        tooltip:{callbacks:{
+          label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(1)+' €/h';},
+          footer:function(items){
+            var tot=items.reduce(function(s,i){return s+(i.parsed.x||0);},0);
+            return 'Total : '+tot.toFixed(1)+' €/h';
+          }
+        }}
+      },
+      scales:{
+        x:{stacked:true,title:{display:true,text:'€/h'},grid:{color:'#f0f0f0'}},
+        y:{stacked:true,grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ── SECTION A.2 : évolution coût horaire Personnel (aires empilées) ────────────
+function renderPmPersEvol(){
+  if(!pmPersSite) return;
+  var years=[2023,2024,2025];
+  var siteData=years.map(function(yr){return pmGetSiteData(pmPersSite,yr);});
+  var interneSerie=siteData.map(function(d){return d&&d.persInterneH!=null?+d.persInterneH.toFixed(1):0;});
+  var externeSerie=siteData.map(function(d){return d&&d.persExterneH!=null?+d.persExterneH.toFixed(1):0;});
+  var totalSerie=siteData.map(function(d){return d&&d.persTotalH!=null?+d.persTotalH.toFixed(1):null;});
+
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  // Moyenne parc = exploitation seule (interne + intérim), pour cohérence avec la pile
+  var avgSerie=years.map(function(yr){
+    var vals=sites.map(function(s){
+      var x=pmGetSiteData(s,yr);
+      if(!x) return null;
+      var explTot=(x.persInterneH||0)+(x.persExterneH||0);
+      return explTot>0?explTot:null;
+    }).filter(function(v){return v!=null;});
+    return vals.length?+(vals.reduce(function(s,v){return s+v;},0)/vals.length).toFixed(1):null;
+  });
+
+  // Variation 2023→2025 (basée sur exploitation seule pour cohérence)
+  var explSerie=years.map(function(_,i){return (interneSerie[i]||0)+(externeSerie[i]||0);});
+  var v1=explSerie[0], v3=explSerie[2];
+  var variation=(v1&&v3)?((v3-v1)/v1*100):null;
+  var varStr=variation!=null?(variation>=0?'+':'')+variation.toFixed(1)+'% (R2023→R2025)':'';
+  var varCol=variation!=null?(variation>0?'#dc2626':'#059669'):'#666';
+  document.getElementById('pm-pers-evol-title').innerHTML='&Eacute;volution co&ucirc;t horaire Personnel d&rsquo;exploitation &mdash; '+pmPersSite+
+    ' <span style="font-size:12px;font-weight:600;color:'+varCol+';margin-left:8px">'+varStr+'</span>';
+
+  // Plugin pour afficher les valeurs sur les points
+  var labelsPlugin={id:'pointLabels',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx;
+    chart.data.datasets.forEach(function(ds,dsIdx){
+      if(ds.hidden||ds._noLabels) return;
+      var meta=chart.getDatasetMeta(dsIdx);
+      meta.data.forEach(function(pt,i){
+        var val=ds.data[i]; if(val==null) return;
+        ctx.save();
+        ctx.font='bold 11px sans-serif';
+        ctx.fillStyle=ds.borderColor||'#333';
+        ctx.textAlign='center';
+        ctx.strokeStyle='rgba(255,255,255,.9)';
+        ctx.lineWidth=3;
+        var txt=Math.round(val);
+        ctx.strokeText(txt,pt.x,pt.y-10);
+        ctx.fillText(txt,pt.x,pt.y-10);
+        ctx.restore();
+      });
+    });
+  }};
+
+  cPmPersEvol=mkChart('c-pm-pers-evol',{type:'line',
+    data:{
+      labels:years.map(function(y){return 'R'+y;}),
+      datasets:[
+        {label:'Exploitation interne (tri + encadrement SPE)', data:interneSerie,
+          borderColor:'#d97706', backgroundColor:'rgba(245,158,11,.55)',
+          borderWidth:2, fill:'origin', tension:.25, pointRadius:6, pointBackgroundColor:'#d97706',
+          pointBorderColor:'#fff', pointBorderWidth:2, stack:'pers'},
+        {label:'Intérim (externe)', data:externeSerie,
+          borderColor:'#78350f', backgroundColor:'rgba(120,53,15,.55)',
+          borderWidth:2, fill:'-1', tension:.25, pointRadius:6, pointBackgroundColor:'#78350f',
+          pointBorderColor:'#fff', pointBorderWidth:2, stack:'pers'},
+        {label:'Moyenne parc (exploitation seule)', data:avgSerie,
+          borderColor:'#1e293b', backgroundColor:'transparent',
+          borderWidth:2.5, borderDash:[6,4], fill:false, tension:.25,
+          pointRadius:5, pointStyle:'rectRot', pointBackgroundColor:'#1e293b',
+          pointBorderColor:'#fff', pointBorderWidth:1.5},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:20,right:10,left:5,bottom:5}},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,padding:12}},
+        tooltip:{
+          mode:'index',intersect:false,
+          callbacks:{
+            label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y!=null?c.parsed.y.toFixed(1):'—')+' €/h';},
+            footer:function(items){
+              var stk=items.filter(function(i){return i.dataset.stack==='pers';}).reduce(function(s,i){return s+(i.parsed.y||0);},0);
+              return stk>0?'Total stack : '+stk.toFixed(1)+' €/h':'';
+            }
+          }
+        }
+      },
+      scales:{
+        y:{stacked:false,title:{display:true,text:'€/h',font:{size:12,weight:'600'}},
+          grid:{color:'#f0f0f0'},ticks:{font:{size:11}},beginAtZero:true},
+        x:{stacked:true,grid:{display:false},ticks:{font:{size:12,weight:'600'}}}
+      }
+    },
+    plugins:[labelsPlugin]
+  });
+}
+
+// ── SECTION B.1 : classement Maintenance €/t par site ──────────────────────────
+function renderPmMaintBench(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;}))).sort();
+  var rows=sites.map(function(s){return pmGetSiteData(s,pmYr);}).filter(function(r){return r&&r.maintTotalT!=null;});
+  rows.sort(function(a,b){return b.maintTotalT-a.maintTotalT;});
+
+  document.getElementById('pm-maint-bench-title').innerHTML=
+    'Maintenance &euro;/t par site &mdash; R'+pmYr+
+    ' <span style="font-size:11px;font-weight:400;color:#666;margin-left:8px">GER en violet &middot; courant en bleu</span>';
+
+  cPmMaintBench=mkChart('c-pm-maint-bench',{type:'bar',
+    data:{
+      labels:rows.map(function(r){return r.site;}),
+      datasets:[
+        {label:'Entretien courant', data:rows.map(function(r){return r.maintCouranteT||0;}),
+          backgroundColor:'rgba(14,165,233,.75)',borderColor:'#0284c7',borderWidth:1.5,stack:'maint'},
+        {label:'GER (oblig.)', data:rows.map(function(r){return r.maintGERT||0;}),
+          backgroundColor:'rgba(139,92,246,.75)',borderColor:'#7c3aed',borderWidth:1.5,stack:'maint'},
+      ]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},usePointStyle:true}},
+        tooltip:{callbacks:{
+          label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.x||0).toFixed(1)+' €/t';},
+          footer:function(items){
+            var tot=items.reduce(function(s,i){return s+(i.parsed.x||0);},0);
+            return 'Total : '+tot.toFixed(1)+' €/t';
+          }
+        }}
+      },
+      scales:{
+        x:{stacked:true,title:{display:true,text:'€/t'},grid:{color:'#f0f0f0'}},
+        y:{stacked:true,grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ── SECTION B.2 : évolution Maintenance €/t (aires empilées) ───────────────────
+function renderPmMaintEvol(){
+  if(!pmMaintSite) return;
+  var years=[2023,2024,2025];
+  var siteData=years.map(function(yr){return pmGetSiteData(pmMaintSite,yr);});
+  var gerSerie=siteData.map(function(d){return d&&d.maintGERT!=null?+d.maintGERT.toFixed(1):0;});
+  var courSerie=siteData.map(function(d){return d&&d.maintCouranteT!=null?+d.maintCouranteT.toFixed(1):0;});
+  var totSerie=siteData.map(function(d){return d&&d.maintTotalT!=null?+d.maintTotalT.toFixed(1):null;});
+
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var avgSerie=years.map(function(yr){
+    var vals=sites.map(function(s){var x=pmGetSiteData(s,yr);return x&&x.maintTotalT!=null?x.maintTotalT:null;}).filter(function(v){return v!=null;});
+    return vals.length?+(vals.reduce(function(s,v){return s+v;},0)/vals.length).toFixed(1):null;
+  });
+
+  var v1=totSerie[0], v3=totSerie[2];
+  var variation=(v1&&v3)?((v3-v1)/v1*100):null;
+  var varStr=variation!=null?(variation>=0?'+':'')+variation.toFixed(1)+'% (R2023→R2025)':'';
+  var varCol=variation!=null?(variation>0?'#dc2626':'#059669'):'#666';
+  document.getElementById('pm-maint-evol-title').innerHTML='&Eacute;volution Maintenance &euro;/t &mdash; '+pmMaintSite+
+    ' <span style="font-size:12px;font-weight:600;color:'+varCol+';margin-left:8px">'+varStr+'</span>';
+
+  // Plugin pour afficher les valeurs sur les points
+  var labelsPlugin={id:'pointLabels',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx;
+    chart.data.datasets.forEach(function(ds,dsIdx){
+      if(ds.hidden||ds._noLabels) return;
+      var meta=chart.getDatasetMeta(dsIdx);
+      meta.data.forEach(function(pt,i){
+        var val=ds.data[i]; if(val==null||val===0) return;
+        ctx.save();
+        ctx.font='bold 11px sans-serif';
+        ctx.fillStyle=ds.borderColor||'#333';
+        ctx.textAlign='center';
+        ctx.strokeStyle='rgba(255,255,255,.9)';
+        ctx.lineWidth=3;
+        var txt=val.toFixed(1);
+        ctx.strokeText(txt,pt.x,pt.y-10);
+        ctx.fillText(txt,pt.x,pt.y-10);
+        ctx.restore();
+      });
+    });
+  }};
+
+  cPmMaintEvol=mkChart('c-pm-maint-evol',{type:'line',
+    data:{
+      labels:years.map(function(y){return 'R'+y;}),
+      datasets:[
+        {label:'GER (oblig.)', data:gerSerie,
+          borderColor:'#7c3aed', backgroundColor:'rgba(139,92,246,.55)',
+          borderWidth:2, fill:'origin', tension:.25, pointRadius:6, pointBackgroundColor:'#7c3aed',
+          pointBorderColor:'#fff', pointBorderWidth:2, stack:'maint'},
+        {label:'Entretien courant', data:courSerie,
+          borderColor:'#0284c7', backgroundColor:'rgba(14,165,233,.55)',
+          borderWidth:2, fill:'-1', tension:.25, pointRadius:6, pointBackgroundColor:'#0284c7',
+          pointBorderColor:'#fff', pointBorderWidth:2, stack:'maint'},
+        {label:'Moyenne parc (total)', data:avgSerie,
+          borderColor:'#1e293b', backgroundColor:'transparent',
+          borderWidth:2.5, borderDash:[6,4], fill:false, tension:.25,
+          pointRadius:5, pointStyle:'rectRot', pointBackgroundColor:'#1e293b',
+          pointBorderColor:'#fff', pointBorderWidth:1.5},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:20,right:10,left:5,bottom:5}},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11,weight:'600'},usePointStyle:true,padding:12}},
+        tooltip:{
+          mode:'index',intersect:false,
+          callbacks:{
+            label:function(c){return ' '+c.dataset.label+' : '+(c.parsed.y!=null?c.parsed.y.toFixed(1):'—')+' €/t';},
+            footer:function(items){
+              var stk=items.filter(function(i){return i.dataset.stack==='maint';}).reduce(function(s,i){return s+(i.parsed.y||0);},0);
+              return stk>0?'Total maintenance : '+stk.toFixed(1)+' €/t':'';
+            }
+          }
+        }
+      },
+      scales:{
+        y:{stacked:false,title:{display:true,text:'€/t',font:{size:12,weight:'600'}},
+          grid:{color:'#f0f0f0'},ticks:{font:{size:11}},beginAtZero:true},
+        x:{stacked:true,grid:{display:false},ticks:{font:{size:12,weight:'600'}}}
+      }
+    },
+    plugins:[labelsPlugin]
+  });
+}
+
+// ── SECTION C : tableau récap année sélectionnée ───────────────────────────────
+function renderPmTable(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;}))).sort();
+  var rows=sites.map(function(s){return pmGetSiteData(s,pmYr);}).filter(function(r){return r;});
+
+  var h='<div style="overflow-x:auto"><table class="pl-table"><thead><tr>';
+  h+='<th>Site</th>';
+  h+='<th>Heures fonct.</th><th>Tonnage</th>';
+  h+='<th>Pers. Total &euro;/h</th><th>Expl. interne &euro;/h</th><th>Int&eacute;rim &euro;/h</th>';
+  h+='<th>Maint. total &euro;/t</th><th>GER &euro;/t</th><th>Courant &euro;/t</th>';
+  h+='<th>Ratio GER/Total</th>';
+  h+='</tr></thead><tbody>';
+  rows.forEach(function(r){
+    var ratioGER=r.maintTotalT?(r.maintGERT||0)/r.maintTotalT*100:null;
+    h+='<tr><td><b>'+r.site+'</b></td>';
+    h+='<td>'+(r.heures!=null?r.heures.toLocaleString('fr-FR'):'—')+'</td>';
+    h+='<td>'+(r.tonnage!=null?r.tonnage.toLocaleString('fr-FR',{maximumFractionDigits:0}):'—')+'</td>';
+    h+='<td><b>'+(r.persTotalH!=null?r.persTotalH.toFixed(1):'—')+'</b></td>';
+    h+='<td>'+(r.persInterneH!=null?r.persInterneH.toFixed(1):'—')+'</td>';
+    h+='<td>'+(r.persExterneH!=null?r.persExterneH.toFixed(1):'—')+'</td>';
+    h+='<td><b>'+(r.maintTotalT!=null?r.maintTotalT.toFixed(1):'—')+'</b></td>';
+    h+='<td>'+(r.maintGERT!=null?r.maintGERT.toFixed(1):'—')+'</td>';
+    h+='<td>'+(r.maintCouranteT!=null?r.maintCouranteT.toFixed(1):'—')+'</td>';
+    h+='<td>'+(ratioGER!=null?ratioGER.toFixed(0)+'%':'—')+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('pm-table-wrap').innerHTML=h;
+}
+
+// ── Sélecteurs et orchestration ────────────────────────────────────────────────
+function pmSetYr(yr,el){
+  pmYr=+yr;
+  document.querySelectorAll('.pm-yr').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderPmPersBench(); renderPmMaintBench(); renderPmTable();
+}
+function pmSetPersSite(s){ pmPersSite=s; renderPmPersEvol(); }
+function pmSetMaintSite(s){ pmMaintSite=s; renderPmMaintEvol(); }
+
+function renderPm(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;}))).sort();
+  // Init sélecteurs
+  var selPers=document.getElementById('pm-pers-site');
+  if(selPers && !selPers.options.length){
+    sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;selPers.appendChild(o);});
+  }
+  if(!pmPersSite) pmPersSite=sites[0];
+  if(selPers) selPers.value=pmPersSite;
+
+  var selMaint=document.getElementById('pm-maint-site');
+  if(selMaint && !selMaint.options.length){
+    sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;selMaint.appendChild(o);});
+  }
+  if(!pmMaintSite) pmMaintSite=sites[0];
+  if(selMaint) selMaint.value=pmMaintSite;
+
+  renderPmPersBench();
+  renderPmPersEvol();
+  renderPmMaintBench();
+  renderPmMaintEvol();
+  renderPmTable();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ONGLET FILIÈRE & CESSIONS INTERNES — renderFi()
+//   Sites multifilière (UVE jumelle) : Nantes, Saran, Bègles
+//   Sites en propre : les 8 autres
+//   Métriques : VE000045 (Cessions Charge) et VE000046 (Cessions Produit)
+// ══════════════════════════════════════════════════════════════════════════════
+var fiYr=2025;
+var cFiBenchAbs=null, cFiBenchPct=null, cFiEvol=null;
+var SITES_MULTIFILIERE=new Set(['Nantes','Bègles','Saran']);
+
+function fiSiteType(site){ return SITES_MULTIFILIERE.has(site)?'multifiliere':'propre'; }
+
+function fiGetSiteData(site, yr){
+  var annee_pl=({2023:'Réel 2023',2024:'R 2024',2025:'Réel 2025',2026:'B 2026'})[yr];
+  var pl=DATA.find(function(d){return d.Site===site&&d.Annee_PL===annee_pl;});
+  if(!pl) return null;
+  var cessCharge=pl.Prestations_internes!=null?Math.abs(+pl.Prestations_internes):0;
+  var cessProduit=pl.Prestations_internes_Produit!=null?+pl.Prestations_internes_Produit:0;
+  var ca=pl.CA!=null?+pl.CA:null;
+  return {
+    site:site, yr:yr, type:fiSiteType(site),
+    ca:ca,
+    cessCharge:cessCharge,
+    cessProduit:cessProduit,
+    cessNet:cessCharge-cessProduit,
+    pctCA:(ca&&ca>0)?(cessCharge/ca*100):null
+  };
+}
+
+// ── KPI cards en haut ──────────────────────────────────────────────────────────
+function renderFiKpiCards(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var mf=sites.filter(function(s){return fiSiteType(s)==='multifiliere';});
+  var pr=sites.filter(function(s){return fiSiteType(s)==='propre';});
+
+  var sumCharge=function(list){return list.reduce(function(s,site){var d=fiGetSiteData(site,fiYr);return s+(d?d.cessCharge:0);},0);};
+  var sumCA=function(list){return list.reduce(function(s,site){var d=fiGetSiteData(site,fiYr);return s+(d&&d.ca?d.ca:0);},0);};
+
+  var mfCharge=sumCharge(mf), prCharge=sumCharge(pr);
+  var mfCA=sumCA(mf), prCA=sumCA(pr);
+  var mfRatio=mfCA>0?(mfCharge/mfCA*100):0;
+  var prRatio=prCA>0?(prCharge/prCA*100):0;
+
+  document.getElementById('fi-kpi-mf-charge').textContent=fmtM(-mfCharge);
+  document.getElementById('fi-kpi-pr-charge').textContent=fmtM(-prCharge);
+  document.getElementById('fi-kpi-mf-charge-pct').textContent=mf.length+' sites &middot; '+mfRatio.toFixed(1)+'% du CA';
+  document.getElementById('fi-kpi-pr-charge-pct').innerHTML=pr.length+' sites &middot; '+prRatio.toFixed(1)+'% du CA';
+  document.getElementById('fi-kpi-mf-ratio').textContent=mfRatio.toFixed(1)+'%';
+  document.getElementById('fi-kpi-pr-ratio').textContent=prRatio.toFixed(1)+'%';
+}
+
+// ── Section A : barres comparatives (absolu + %) ──────────────────────────────
+function renderFiBench(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var allRows=sites.map(function(s){return fiGetSiteData(s,fiYr);}).filter(function(r){return r;});
+  // Groupes : multifiliere en haut, propre en bas, triés desc dans chaque groupe
+  var mfRows=allRows.filter(function(r){return r.type==='multifiliere';}).sort(function(a,b){return b.cessCharge-a.cessCharge;});
+  var prRows=allRows.filter(function(r){return r.type==='propre';}).sort(function(a,b){return b.cessCharge-a.cessCharge;});
+  var ordered=mfRows.concat(prRows);
+
+  var labels=ordered.map(function(r){return r.site+(r.type==='multifiliere'?' 🏭':'');});
+  var colors=ordered.map(function(r){return r.type==='multifiliere'?'rgba(220,38,38,.75)':'rgba(16,185,129,.65)';});
+  var borders=ordered.map(function(r){return r.type==='multifiliere'?'#991b1b':'#047857';});
+
+  // Plugin séparateur visuel entre les 2 groupes
+  var sepPlugin={id:'sepLine',afterDatasetsDraw:function(chart){
+    var meta=chart.getDatasetMeta(0);
+    if(!meta||!meta.data.length||mfRows.length===0||prRows.length===0) return;
+    var sepIdx=mfRows.length;
+    if(sepIdx>=meta.data.length) return;
+    var ctx=chart.ctx, ya=chart.scales.y, xa=chart.scales.x;
+    var y=(meta.data[sepIdx-1].y+meta.data[sepIdx].y)/2;
+    ctx.save();
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(xa.left,y); ctx.lineTo(xa.right,y); ctx.stroke();
+    ctx.restore();
+  }};
+
+  // Graphe 1 — Valeurs absolues
+  cFiBenchAbs=mkChart('c-fi-bench-abs',{type:'bar',
+    data:{labels:labels,datasets:[{label:'Cessions internes (Charge)',
+      data:ordered.map(function(r){return r.cessCharge/1e6;}),
+      backgroundColor:colors,borderColor:borders,borderWidth:1.5,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:function(c){return c[0].label.replace(' 🏭','');},
+          label:function(c){
+            var r=ordered[c.dataIndex];
+            return [' '+(c.parsed.x||0).toFixed(2)+' M€',' Type : '+(r.type==='multifiliere'?'Multifilière':'En propre')];
+          }
+        }}
+      },
+      scales:{x:{title:{display:true,text:'M€ (Charge)'},grid:{color:'#f0f0f0'}},
+              y:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}}}
+    },
+    plugins:[sepPlugin]
+  });
+
+  // Graphe 2 — En % du CA
+  cFiBenchPct=mkChart('c-fi-bench-pct',{type:'bar',
+    data:{labels:labels,datasets:[{label:'Cessions / CA (%)',
+      data:ordered.map(function(r){return r.pctCA;}),
+      backgroundColor:colors,borderColor:borders,borderWidth:1.5,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:function(c){return c[0].label.replace(' 🏭','');},
+          label:function(c){
+            var r=ordered[c.dataIndex];
+            return [' '+(c.parsed.x||0).toFixed(1)+'% du CA',' Cessions : '+fmtM(-r.cessCharge)+' / CA : '+fmtM(r.ca)];
+          }
+        }}
+      },
+      scales:{x:{title:{display:true,text:'% du CA'},grid:{color:'#f0f0f0'}},
+              y:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}}}
+    },
+    plugins:[sepPlugin]
+  });
+}
+
+// ── Section B : évolution 3 ans des cessions moyennes par groupe ──────────────
+function renderFiEvol(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var years=[2023,2024,2025];
+  var mfSites=sites.filter(function(s){return fiSiteType(s)==='multifiliere';});
+  var prSites=sites.filter(function(s){return fiSiteType(s)==='propre';});
+
+  var serieAbs=function(group){
+    return years.map(function(yr){
+      var vals=group.map(function(s){var d=fiGetSiteData(s,yr);return d?d.cessCharge/1e6:null;}).filter(function(v){return v!=null;});
+      return vals.length?vals.reduce(function(s,v){return s+v;},0)/vals.length:null;
+    });
+  };
+  var seriePct=function(group){
+    return years.map(function(yr){
+      var totC=0,totCA=0;
+      group.forEach(function(s){var d=fiGetSiteData(s,yr);if(d){totC+=d.cessCharge;if(d.ca)totCA+=d.ca;}});
+      return totCA>0?+(totC/totCA*100).toFixed(1):null;
+    });
+  };
+
+  cFiEvol=mkChart('c-fi-evol',{type:'line',
+    data:{labels:years.map(function(y){return 'R'+y;}),
+      datasets:[
+        {label:'Multifilière — Charge moyenne (M€)', data:serieAbs(mfSites),
+          borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.15)',
+          borderWidth:2.5,fill:true,tension:.3,pointRadius:6,yAxisID:'y1'},
+        {label:'Propre — Charge moyenne (M€)', data:serieAbs(prSites),
+          borderColor:'#059669',backgroundColor:'rgba(16,185,129,.12)',
+          borderWidth:2.5,fill:true,tension:.3,pointRadius:6,yAxisID:'y1'},
+        {label:'Multifilière — % du CA', data:seriePct(mfSites),
+          borderColor:'#991b1b',backgroundColor:'transparent',
+          borderWidth:2,borderDash:[5,4],fill:false,tension:.3,pointRadius:5,pointStyle:'rectRot',yAxisID:'y2'},
+        {label:'Propre — % du CA', data:seriePct(prSites),
+          borderColor:'#047857',backgroundColor:'transparent',
+          borderWidth:2,borderDash:[5,4],fill:false,tension:.3,pointRadius:5,pointStyle:'rectRot',yAxisID:'y2'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},usePointStyle:true,padding:12}},
+        tooltip:{callbacks:{label:function(c){
+          var unit=c.dataset.yAxisID==='y2'?'%':' M€';
+          return ' '+c.dataset.label+' : '+(c.parsed.y!=null?c.parsed.y.toFixed(2)+unit:'—');
+        }}}
+      },
+      scales:{
+        y1:{position:'left',title:{display:true,text:'M€ (Charge moyenne)'},grid:{color:'#f0f0f0'}},
+        y2:{position:'right',title:{display:true,text:'% du CA'},grid:{drawOnChartArea:false}},
+        x:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}}
+      }
+    }
+  });
+}
+
+// ── Section C : tableau détaillé ───────────────────────────────────────────────
+function renderFiTable(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var rows=sites.map(function(s){return fiGetSiteData(s,fiYr);}).filter(function(r){return r;});
+  rows.sort(function(a,b){
+    if(a.type!==b.type) return a.type==='multifiliere'?-1:1;
+    return b.cessCharge-a.cessCharge;
+  });
+
+  var h='<div style="overflow-x:auto"><table class="pl-table"><thead><tr>';
+  h+='<th>Site</th><th>Type</th><th>CA</th>';
+  h+='<th>Cessions Charge</th><th>Cessions Produit</th><th>Net</th>';
+  h+='<th>% CA</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var typLabel=r.type==='multifiliere'
+      ?'<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">🏭 MULTIFILIÈRE</span>'
+      :'<span style="background:#d1fae5;color:#047857;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">⚙️ EN PROPRE</span>';
+    h+='<tr><td><b>'+r.site+'</b></td><td>'+typLabel+'</td>';
+    h+='<td>'+(r.ca!=null?fmtM(r.ca):'—')+'</td>';
+    h+='<td class="neg">'+(r.cessCharge?fmtM(-r.cessCharge):'—')+'</td>';
+    h+='<td class="pos">'+(r.cessProduit?fmtM(r.cessProduit):'—')+'</td>';
+    h+='<td class="neg"><b>'+(r.cessNet?fmtM(-r.cessNet):'—')+'</b></td>';
+    h+='<td>'+(r.pctCA!=null?r.pctCA.toFixed(1)+'%':'—')+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('fi-table-wrap').innerHTML=h;
+}
+
+// ── Orchestration ──────────────────────────────────────────────────────────────
+function fiSetYr(yr,el){
+  fiYr=+yr;
+  document.querySelectorAll('.fi-yr').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderFiKpiCards(); renderFiBench(); renderFiTable();
+}
+
+function renderFi(){
+  renderFiKpiCards();
+  renderFiBench();
+  renderFiTable();
+}
+
+// ── Benchmark KPIs (Graph 1 : classement, Graph 2 : évolution) ───────────────
+var tkBenchKpi='debit', tkBenchYr=2025;
+var tkEvolSite=null, tkEvolKpi='debit';
+var cTkBench=null, cTkEvol=null;
+
+// Labels et unités pour les nouveaux KPIs (inclut tonnage et refus)
+var TK_KPI_INFO={
+  debit:         {label:'Débit',        unit:'t/h',     fmt:1, lowGood:false},
+  dispo:         {label:'Disponibilité globale', unit:'%',  fmt:1, lowGood:false},
+  dispo_process: {label:'Disponibilité process', unit:'%',  fmt:1, lowGood:false},
+  heures:        {label:'Heures de fonctionnement',   unit:'h',  fmt:0, lowGood:false},
+  tonnage:       {label:'Tonnage entrant', unit:'t',  fmt:0, lowGood:false},
+  productivite:  {label:'Productivité',unit:'t/h/op.', fmt:2, lowGood:false},
+  refus:         {label:'Taux de refus',   unit:'%',  fmt:1, lowGood:true}, // refus : moins = mieux
+  fonctions_tri: {label:'Fonctions de tri',unit:'',   fmt:0, lowGood:false},
+};
+
+function fmtKpiVal(v, kpi){
+  if(v==null||isNaN(v)) return '—';
+  var info=TK_KPI_INFO[kpi]||{fmt:1,unit:''};
+  var s=Number(v).toFixed(info.fmt);
+  return s+(info.unit?' '+info.unit:'');
+}
+
+// ── Graph 1 : classement des sites pour un KPI/année ─────────────────────────
+function renderTkBench(){
+  var m=getTkMerged();
+  var info=TK_KPI_INFO[tkBenchKpi]||{label:tkBenchKpi};
+  // Fonctions de tri = indépendant de l'année : on prend la dernière valeur dispo par site
+  var isYearIndep=(tkBenchKpi==='fonctions_tri');
+  var rows;
+  if(isYearIndep){
+    // Une seule valeur par site (la plus récente non-null)
+    var bySite={};
+    m.forEach(function(d){
+      if(d[tkBenchKpi]==null) return;
+      if(!bySite[d.site] || d.annee>bySite[d.site].annee){
+        bySite[d.site]={site:d.site, v:+d[tkBenchKpi], annee:d.annee};
+      }
+    });
+    rows=Object.values(bySite);
+  } else {
+    rows=m.filter(function(d){return d.annee===tkBenchYr && d[tkBenchKpi]!=null;})
+          .map(function(d){return{site:d.site, v:+d[tkBenchKpi]};});
+  }
+  rows.sort(function(a,b){return info.lowGood?(a.v-b.v):(b.v-a.v);});
+  var avg=rows.length?rows.reduce(function(s,r){return s+r.v;},0)/rows.length:0;
+
+  // Couleur rouge/vert UNIQUEMENT pour les KPIs qualitatifs (Dispo + Taux refus)
+  // Pour les autres : bleu neutre
+  var useQualColor=(tkBenchKpi==='dispo'||tkBenchKpi==='dispo_process'||tkBenchKpi==='refus');
+  var colors=rows.map(function(r){
+    if(!useQualColor) return 'rgba(59,130,246,.7)';
+    var better=info.lowGood?r.v<avg:r.v>avg;
+    return better?'rgba(16,185,129,.7)':'rgba(239,68,68,.6)';
+  });
+  var border=rows.map(function(r){
+    if(!useQualColor) return '#2563eb';
+    var better=info.lowGood?r.v<avg:r.v>avg;
+    return better?'#059669':'#dc2626';
+  });
+
+  // Masquer/afficher le sélecteur d'année selon le KPI
+  var yrRow=document.getElementById('tk-bench-yr-row');
+  if(yrRow) yrRow.style.display=isYearIndep?'none':'';
+
+  var titleAnneeStr=isYearIndep?'':' &middot; R'+tkBenchYr;
+  document.getElementById('tk-bench-title').innerHTML='Classement des sites &mdash; '+
+    info.label+(info.unit?' ('+info.unit+')':'')+titleAnneeStr+
+    ' <span style="font-size:11px;font-weight:400;color:#666;margin-left:8px">Moyenne parc : '+
+    fmtKpiVal(avg,tkBenchKpi)+'</span>';
+
+  // Plugin inline pour dessiner la ligne de moyenne parc
+  var avgLinePlugin={id:'avgLine',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx; var xScale=chart.scales.x; var yScale=chart.scales.y;
+    if(!xScale||!yScale) return;
+    var xPx=xScale.getPixelForValue(avg);
+    ctx.save();
+    ctx.strokeStyle='#1e293b'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(xPx,yScale.top); ctx.lineTo(xPx,yScale.bottom); ctx.stroke();
+    ctx.restore();
+  }};
+
+  cTkBench=mkChart('c-tk-bench',{type:'bar',
+    data:{labels:rows.map(function(r){return r.site;}),
+      datasets:[{label:info.label,data:rows.map(function(r){return r.v;}),
+        backgroundColor:colors,borderColor:border,borderWidth:1.5,borderRadius:4}]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:true,
+          callbacks:{
+            title:function(c){return c[0]&&c[0].label?c[0].label:'';},
+            label:function(c){return ' '+info.label+' : '+fmtKpiVal(c.parsed.x,tkBenchKpi);}
+          }
+        }
+      },
+      scales:{x:{title:{display:true,text:info.unit||info.label},grid:{color:'#f0f0f0'}},
+              y:{grid:{display:false},ticks:{font:{size:10}}}}
+    },
+    plugins:[avgLinePlugin]
+  });
+}
+
+function tkBenchSetKpi(kpi,el){
+  tkBenchKpi=kpi;
+  document.querySelectorAll('.tk-bench-kpi').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkBench();
+}
+function tkBenchSetYr(yr,el){
+  tkBenchYr=+yr;
+  document.querySelectorAll('.tk-bench-yr').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkBench();
+}
+
+// ── Graph 2 : évolution 2023→2025 pour un site / KPI ─────────────────────────
+function renderTkEvol(){
+  var m=getTkMerged();
+  var info=TK_KPI_INFO[tkEvolKpi]||{label:tkEvolKpi};
+  var years=[2023,2024,2025];
+  // Valeurs du site
+  var siteVals=years.map(function(yr){
+    var r=m.find(function(d){return d.site===tkEvolSite && d.annee===yr;});
+    return r&&r[tkEvolKpi]!=null?+r[tkEvolKpi]:null;
+  });
+  // Moyenne parc par année
+  var parcAvg=years.map(function(yr){
+    var vs=m.filter(function(d){return d.annee===yr && d[tkEvolKpi]!=null;})
+            .map(function(d){return +d[tkEvolKpi];});
+    return vs.length?vs.reduce(function(s,v){return s+v;},0)/vs.length:null;
+  });
+
+  document.getElementById('tk-evol-title').innerHTML='&Eacute;volution &mdash; '+
+    info.label+(info.unit?' ('+info.unit+')':'');
+
+  cTkEvol=mkChart('c-tk-evol',{type:'line',
+    data:{labels:years.map(function(y){return 'R'+y;}),datasets:[
+      {label:tkEvolSite, data:siteVals,
+        borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.15)',
+        borderWidth:3,tension:.3,fill:true,pointRadius:6,pointHoverRadius:8,
+        pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},
+      {label:'Moyenne parc', data:parcAvg,
+        borderColor:'#64748b',backgroundColor:'transparent',
+        borderWidth:2,borderDash:[5,4],tension:.3,fill:false,
+        pointRadius:4,pointStyle:'rectRot',pointBackgroundColor:'#64748b'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},usePointStyle:true}},
+        tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+' : '+fmtKpiVal(c.parsed.y,tkEvolKpi);}}}
+      },
+      scales:{y:{title:{display:true,text:info.unit||info.label},grid:{color:'#f0f0f0'}},
+              x:{grid:{display:false}}}
+    }
+  });
+}
+
+function tkEvolSetSite(s){
+  tkEvolSite=s;
+  renderTkEvol();
+}
+function tkEvolSetKpi(kpi,el){
+  tkEvolKpi=kpi;
+  document.querySelectorAll('.tk-evol-kpi').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderTkEvol();
+}
+
 function renderTk(){
   var m=getTkMerged();
   var sites=Array.from(new Set(m.map(function(d){return d.site;}))).sort();
@@ -3366,10 +4322,19 @@ function renderTk(){
   if(!sel.options.length){ sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;sel.appendChild(o);}); }
   if(!tkSite) tkSite=sites[0];
   sel.value=tkSite;
+  // Initialiser le sélecteur de site du graphe d'évolution
+  var selEvol=document.getElementById('tk-evol-site');
+  if(selEvol && !selEvol.options.length){
+    sites.forEach(function(s){var o=document.createElement('option');o.value=s;o.text=s;selEvol.appendChild(o);});
+  }
+  if(!tkEvolSite) tkEvolSite=sites[0];
+  if(selEvol) selEvol.value=tkEvolSite;
   renderTkSiteDetail();
   renderTkCorr();
   renderTkScatter();
   renderTkTable();
+  renderTkBench();
+  renderTkEvol();
 }
 
 // ══════════════════════════════════════════════════════
@@ -3638,6 +4603,8 @@ function q1SetSite(s){q1Site=s;renderQ1Site();}
       else if(id==='et') renderEt();
       else if(id==='rg') renderRg();
       else if(id==='tk') renderTk();
+      else if(id==='pm') renderPm();
+      else if(id==='fi') renderFi();
       else if(id==='q1') renderQ1();
     }); });
   });
