@@ -961,6 +961,17 @@ select.sel:focus{border-color:#00a3e0}
     </div>
   </div>
 
+  <!-- ────── SECTION A bis — Cessions €/t ────── -->
+  <div class="row2" style="margin-bottom:22px">
+    <div class="card full" style="border-top:3px solid #7c3aed">
+      <div class="card-title">Cessions internes &euro;/t &mdash; comparaison &agrave; la tonne entrante</div>
+      <div style="position:relative;height:380px"><canvas id="c-fi-bench-eurt"></canvas></div>
+      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
+        Cessions internes ramen&eacute;es au tonnage entrant &mdash; m&eacute;trique la plus comparable entre sites
+      </div>
+    </div>
+  </div>
+
   <!-- ────── SECTION B — Tableau détaillé ────── -->
   <div class="section-sep">Tableau d&eacute;taill&eacute; par site</div>
   <div id="fi-table-wrap"></div>
@@ -3939,13 +3950,15 @@ function fiGetSiteData(site, yr){
   var cessCharge=pl.Prestations_internes!=null?Math.abs(+pl.Prestations_internes):0;
   var cessProduit=pl.Prestations_internes_Produit!=null?+pl.Prestations_internes_Produit:0;
   var ca=pl.CA!=null?+pl.CA:null;
+  var tn=pl.Tonnes_entrantes!=null?Math.abs(+pl.Tonnes_entrantes):null;
   return {
     site:site, yr:yr, type:fiSiteType(site),
-    ca:ca,
+    ca:ca, tonnage:tn,
     cessCharge:cessCharge,
     cessProduit:cessProduit,
     cessNet:cessCharge-cessProduit,
-    pctCA:(ca&&ca>0)?(cessCharge/ca*100):null
+    pctCA:(ca&&ca>0)?(cessCharge/ca*100):null,
+    eurT:(tn&&tn>0)?(cessCharge/tn):null
   };
 }
 
@@ -4133,12 +4146,72 @@ function fiSetYr(yr,el){
   fiYr=+yr;
   document.querySelectorAll('.fi-yr').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
-  renderFiKpiCards(); renderFiBench(); renderFiTable();
+  renderFiKpiCards(); renderFiBench(); renderFiBenchEurT(); renderFiTable();
+}
+
+// ── Section A bis : Cessions internes en €/t ──────────────────────────────────
+function renderFiBenchEurT(){
+  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
+  var allRows=sites.map(function(s){return fiGetSiteData(s,fiYr);}).filter(function(r){return r&&r.eurT!=null;});
+  var mfRows=allRows.filter(function(r){return r.type==='multifiliere';}).sort(function(a,b){return b.eurT-a.eurT;});
+  var prRows=allRows.filter(function(r){return r.type==='propre';}).sort(function(a,b){return b.eurT-a.eurT;});
+  var ordered=mfRows.concat(prRows);
+
+  var labels=ordered.map(function(r){return r.site+(r.type==='multifiliere'?' 🏭':'');});
+  var colors=ordered.map(function(r){return r.type==='multifiliere'?'rgba(220,38,38,.75)':'rgba(16,185,129,.65)';});
+  var borders=ordered.map(function(r){return r.type==='multifiliere'?'#991b1b':'#047857';});
+
+  // Plugin séparateur visuel
+  var sepPlugin={id:'sepLineEurT',afterDatasetsDraw:function(chart){
+    var meta=chart.getDatasetMeta(0);
+    if(!meta||!meta.data.length||mfRows.length===0||prRows.length===0) return;
+    var sepIdx=mfRows.length;
+    if(sepIdx>=meta.data.length) return;
+    var ctx=chart.ctx, ya=chart.scales.y, xa=chart.scales.x;
+    var y=(meta.data[sepIdx-1].y+meta.data[sepIdx].y)/2;
+    ctx.save();
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(xa.left,y); ctx.lineTo(xa.right,y); ctx.stroke();
+    ctx.restore();
+  }};
+
+  // Moyennes par groupe
+  var avgMf=mfRows.length?mfRows.reduce(function(s,r){return s+r.eurT;},0)/mfRows.length:0;
+  var avgPr=prRows.length?prRows.reduce(function(s,r){return s+r.eurT;},0)/prRows.length:0;
+
+  mkChart('c-fi-bench-eurt',{type:'bar',
+    data:{labels:labels,datasets:[{label:'Cessions €/t',
+      data:ordered.map(function(r){return r.eurT;}),
+      backgroundColor:colors,borderColor:borders,borderWidth:1.5,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false,axis:'y'},
+      plugins:{
+        legend:{display:false},
+        title:{display:true,
+          text:'Moyenne multifilière : '+avgMf.toFixed(1)+' €/t  ·  Moyenne propre : '+avgPr.toFixed(1)+' €/t',
+          font:{size:11,weight:'normal'},color:'#555',padding:{bottom:8}},
+        tooltip:{callbacks:{
+          title:function(c){return c[0].label.replace(' 🏭','');},
+          label:function(c){
+            var r=ordered[c.dataIndex];
+            return [' '+(c.parsed.x||0).toFixed(1)+' €/t',
+                    ' Cessions : '+fmtM(-r.cessCharge),
+                    ' Tonnage : '+(r.tonnage?(r.tonnage/1000).toFixed(1)+' kt':'—'),
+                    ' Type : '+(r.type==='multifiliere'?'Multifilière 🏭':'En propre ⚙️')];
+          }
+        }}
+      },
+      scales:{x:{title:{display:true,text:'€/t entrante'},grid:{color:'#f0f0f0'}},
+              y:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}}}
+    },
+    plugins:[sepPlugin]
+  });
 }
 
 function renderFi(){
   renderFiKpiCards();
   renderFiBench();
+  renderFiBenchEurT();
   renderFiTable();
 }
 
