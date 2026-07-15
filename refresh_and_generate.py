@@ -17,10 +17,10 @@ import sys
 
 import openpyxl
 
-BASE = os.path.dirname(os.path.abspath(__file__))
-SCRIPT_DIR = BASE
-ROOT_DIR = BASE
-SRC_XLSX = os.path.join(BASE, "BDD_dashboard.xlsx")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))   # test/_internals/
+ROOT_DIR = os.path.dirname(SCRIPT_DIR)                    # test/
+BASE = SCRIPT_DIR  # Les CSVs et le HTML temp sont generes ici
+SRC_XLSX = os.path.join(ROOT_DIR, "BDD_dashboard.xlsx")
 
 # ─── Mappings ─────────────────────────────────────────────────────────────────
 
@@ -180,6 +180,72 @@ def read_pl_annuel(wb, sheet_name):
     return site_cols, data, libelles, categories
 
 
+def read_pl_periodique_q1(wb):
+    """Lit l'onglet trimestriel (Suivi trimestriel 2026 ou Q1_2026 pour retro-compat).
+       Retourne : data = {(site, periode, annee, key): valeur}
+       Supporte T1/T2/T3/T4 (BDD) -> Q1/S1/9M/ANN (interne, cumuls).
+       Une periode est ignoree si aucune valeur n'y est renseignee.
+    """
+    # Choix de l'onglet : nouveau nom prioritaire
+    if "Suivi trimestriel 2026" in wb.sheetnames:
+        ws = wb["Suivi trimestriel 2026"]
+    elif "Q1_2026" in wb.sheetnames:
+        ws = wb["Q1_2026"]
+    else:
+        return None
+
+    # Detection : L2 col 4 doit valoir 'T1', 'Q1' (ancienne convention) ou similaire
+    l2_c4 = ws.cell(row=2, column=4).value
+    if l2_c4 not in ("T1", "Q1"):
+        # Ancien format (2 lignes header) : fallback vers read_pl_annuel
+        return None
+
+    # Mapping libelle affiche -> code interne (cumuls a fin de periode)
+    # T1 = cumul fin T1 (jan-mars) ; T2 = cumul S1 (jan-juin) ;
+    # T3 = cumul 9M (jan-sept)     ; T4 = cumul annuel (jan-dec)
+    PERIOD_ALIAS = {
+        "T1": "Q1", "T2": "S1", "T3": "9M", "T4": "ANN",
+        "Q1": "Q1", "S1": "S1",  # retro-compat
+    }
+
+    # Parcourir les colonnes pour construire {site: {periode: {annee: col_idx}}}
+    site_period_cols = {}
+    last_site = None
+    last_period = None
+    for c in range(4, ws.max_column + 1):
+        s = ws.cell(row=1, column=c).value
+        if s:
+            last_site = s
+        p = ws.cell(row=2, column=c).value
+        if p:
+            # Traduit T1/T2 (BDD) vers Q1/S1 (interne) pour compat JS
+            last_period = PERIOD_ALIAS.get(p, p)
+        if last_site is None or last_period is None:
+            continue
+        annee = ws.cell(row=3, column=c).value
+        site_period_cols.setdefault(last_site, {}).setdefault(last_period, {})[annee] = c
+
+    data = {}
+    for r in range(4, ws.max_row + 1):
+        code = ws.cell(row=r, column=1).value
+        libelle = (ws.cell(row=r, column=2).value or "").strip()
+        if code and code != "—":
+            key = code
+        else:
+            key = libelle
+        if not key:
+            continue
+        for site, periods in site_period_cols.items():
+            for period, year_cols in periods.items():
+                for annee, col_idx in year_cols.items():
+                    val = ws.cell(row=r, column=col_idx).value
+                    num_val = _to_num(val)
+                    if num_val is not None:
+                        data[(site, period, annee, key)] = num_val
+
+    return data
+
+
 # ─── 1. data_synthese.csv ─────────────────────────────────────────────────────
 def write_data_synthese(wb):
     _, data, _, _ = read_pl_annuel(wb, "PL_Annuel")
@@ -299,31 +365,78 @@ def write_data_detail_pl(wb):
 
 
 # ─── 4. data_q1_2026.csv ──────────────────────────────────────────────────────
+# Definit toutes les periodes possibles + comment les calculer.
+# Cumuls (T1/T2/T3/T4) = valeurs brutes de la BDD (codes Q1/S1/9M/ANN).
+# Trimestres isoles (Q2/Q3/Q4) = calcul par difference.
+PERIODS_DEF = [
+    # (code_interne, cumul_bdd_source, cumul_precedent_ou_none, isolé?)
+    ("Q1",  "Q1",  None,  False),   # T1 cumul jan-mars (= T1 isole aussi)
+    ("Q2",  "S1",  "Q1",  True),    # T2 isole = S1 - Q1 (avr-juin)
+    ("S1",  "S1",  None,  False),   # Cumul S1 (jan-juin)
+    ("Q3",  "9M",  "S1",  True),    # T3 isole = 9M - S1 (juil-sept)
+    ("9M",  "9M",  None,  False),   # Cumul 9M (jan-sept)
+    ("Q4",  "ANN", "9M",  True),    # T4 isole = ANN - 9M (oct-dec)
+    ("ANN", "ANN", None,  False),   # Cumul annuel
+]
+
+
 def write_data_q1(wb):
-    _, data, _, _ = read_pl_annuel(wb, "Q1_2026")
-    headers = ["Site","Metrique","R2025","R2026","B2026"]
+    """Genere data_q1_2026.csv avec toutes les periodes disponibles.
+       Structure : Site, Metrique, Periode, R2025, R2026, B2026.
+       Periodes possibles : Q1, Q2, S1, Q3, 9M, Q4, ANN.
+       Une periode n'est ecrite que si la source BDD correspondante est renseignee.
+    """
+    periodic_data = read_pl_periodique_q1(wb)
+
+    # Detection des cumuls presents (au moins une valeur non vide dans le cumul)
+    cumuls_present = set()
+    for (site, period, annee, key), v in periodic_data.items():
+        if v is not None and v != "":
+            cumuls_present.add(period)
+
+    # On genere une periode si son cumul source est present dans la BDD
+    active_periods = [p for p in PERIODS_DEF if p[1] in cumuls_present]
+    active_codes = [p[0] for p in active_periods]
+
+    def get_val(site, period_code, annee, key):
+        """Recupere la valeur cumul brut ou calcul isole."""
+        pdef = next((p for p in PERIODS_DEF if p[0] == period_code), None)
+        if pdef is None:
+            return None
+        _, cumul_source, cumul_prev, is_isole = pdef
+        v_cur = periodic_data.get((site, cumul_source, annee, key))
+        if not is_isole:
+            return v_cur
+        # Isole : difference avec le cumul precedent
+        v_prev = periodic_data.get((site, cumul_prev, annee, key))
+        if v_cur is None or v_prev is None:
+            return None
+        return v_cur - v_prev
+
+    headers = ["Site", "Metrique", "Periode", "R2025", "R2026", "B2026"]
     rows = []
+
     for site in SITES_ORDER:
-        for key, metric_name in Q1_METRICS_EXPORT:
-            row = {"Site": site, "Metrique": metric_name}
-            for annee in ["R2025","R2026","B2026"]:
-                if key == "_MARGE_BRUTE":
-                    # Marge_brute = CA + VE000036 + VE000050
-                    ca   = data.get((site, annee, "VE000001"))
-                    v36  = data.get((site, annee, "VE000036"))
-                    v50  = data.get((site, annee, "VE000050"))
-                    if None in (ca, v36, v50):
-                        v = ""
+        for period_code in active_codes:
+            for key, metric_name in Q1_METRICS_EXPORT:
+                row = {"Site": site, "Metrique": metric_name, "Periode": period_code}
+                for annee in ["R2025", "R2026", "B2026"]:
+                    if key == "_MARGE_BRUTE":
+                        ca  = get_val(site, period_code, annee, "VE000001")
+                        v36 = get_val(site, period_code, annee, "VE000036")
+                        v50 = get_val(site, period_code, annee, "VE000050")
+                        if None in (ca, v36, v50):
+                            v = ""
+                        else:
+                            v = ca + v36 + v50
                     else:
-                        v = ca + v36 + v50
-                else:
-                    v = data.get((site, annee, key))
-                    if v is None:
-                        v = ""
-                row[annee] = v
-            rows.append(row)
+                        v = get_val(site, period_code, annee, key)
+                        if v is None:
+                            v = ""
+                    row[annee] = v
+                rows.append(row)
     _write_csv(os.path.join(BASE, "data_q1_2026.csv"), headers, rows)
-    print(f"  [OK] data_q1_2026.csv          ({len(rows)} lignes)")
+    print(f"  [OK] data_q1_2026.csv          ({len(rows)} lignes, periodes actives: {'/'.join(active_codes)})")
 
 
 # ─── 5. data_kpi_techniques.csv ───────────────────────────────────────────────
@@ -374,12 +487,12 @@ def main():
         print("\n[ERREUR] La generation du dashboard a echoue.")
         sys.exit(result.returncode)
 
-    # Synchroniser index.html pour GitHub Pages
+    # Copier le dashboard.html vers le dossier racine (visible pour l'utilisateur)
     import shutil
-    src_html = os.path.join(BASE, "dashboard.html")
-    idx_html = os.path.join(BASE, "index.html")
+    src_html = os.path.join(SCRIPT_DIR, "dashboard.html")
+    dst_html = os.path.join(ROOT_DIR, "dashboard.html")
     if os.path.exists(src_html):
-        shutil.copy(src_html, idx_html)
+        shutil.copy(src_html, dst_html)
 
     print(f"\n[OK] Tout est a jour ! Ouvrez dashboard.html dans votre navigateur.")
 

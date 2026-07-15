@@ -294,6 +294,11 @@ select.sel:focus{border-color:#00a3e0}
 .q1-site-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:.72rem;font-weight:700;color:#fff;min-width:30px;white-space:nowrap;transition:width .5s ease}
 .q1-site-bar-val{margin-left:8px;font-size:.75rem;font-weight:700;white-space:nowrap}
 .q1-sel-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+/* Selecteur de periode Q1/Q2/S1 */
+.q1-period-sel{display:inline-flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:22px;margin-left:12px}
+.q1-period-btn{border:0;background:transparent;padding:6px 14px;font-size:.78rem;font-weight:700;color:#6b7280;border-radius:18px;cursor:pointer;transition:all .18s;letter-spacing:.02em}
+.q1-period-btn:hover{color:#003a63}
+.q1-period-btn.active{background:#003a63;color:#fff;box-shadow:0 2px 6px rgba(0,58,99,.3)}
 .q1-sel-lbl{font-size:.82rem;font-weight:700;color:#003a63}
 /* ── Accordion P&L ── */
 .q1-acc-item{border-bottom:1px solid #f1f5f9}
@@ -343,9 +348,7 @@ select.sel:focus{border-color:#00a3e0}
   <div class="tab"         onclick="showTab('dt',this)">D&eacute;tail par site</div>
   <div class="tab"         onclick="showTab('rg',this)">R&eacute;gion</div>
   <div class="tab"         onclick="showTab('tk',this)">Perfs &rarr; Charges</div>
-  <div class="tab"         onclick="showTab('pm',this)">Personnel &amp; Maintenance</div>
-  <div class="tab"         onclick="showTab('fi',this)">Fili&egrave;re &amp; Cessions internes</div>
-  <div class="tab"         onclick="showTab('q1',this)">Suivi T1 2026</div>
+  <div class="tab"         onclick="showTab('q1',this)">Suivi trimestriel 2026</div>
 </div>
 
 <!-- ═══ ONGLET 0 — PAGE DE GARDE ════════════════════════════════════════════ -->
@@ -826,165 +829,17 @@ select.sel:focus{border-color:#00a3e0}
   </div>
 </div>
 
-<!-- ═══ ONGLET PERSONNEL & MAINTENANCE ═════════════════════════════════════ -->
-<div class="page" id="tab-pm">
-  <div class="toolbar">
-    <label>Ann&eacute;e :</label>
-    <button class="btn-pill pm-yr" onclick="pmSetYr(2023,this)">R2023</button>
-    <button class="btn-pill pm-yr" onclick="pmSetYr(2024,this)">R2024</button>
-    <button class="btn-pill pm-yr active" onclick="pmSetYr(2025,this)">R2025</button>
-    <div class="spacer"></div>
-    <button class="btn-print" onclick="window.print()" style="margin-left:12px">&#128438; Exporter PDF</button>
-  </div>
-
-  <!-- ────── SECTION A — PERSONNEL HORAIRE ────── -->
-  <div class="section-sep" style="margin-top:18px">Co&ucirc;ts horaires du Personnel d&rsquo;exploitation &mdash; interne vs int&eacute;rim</div>
-  <p style="font-size:.78rem;color:#666;margin:6px 0 14px;line-height:1.5">
-    Personnel d&rsquo;exploitation divis&eacute; par les heures de fonctionnement du site.<br>
-    &bull; <b style="color:#d97706">Exploitation interne</b> = op&eacute;rateurs de tri + encadrement de proximit&eacute; SPE (VE000052)<br>
-    &bull; <b style="color:#78350f">Int&eacute;rim</b> = personnel externe (VE000053)<br>
-    <i>&Agrave; noter : le personnel maintenance et les avantages sociaux ne sont pas inclus dans ce graphe (visibles dans le <b>Personnel Total &euro;/h</b> du tableau r&eacute;cap en bas).</i>
-  </p>
-
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card" style="border-top:3px solid #f59e0b">
-      <div class="card-title" id="pm-pers-bench-title">Co&ucirc;t horaire par site &mdash; R2025</div>
-      <div style="position:relative;height:420px"><canvas id="c-pm-pers-bench"></canvas></div>
-      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
-        Barres empil&eacute;es : Personnel interne (tri) + externe (int&eacute;rim)
-      </div>
-    </div>
-    <div class="card" style="border-top:3px solid #10b981">
-      <div class="card-title" id="pm-pers-evol-title">&Eacute;volution co&ucirc;t horaire &mdash; site s&eacute;lectionn&eacute;</div>
-      <div style="display:flex;align-items:center;gap:6px;margin:8px 0">
-        <label style="font-size:.75rem;font-weight:700;color:#555">Site :</label>
-        <select class="sel" id="pm-pers-site" onchange="pmSetPersSite(this.value)" style="font-size:.75rem;padding:3px 8px"></select>
-      </div>
-      <div style="position:relative;height:380px"><canvas id="c-pm-pers-evol"></canvas></div>
-    </div>
-  </div>
-
-  <!-- ────── SECTION B — MAINTENANCE ────── -->
-  <div class="section-sep" style="margin-top:18px">Maintenance &mdash; GER (oblig.) vs Entretien courant</div>
-  <p style="font-size:.78rem;color:#666;margin:6px 0 14px">
-    GER = Maintenance Obligatoire Programm&eacute;e &amp; renouvellement (VE000071).
-    Entretien courant = Maintenance courante hors personnel (VE000067).
-    Donn&eacute;es exprim&eacute;es en &euro;/tonne entrante.
-  </p>
-
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card" style="border-top:3px solid #8b5cf6">
-      <div class="card-title" id="pm-maint-bench-title">Maintenance &euro;/t par site &mdash; R2025</div>
-      <div style="position:relative;height:420px"><canvas id="c-pm-maint-bench"></canvas></div>
-      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
-        Barres empil&eacute;es : GER + Entretien courant
-      </div>
-    </div>
-    <div class="card" style="border-top:3px solid #ef4444">
-      <div class="card-title" id="pm-maint-evol-title">&Eacute;volution Maintenance &euro;/t &mdash; site s&eacute;lectionn&eacute;</div>
-      <div style="display:flex;align-items:center;gap:6px;margin:8px 0">
-        <label style="font-size:.75rem;font-weight:700;color:#555">Site :</label>
-        <select class="sel" id="pm-maint-site" onchange="pmSetMaintSite(this.value)" style="font-size:.75rem;padding:3px 8px"></select>
-      </div>
-      <div style="position:relative;height:380px"><canvas id="c-pm-maint-evol"></canvas></div>
-    </div>
-  </div>
-
-  <!-- ────── SECTION C — TABLEAU RÉCAP ────── -->
-  <div class="section-sep">Tableau r&eacute;capitulatif &mdash; ann&eacute;e s&eacute;lectionn&eacute;e</div>
-  <div id="pm-table-wrap"></div>
-</div>
-
-<!-- ═══ ONGLET FILIÈRE & CESSIONS INTERNES ═════════════════════════════════ -->
-<div class="page" id="tab-fi">
-  <div class="toolbar">
-    <label>Ann&eacute;e :</label>
-    <button class="btn-pill fi-yr" onclick="fiSetYr(2023,this)">R2023</button>
-    <button class="btn-pill fi-yr" onclick="fiSetYr(2024,this)">R2024</button>
-    <button class="btn-pill fi-yr active" onclick="fiSetYr(2025,this)">R2025</button>
-    <div class="spacer"></div>
-    <button class="btn-print" onclick="window.print()" style="margin-left:12px">&#128438; Exporter PDF</button>
-  </div>
-
-  <!-- Bandeau simple : liste des sites par groupe -->
-  <div style="display:flex;gap:14px;margin:18px 0;flex-wrap:wrap">
-    <div style="flex:1;min-width:300px;background:#fef2f2;border-left:3px solid #dc2626;border-radius:5px;padding:10px 14px">
-      <div style="font-size:.7rem;font-weight:700;color:#991b1b;letter-spacing:.5px">🏭 SITES MULTIFILI&Egrave;RE</div>
-      <div style="font-size:.85rem;color:#1e293b;margin-top:4px">Nantes &middot; B&egrave;gles &middot; Saran</div>
-    </div>
-    <div style="flex:1;min-width:300px;background:#f0fdf4;border-left:3px solid #059669;border-radius:5px;padding:10px 14px">
-      <div style="font-size:.7rem;font-weight:700;color:#047857;letter-spacing:.5px">⚙️ SITES EN PROPRE</div>
-      <div style="font-size:.85rem;color:#1e293b;margin-top:4px">Le Havre &middot; Amiens &middot; Paris 15 &middot; Sevran &middot; Ch&eacute;zy &middot; Portes les Valences &middot; Montpellier &middot; Millau</div>
-    </div>
-  </div>
-
-  <!-- ────── KPI cards résumé ────── -->
-  <div class="kpi-grid" style="margin-bottom:22px;grid-template-columns:repeat(4,1fr);gap:12px">
-    <div class="kpi-card r">
-      <div class="kpi-label">Cessions Charge &mdash; <b>Multifili&egrave;re</b></div>
-      <div class="kpi-value" id="fi-kpi-mf-charge">&mdash;</div>
-      <div class="kpi-sub" id="fi-kpi-mf-charge-pct">&mdash;</div>
-    </div>
-    <div class="kpi-card g">
-      <div class="kpi-label">Cessions Charge &mdash; <b>Propre</b></div>
-      <div class="kpi-value" id="fi-kpi-pr-charge">&mdash;</div>
-      <div class="kpi-sub" id="fi-kpi-pr-charge-pct">&mdash;</div>
-    </div>
-    <div class="kpi-card o">
-      <div class="kpi-label">Ratio Cessions / CA &mdash; <b>Multifili&egrave;re</b></div>
-      <div class="kpi-value" id="fi-kpi-mf-ratio">&mdash;</div>
-      <div class="kpi-sub">moyenne du groupe</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Ratio Cessions / CA &mdash; <b>Propre</b></div>
-      <div class="kpi-value" id="fi-kpi-pr-ratio">&mdash;</div>
-      <div class="kpi-sub">moyenne du groupe</div>
-    </div>
-  </div>
-
-  <!-- ────── SECTION A — Barres comparatives ────── -->
-  <div class="section-sep">Cessions internes par site &mdash; ann&eacute;e s&eacute;lectionn&eacute;e</div>
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card" style="border-top:3px solid #dc2626">
-      <div class="card-title">Cessions internes (Charge) &mdash; valeurs absolues</div>
-      <div style="position:relative;height:450px"><canvas id="c-fi-bench-abs"></canvas></div>
-      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
-        Sites group&eacute;s par cat&eacute;gorie &middot; tri d&eacute;croissant dans chaque groupe
-      </div>
-    </div>
-    <div class="card" style="border-top:3px solid #2563eb">
-      <div class="card-title">Cessions internes en % du CA &mdash; poids dans le P&amp;L</div>
-      <div style="position:relative;height:450px"><canvas id="c-fi-bench-pct"></canvas></div>
-      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
-        Montre le poids r&eacute;el du flux interne dans l&rsquo;activit&eacute; de chaque site
-      </div>
-    </div>
-  </div>
-
-  <!-- ────── SECTION A bis — Cessions €/t ────── -->
-  <div class="row2" style="margin-bottom:22px">
-    <div class="card full" style="border-top:3px solid #7c3aed">
-      <div class="card-title">Cessions internes &euro;/t &mdash; comparaison &agrave; la tonne entrante</div>
-      <div style="position:relative;height:380px"><canvas id="c-fi-bench-eurt"></canvas></div>
-      <div style="font-size:.7rem;color:#888;text-align:center;margin-top:6px">
-        Cessions internes ramen&eacute;es au tonnage entrant &mdash; m&eacute;trique la plus comparable entre sites
-      </div>
-    </div>
-  </div>
-
-  <!-- ────── SECTION B — Tableau détaillé ────── -->
-  <div class="section-sep">Tableau d&eacute;taill&eacute; par site</div>
-  <div id="fi-table-wrap"></div>
-</div>
-
-<!-- ═══ ONGLET Q1 2026 ══════════════════════════════════════════════════════ -->
+<!-- ═══ ONGLET SUIVI TRIMESTRIEL 2026 ═══════════════════════════════════════ -->
 <div class="page" id="tab-q1">
 
   <!-- ── En-tête ── -->
   <div class="q1-header" style="margin-top:4px">
     <div>
-      <div style="font-size:1.05rem;font-weight:800;color:#003a63;margin-bottom:2px">Suivi T1 2026 &mdash; R&eacute;el vs Budget</div>
-      <div class="q1-period">Cumul jan &rarr; mars 2026</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="font-size:1.05rem;font-weight:800;color:#003a63">Suivi trimestriel 2026 &mdash; R&eacute;el vs Budget</div>
+        <div class="q1-period-sel" role="tablist" id="q1-period-sel"></div>
+      </div>
+      <div class="q1-period" id="q1-period-label">Cumul jan &rarr; mars 2026</div>
     </div>
     <button class="btn-print" onclick="window.print()">&#128438; Exporter PDF</button>
   </div>
@@ -1089,8 +944,6 @@ function showTab(id,el){
     if(id==='et') renderEt();
     if(id==='rg') renderRg();
     if(id==='tk') renderTk();
-    if(id==='pm') renderPm();
-    if(id==='fi') renderFi();
     if(id==='q1') renderQ1();
   }));
 }
@@ -3950,15 +3803,13 @@ function fiGetSiteData(site, yr){
   var cessCharge=pl.Prestations_internes!=null?Math.abs(+pl.Prestations_internes):0;
   var cessProduit=pl.Prestations_internes_Produit!=null?+pl.Prestations_internes_Produit:0;
   var ca=pl.CA!=null?+pl.CA:null;
-  var tn=pl.Tonnes_entrantes!=null?Math.abs(+pl.Tonnes_entrantes):null;
   return {
     site:site, yr:yr, type:fiSiteType(site),
-    ca:ca, tonnage:tn,
+    ca:ca,
     cessCharge:cessCharge,
     cessProduit:cessProduit,
     cessNet:cessCharge-cessProduit,
-    pctCA:(ca&&ca>0)?(cessCharge/ca*100):null,
-    eurT:(tn&&tn>0)?(cessCharge/tn):null
+    pctCA:(ca&&ca>0)?(cessCharge/ca*100):null
   };
 }
 
@@ -4146,72 +3997,12 @@ function fiSetYr(yr,el){
   fiYr=+yr;
   document.querySelectorAll('.fi-yr').forEach(function(b){b.classList.remove('active');});
   el.classList.add('active');
-  renderFiKpiCards(); renderFiBench(); renderFiBenchEurT(); renderFiTable();
-}
-
-// ── Section A bis : Cessions internes en €/t ──────────────────────────────────
-function renderFiBenchEurT(){
-  var sites=Array.from(new Set(DATA.map(function(d){return d.Site;})));
-  var allRows=sites.map(function(s){return fiGetSiteData(s,fiYr);}).filter(function(r){return r&&r.eurT!=null;});
-  var mfRows=allRows.filter(function(r){return r.type==='multifiliere';}).sort(function(a,b){return b.eurT-a.eurT;});
-  var prRows=allRows.filter(function(r){return r.type==='propre';}).sort(function(a,b){return b.eurT-a.eurT;});
-  var ordered=mfRows.concat(prRows);
-
-  var labels=ordered.map(function(r){return r.site+(r.type==='multifiliere'?' 🏭':'');});
-  var colors=ordered.map(function(r){return r.type==='multifiliere'?'rgba(220,38,38,.75)':'rgba(16,185,129,.65)';});
-  var borders=ordered.map(function(r){return r.type==='multifiliere'?'#991b1b':'#047857';});
-
-  // Plugin séparateur visuel
-  var sepPlugin={id:'sepLineEurT',afterDatasetsDraw:function(chart){
-    var meta=chart.getDatasetMeta(0);
-    if(!meta||!meta.data.length||mfRows.length===0||prRows.length===0) return;
-    var sepIdx=mfRows.length;
-    if(sepIdx>=meta.data.length) return;
-    var ctx=chart.ctx, ya=chart.scales.y, xa=chart.scales.x;
-    var y=(meta.data[sepIdx-1].y+meta.data[sepIdx].y)/2;
-    ctx.save();
-    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(xa.left,y); ctx.lineTo(xa.right,y); ctx.stroke();
-    ctx.restore();
-  }};
-
-  // Moyennes par groupe
-  var avgMf=mfRows.length?mfRows.reduce(function(s,r){return s+r.eurT;},0)/mfRows.length:0;
-  var avgPr=prRows.length?prRows.reduce(function(s,r){return s+r.eurT;},0)/prRows.length:0;
-
-  mkChart('c-fi-bench-eurt',{type:'bar',
-    data:{labels:labels,datasets:[{label:'Cessions €/t',
-      data:ordered.map(function(r){return r.eurT;}),
-      backgroundColor:colors,borderColor:borders,borderWidth:1.5,borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'nearest',intersect:false,axis:'y'},
-      plugins:{
-        legend:{display:false},
-        title:{display:true,
-          text:'Moyenne multifilière : '+avgMf.toFixed(1)+' €/t  ·  Moyenne propre : '+avgPr.toFixed(1)+' €/t',
-          font:{size:11,weight:'normal'},color:'#555',padding:{bottom:8}},
-        tooltip:{callbacks:{
-          title:function(c){return c[0].label.replace(' 🏭','');},
-          label:function(c){
-            var r=ordered[c.dataIndex];
-            return [' '+(c.parsed.x||0).toFixed(1)+' €/t',
-                    ' Cessions : '+fmtM(-r.cessCharge),
-                    ' Tonnage : '+(r.tonnage?(r.tonnage/1000).toFixed(1)+' kt':'—'),
-                    ' Type : '+(r.type==='multifiliere'?'Multifilière 🏭':'En propre ⚙️')];
-          }
-        }}
-      },
-      scales:{x:{title:{display:true,text:'€/t entrante'},grid:{color:'#f0f0f0'}},
-              y:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}}}
-    },
-    plugins:[sepPlugin]
-  });
+  renderFiKpiCards(); renderFiBench(); renderFiTable();
 }
 
 function renderFi(){
   renderFiKpiCards();
   renderFiBench();
-  renderFiBenchEurT();
   renderFiTable();
 }
 
@@ -4419,15 +4210,72 @@ function renderTk(){
 // Convention couleur : vert = au-dessus du budget, rouge = en dessous.
 // ══════════════════════════════════════════════════════
 var q1Site = null;
+var q1Period = 'Q1';   // periode active - reglee dynamiquement selon les donnees dispo
+
+// Libelles / boutons par periode
+// - Cumuls (T1/S1/9M/ANN) = valeurs brutes de la BDD
+// - Isoles (T2/T3/T4 seuls) = calcul par difference
+var Q1_PERIOD_META = {
+  'Q1':  { btn: 'T1',            lbl: 'T1 — jan → mars 2026',            short: 'T1 2026' },
+  'Q2':  { btn: 'T2 (isolé)',    lbl: 'T2 isolé — avril → juin 2026',    short: 'T2 2026' },
+  'S1':  { btn: 'Cumul S1',      lbl: 'Cumul S1 — jan → juin 2026',      short: 'S1 2026' },
+  'Q3':  { btn: 'T3 (isolé)',    lbl: 'T3 isolé — juil → sept 2026',     short: 'T3 2026' },
+  '9M':  { btn: 'Cumul 9M',      lbl: 'Cumul 9M — jan → sept 2026',      short: '9M 2026' },
+  'Q4':  { btn: 'T4 (isolé)',    lbl: 'T4 isolé — oct → dec 2026',       short: 'T4 2026' },
+  'ANN': { btn: 'Cumul annuel',  lbl: 'Cumul annuel — jan → dec 2026',   short: 'Annuel 2026' },
+};
+// Ordre d'affichage des boutons (respecte les periodes existantes dans les donnees)
+var Q1_PERIOD_ORDER = ['Q1','Q2','S1','Q3','9M','Q4','ANN'];
+
+// Retro-compat pour l'ancien code qui utilisait Q1_PERIOD_LBL/SHORT
+var Q1_PERIOD_LBL = {};
+var Q1_PERIOD_SHORT = {};
+Object.keys(Q1_PERIOD_META).forEach(function(k){
+  Q1_PERIOD_LBL[k] = Q1_PERIOD_META[k].lbl;
+  Q1_PERIOD_SHORT[k] = Q1_PERIOD_META[k].short;
+});
+
+// Construit dynamiquement les boutons de periode selon les donnees disponibles
+function q1BuildPeriodButtons(){
+  var container = document.getElementById('q1-period-sel');
+  if(!container) return;
+  // Detecter les periodes presentes dans les donnees
+  var present = new Set();
+  Q1_DATA.forEach(function(d){
+    if(d.Periode) present.add(d.Periode);
+  });
+  // Choisir la periode active : garder celle en cours si dispo, sinon la 1ere
+  var ordered = Q1_PERIOD_ORDER.filter(function(p){return present.has(p);});
+  if(!ordered.length) return;
+  if(!present.has(q1Period)) q1Period = ordered[0];
+  // Rendu
+  container.innerHTML = '';
+  ordered.forEach(function(p){
+    var btn = document.createElement('button');
+    btn.className = 'q1-period-btn' + (p===q1Period ? ' active' : '');
+    btn.setAttribute('data-p', p);
+    btn.textContent = Q1_PERIOD_META[p].btn;
+    btn.onclick = function(){ q1SetPeriod(p); };
+    container.appendChild(btn);
+  });
+}
 
 // ── Helpers Q1 ────────────────────────────────────────────────────────────────
+function q1Filter(d){
+  // Compatibilite : si le CSV n'a pas de colonne Periode, on prend toutes les lignes
+  if(d.Periode==null || d.Periode==='') return q1Period==='Q1';
+  return d.Periode===q1Period;
+}
 function q1Get(site, met, col){
-  var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===met;});
-  return (r && r[col]!=null) ? +r[col] : null;
+  var r = Q1_DATA.find(function(d){return d.Site===site && d.Metrique===met && q1Filter(d);});
+  return (r && r[col]!=null && r[col]!=='') ? +r[col] : null;
 }
 function q1Sum(met, col){
-  return Q1_DATA.filter(function(d){return d.Metrique===met;})
-    .reduce(function(s,d){return s+(d[col]!=null?+d[col]:0);},0);
+  return Q1_DATA.filter(function(d){return d.Metrique===met && q1Filter(d);})
+    .reduce(function(s,d){
+      var v=(d[col]!=null&&d[col]!=='')?+d[col]:0;
+      return s+(isNaN(v)?0:v);
+    },0);
 }
 
 // ── Scorecards (parc ou site) ─────────────────────────────────────────────────
@@ -4546,10 +4394,11 @@ function renderQ1Site(){
   var site=q1Site;
   q1RenderCards('q1-site-cards',function(met,col){return q1Get(site,met,col);});
 
+  var pShort=Q1_PERIOD_SHORT[q1Period]||q1Period;
   document.getElementById('q1-site-fin-title').textContent=
-    site+' \u2014 Synth\u00e8se financi\u00e8re \u2014 R\u00e9el vs Budget Q1 2026';
+    site+' \u2014 Synth\u00e8se financi\u00e8re \u2014 R\u00e9el vs Budget '+pShort;
   document.getElementById('q1-site-chg-title').textContent=
-    site+' \u2014 Charges d\u00e9taill\u00e9es \u2014 R\u00e9el vs Budget Q1 2026';
+    site+' \u2014 Charges d\u00e9taill\u00e9es \u2014 R\u00e9el vs Budget '+pShort;
 
   var finMet=[
     ['CA','CA'],['PNE','PNE'],['Marge_brute','Marge brute'],['EBITDA','EBITDA'],['EBIT','EBIT']
@@ -4601,6 +4450,15 @@ function renderQ1Site(){
 // ── Rendu principal onglet Q1 ─────────────────────────────────────────────────
 function renderQ1(){
   var sites=[...new Set(Q1_DATA.map(function(d){return d.Site;}))].sort();
+  // (Re)construit les boutons de periode selon les donnees disponibles
+  q1BuildPeriodButtons();
+  // Mise a jour du libelle de periode
+  var lbl=document.getElementById('q1-period-label');
+  if(lbl) lbl.textContent=Q1_PERIOD_LBL[q1Period]||'';
+  // Boutons actifs
+  document.querySelectorAll('.q1-period-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.p===q1Period);
+  });
   q1RenderCards('q1-global-cards',function(met,col){return q1Sum(met,col);});
   q1RenderAccordion();
   if(!q1Site)q1Site=sites[0];
@@ -4613,6 +4471,7 @@ function renderQ1(){
 }
 
 function q1SetSite(s){q1Site=s;renderQ1Site();}
+function q1SetPeriod(p){q1Period=p;renderQ1();}
 
 // ══════════════════════════════════════════════════════
 // INITIALISATION — exécutée une seule fois au chargement de la page
@@ -4676,8 +4535,6 @@ function q1SetSite(s){q1Site=s;renderQ1Site();}
       else if(id==='et') renderEt();
       else if(id==='rg') renderRg();
       else if(id==='tk') renderTk();
-      else if(id==='pm') renderPm();
-      else if(id==='fi') renderFi();
       else if(id==='q1') renderQ1();
     }); });
   });
